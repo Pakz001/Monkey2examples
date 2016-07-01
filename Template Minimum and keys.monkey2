@@ -4,6 +4,8 @@
 Using std..
 Using mojo..
 
+Global instance:AppInstance
+
 Class MyWindow Extends Window
 
 	Method New()
@@ -16,20 +18,18 @@ Class MyWindow Extends Window
 	Method OnKeyEvent( event:KeyEvent ) Override
 	
 		Select event.Type
-		Case EventType.KeyDown
+			Case EventType.KeyDown
 			Select event.Key
-			Case Key.Escape
-			'End here
+				Case Key.Escape
+			    instance.Terminate()
 			End Select
-			End Select
-		End 
+		End Select		
 	End Method
 	
 End	Class
 
 Function Main()
-
-	New AppInstance
+	instance = New AppInstance	
 	
 	New MyWindow
 	
