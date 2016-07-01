@@ -12,11 +12,10 @@ Class MyWindow Extends Window
 	End method
 	
 	Method OnRender( canvas:Canvas ) Override
-	
+		App.RequestRender() ' Activate this method 
 	End Method	
 	
-	Method OnKeyEvent( event:KeyEvent ) Override
-	
+	Method OnKeyEvent( event:KeyEvent ) Override	
 		Select event.Type
 			Case EventType.KeyDown
 			Select event.Key
@@ -35,5 +34,4 @@ Function Main()
 	
 	App.Run()
 	
-End function
-
+End Function
