@@ -13,17 +13,9 @@ Class MyWindow Extends Window
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
+		' if key escape then quit
+		If Keyboard.KeyReleased(Key.Escape) Then instance.Terminate()		
 	End Method	
-	
-	Method OnKeyEvent( event:KeyEvent ) Override	
-		Select event.Type
-			Case EventType.KeyDown
-			Select event.Key
-				Case Key.Escape
-			    instance.Terminate()
-			End Select
-		End Select		
-	End Method
 	
 End	Class
 
