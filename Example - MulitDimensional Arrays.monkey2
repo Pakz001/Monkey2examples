@@ -10,9 +10,10 @@ Global instance:AppInstance
 
 Class MyWindow Extends Window
 
-	field map:= new int[10,10]	
+	field map:Int[,]	
 
 	Method New()
+		map=New Int[10,10]
 		Local cnt:=0
 		For Local y:=0 Until 10
 		For Local x:=0 Until 10
