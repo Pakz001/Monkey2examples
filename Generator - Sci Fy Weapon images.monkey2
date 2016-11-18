@@ -55,7 +55,9 @@ Class item
 		a = Rnd()*name.Length
 		secondname = name[a] + " " + Round(Rnd()*10)
 	End Method
-	Method makeimage()		
+	Method makeimage()
+		Local a:Int=Millisecs()
+		SeedRnd(a)
 		can.Color = Color.None
 		can.BlendMode=BlendMode.Opaque
 		can.DrawRect(0,0,64,64)	
