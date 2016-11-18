@@ -105,6 +105,7 @@ Class MyWindow Extends Window
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Space)
 			myitem.Clear()
+			SeedRnd(Millisecs())
 			For Local y:=0 To 5
 			For Local x:=0 To 8
 				myitem.AddLast(New item())
