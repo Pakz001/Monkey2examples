@@ -46,9 +46,6 @@ Class item
 		image = New Image(64,64)
 		can = New Canvas(image)
 		image.Handle=New Vec2f( .5,.5 )
-		can.Color = Color.None
-		can.BlendMode=BlendMode.Opaque
-		can.DrawRect(0,0,64,64)			
 		makeimage()
 		getname()
 	End Method
@@ -59,6 +56,9 @@ Class item
 		secondname = name[a] + " " + Round(Rnd()*10)
 	End Method
 	Method makeimage()		
+		can.Color = Color.None
+		can.BlendMode=BlendMode.Opaque
+		can.DrawRect(0,0,64,64)	
 		Local w:Int=Rnd(4,30)
 		Local h:Int=Rnd(4,30)
 		For Local i:=0 Until 10
@@ -104,13 +104,10 @@ Class MyWindow Extends Window
 		App.RequestRender() ' Activate this method 
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Space)
-			myitem.Clear()
-			SeedRnd(Millisecs())
-			For Local y:=0 To 5
-			For Local x:=0 To 8
-				myitem.AddLast(New item())
+			For Local i:=Eachin myitem
+				i.makeimage()
+				i.getname()
 			Next
-			Next		
 		end If
 		Local x:Int=0
 		Local y:Int=0
