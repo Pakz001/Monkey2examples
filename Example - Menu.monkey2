@@ -37,11 +37,9 @@ Class menu
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.Black
 		canvas.DrawRect(wx,wy,tw,th)
-		'canvas.Color = Color.Brown
 		For Local y1:Float=0 Until 10 Step 1
 			outline(canvas,wx+y1,wy+y1,tw-(y1*2),th-(y1*2),New Color(y1/10,y1/10,y1/10),New Color(y1/10/2,y1/10/2,y1/10/2))
 		Next
-		''canvas.DrawRect(wx+1,wy+1,tw-2,th-2)
 		outline(canvas,wx+1,wy+1,tw-2,th-2,New Color(.7,.7,.7), New Color(.3,.3,.3))
 		outline(canvas,wx+2,wy+2,tw-4,th-4,New Color(.4,.4,.4), New Color(.5,.5,.5))
 		For Local y:=0 Until twy
