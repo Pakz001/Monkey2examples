@@ -85,7 +85,9 @@ Class MyWindow Extends Window
 
 	
 	Method New()
+		' window title
 		Title="Menu example 1"
+		' x,y,num windows hor,num windows ver
 		mymenu = New menu(0,50,6,4)
 	End Method
 	
