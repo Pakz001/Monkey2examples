@@ -61,7 +61,7 @@ Class menu
 		canvas.Color = Color.Black
 		canvas.DrawRect(x+8,y+8,ww-16,wh-16)
 		For Local y1:Float=0 To 10 Step 1
-			outline(canvas,x+y1,y+y1,ww-(y1*2),wh-(y1*2),New Color(y1/10,y1/10,y1/10),New Color((y1/10)/2,(y1/10)/2,(y1/10)/2))
+			outline(canvas,x+y1,y+y1,ww-(y1*2),wh-(y1*2),New Color((y1/10)/2,(y1/10)/2,(y1/10)/2),New Color(y1/10,y1/10,y1/10))
 		Next
 		outline(canvas,x+1,y+1,ww-1,wh-1,  New Color(1,1,1)   ,New Color(.3,.3,.3))
 		outline(canvas,x+2,y+2,ww-4,wh-4,color,color)
