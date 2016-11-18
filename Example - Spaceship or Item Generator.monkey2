@@ -24,6 +24,19 @@ Class item
 		For Local i:=0 Until 10
 			Local a:Float=Rnd()
 			can.Color = New Color(a,a,a)
+			If Rnd() <0.1 Then
+			Local a:int=Rnd()*4
+			Select a
+				Case 0 
+				can.Color = New Color(Rnd(.2,1),0,0)
+				Case 1
+				can.Color = New Color(0,Rnd(.2,1),0)
+				Case 2 
+				can.Color = New Color(0,0,Rnd(.2,1))
+				Case 3
+				can.Color = New Color(Rnd(.2,1),Rnd(.2,1),0)
+			End Select
+			End if
 			can.DrawTriangle(   New Vec2f(24+Rnd(-16,16),24+Rnd(-16,16)),
 								New Vec2f(24+Rnd(-16,16),24+Rnd(-16,16)),
 								New Vec2f(24+Rnd(-16,16),24+Rnd(-16,16)))
@@ -43,6 +56,7 @@ Class MyWindow Extends Window
 			myitem.AddLast(New item())
 		Next
 		Next
+		ClearColor = Color.Black
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
