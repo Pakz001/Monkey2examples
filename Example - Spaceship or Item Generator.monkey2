@@ -21,6 +21,8 @@ Class item
 		makeimage()
 	End Method
 	Method makeimage()		
+		Local w:Int=Rnd(4,20)
+		Local h:Int=Rnd(4,20)
 		For Local i:=0 Until 10
 			Local a:Float=Rnd()
 			can.Color = New Color(a,a,a)
@@ -36,10 +38,10 @@ Class item
 				Case 3
 				can.Color = New Color(Rnd(.2,1),Rnd(.2,1),0)
 			End Select
-			End if
-			can.DrawTriangle(   New Vec2f(24+Rnd(-16,16),24+Rnd(-16,16)),
-								New Vec2f(24+Rnd(-16,16),24+Rnd(-16,16)),
-								New Vec2f(24+Rnd(-16,16),24+Rnd(-16,16)))
+			End If
+			can.DrawTriangle(   New Vec2f(24+Rnd(-w,w),24+Rnd(-h,h)),
+								New Vec2f(24+Rnd(-w,w),24+Rnd(-h,h)),
+								New Vec2f(24+Rnd(-w,w),24+Rnd(-h,h)))
 		Next
 		can.Flush()
 	End Method 
