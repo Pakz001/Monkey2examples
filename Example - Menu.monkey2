@@ -79,16 +79,17 @@ Class menu
 	End Method  
 End Class 
 
+Global winwidth:Int=800
+Global winheight:Int=600
 Global mymenu:menu
 
 Class MyWindow Extends Window 
 
 	
 	Method New()
-		' window title
-		Title="Menu example 1"
+		Super.New("Menu example 1",winwidth,winheight)		
 		' x,y,num windows hor,num windows ver
-		mymenu = New menu(0,50,6,4)
+		mymenu = New menu(0,50,(winwidth/96)-1,(winheight/96)-1)
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -97,8 +98,8 @@ Class MyWindow Extends Window
 		canvas.Clear(Color.White)
 		For Local y:Float=0 To 50 Step 1
 			canvas.Color = New Color(y/50,y/50,y/50)
-			canvas.DrawLine(0,y,640,y)
-			canvas.DrawLine(0,480-y,640,480-y)
+			canvas.DrawLine(0,y,winwidth,y)
+			canvas.DrawLine(0,winheight-y,winwidth,winheight-y)
 		Next
 		mymenu.update()
 		mymenu.draw(canvas)	
