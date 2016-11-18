@@ -56,8 +56,6 @@ Class item
 		secondname = name[a] + " " + Round(Rnd()*10)
 	End Method
 	Method makeimage()
-		Local a:Int=Millisecs()
-		SeedRnd(a)
 		can.Color = Color.None
 		can.BlendMode=BlendMode.Opaque
 		can.DrawRect(0,0,64,64)	
@@ -106,6 +104,8 @@ Class MyWindow Extends Window
 		App.RequestRender() ' Activate this method 
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Space)
+			Local a:Int=Microsecs()
+			SeedRnd(a)
 			For Local i:=Eachin myitem
 				i.makeimage()
 				i.getname()
