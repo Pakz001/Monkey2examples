@@ -5,16 +5,16 @@ Using std..
 Using mojo..
 
 Class menu
-	Field twx:Int
-	Field twy:Int
-	Field wx:Int
-	Field wy:Int
-	Field ww:Int=96
-	Field wh:Int=96
-	Field tw:Int
-	Field th:Int
-	Field ix:Int
-	Field iy:Int
+	Field twx:Int'number of windows horizontal
+	Field twy:Int'number of windows vertically
+	Field wx:Int'x location of the menu
+	Field wy:Int'y location of the menu
+	Field ww:Int=96'width of a window
+	Field wh:Int=96'height of a window
+	Field tw:Int'total width of the menu
+	Field th:Int'total height of the menu
+	Field ix:Int'window location x (cursors)
+	Field iy:Int'window location y
 	Method New(x:Int,y:Int,twx:Int,twy:Int)
 		Self.wx=x
 		Self.wy=y
@@ -23,6 +23,7 @@ Class menu
 		tw = (ww*twx)+20
 		th = (wh*twy)+20
 	End Method 
+	' update method of the menu
 	Method update()
 		If Keyboard.KeyReleased(Key.Right)
 			If ix<twx-1 Then ix+=1
@@ -34,6 +35,7 @@ Class menu
 			If iy<twy-1 Then iy+=1
 		End If
 	End Method 
+	' draw the menu
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.Black
 		canvas.DrawRect(wx,wy,tw,th)
@@ -52,6 +54,7 @@ Class menu
 		Next
 		Next
 	End Method 
+	'draw a window
 	Method drawwindow(canvas:Canvas,x:Int,y:Int,color:Color)
 		canvas.Color = Color.Black
 		canvas.DrawRect(x,y,ww,wh)
@@ -65,6 +68,7 @@ Class menu
 		outline(canvas,x+3,y+3,ww-6,wh-6,color,color)
 
 	End Method
+	' draw a non filled rectangle (2 colors)
 	Method outline(canvas:Canvas,x:Int,y:Int,w:Int,h:Int,lc:Color,dc:Color)
 		canvas.Color = lc
 		canvas.DrawLine(x,y,x+w,y)
