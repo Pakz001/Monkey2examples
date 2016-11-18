@@ -64,6 +64,14 @@ Class MyWindow Extends Window
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
 		' if key escape then quit
+		If Keyboard.KeyReleased(Key.Space)
+			myitem.Clear()
+			For Local y:=0 To 10
+			For Local x:=0 To 10
+				myitem.AddLast(New item())
+			Next
+			Next		
+		end if
 		Local x:Int=0
 		Local y:Int=0
 		For Local i:=Eachin myitem
@@ -74,6 +82,8 @@ Class MyWindow Extends Window
 			x+=1
 			If x>10 Then y+=1;x=0
 		Next
+		canvas.Color = Color.White
+		canvas.DrawText("Press Space to generate new items - press escape to end",0,560)
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 	
