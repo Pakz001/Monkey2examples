@@ -1,4 +1,6 @@
 ' I took this from the monkey 2 forum. Keeping it here so I can access it quickly.
+' btw - I found a number of mojox examples in the test folder in the mojox folder
+'in the monkey installation
 
 #import "<std>"
 #import "<mojo>"
