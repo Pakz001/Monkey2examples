@@ -13,6 +13,7 @@ Class listview
 	Field item:= New String[50]
 	Field ih:Int 'num of items in window
 	Field ipos:Int 
+	Field keydelay:Double
 	Method New(x:Int,y:Int,w:Int,h:Int)
 		wx = x ; wy = y ; ww = w ; wh = h
 		' Scroll bar
@@ -25,9 +26,16 @@ Class listview
 		Next
 	End Method
 	Method update()
+		If keydelay > Millisecs() Then return
 		If Keyboard.KeyDown(Key.Down)
 			ipos+=1
 			If ipos+ih>numitems Then ipos-=1
+			keydelay = Millisecs() + 100			
+		Endif
+		If Keyboard.KeyDown(Key.Up)
+			ipos-=1
+			If ipos<0 Then ipos+=1
+			keydelay = Millisecs() + 100
 		Endif
 	End Method 
 	Method draw(canvas:Canvas)
