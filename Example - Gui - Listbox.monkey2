@@ -5,7 +5,9 @@ Using std..
 Using mojo..
 
 Class listview
+	Field outlinex1:Int,outliney1:int
 	Field wx:Int,wy:Int,ww:Int,wh:Int
+	Field ly:int
 	Field scrollb:Bool=false
 	Field sbx:int,sby:Float
 	Field sbw:Int=12
@@ -74,23 +76,17 @@ Class listview
 		canvas.Color = New Color(.6,.6,.6)
 		canvas.DrawRect(sbx,ssy,sbw,sbh)
 		outline(canvas,sbx,ssy,sbw,sbh,Color.Black,Color.Black)
-		drawitems(canvas)
-		drawmouseover(canvas)		
+		drawitems(canvas)		
 	End Method
-	Method drawmouseover(canvas:Canvas)
-		If rectsoverlap(Mouse.X,Mouse.Y,1,1,
-						wx,wy+10,ww-sbw,wh-20) = False Then Return
-								
-		Local x:Int=wx
-		Local y:Int=((Mouse.Y-10)/15)*15
-		outline(canvas,x+8,y+10,ww-26,15,Color.White,Color.White)
-						
-	end Method
-	Method drawitems(canvas:Canvas)
+	Method drawitems(canvas:Canvas)		
 		For Local i:=0 Until ih
+			canvas.Color = Color.Grey
 			canvas.DrawText(    item[i+ipos],
 								wx+10,
-								(wy+10)+i*15)
+								(wy+5)+i*15)
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,wx+10,(wy+5)+i*15,ww-20,15)
+				outline(canvas,wx+10,(wy+5)+i*15,ww-28,15,Color.White,Color.White)
+			End If 
 		Next
 	End Method 
 	Method outline(canvas:Canvas,   x:Int,y:Int,
@@ -107,10 +103,11 @@ Class listview
 
 		If scrollb = False Then 
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,
-							sbx,wy+5,sbw,wh-8-sbh) = False Then Return
-			If Mouse.ButtonDown(MouseButton.Left)
-				ssy = Mouse.Y
-				scrollb = True
+							sbx,wy+5,sbw,wh-8-sbh) = True 
+				if Mouse.ButtonDown(MouseButton.Left)
+					ssy = Mouse.Y
+					scrollb = True
+				End If
 			End If
 		End If
 		If scrollb = True
