@@ -6,9 +6,11 @@ Using mojo..
 
 Class listview
 	Field wx:Int,wy:Int,ww:Int,wh:Int
+	Field scrollb:Bool=false
 	Field sbx:int,sby:Float
 	Field sbw:Int=12
 	Field sbh:Int=14
+	Field ssy:Int'scroll slider y pos
 	Field numitems:Int=50
 	Field item:= New String[50]
 	Field ih:Int 'num of items in window
@@ -37,6 +39,7 @@ Class listview
 			If ipos<0 Then ipos+=1
 			keydelay = Millisecs() + 100
 		Endif
+		updatescrollbar()
 	End Method 
 	Method draw(canvas:Canvas)
 		window(canvas)
@@ -69,10 +72,20 @@ Class listview
 						Color.Black)
 		' Scrol pull bar
 		canvas.Color = New Color(.6,.6,.6)
-		canvas.DrawRect(sbx,sby,sbw,sbh)
-		outline(canvas,sbx,sby,sbw,sbh,Color.Black,Color.Black)
+		canvas.DrawRect(sbx,ssy,sbw,sbh)
+		outline(canvas,sbx,ssy,sbw,sbh,Color.Black,Color.Black)
 		drawitems(canvas)
+		drawmouseover(canvas)		
 	End Method
+	Method drawmouseover(canvas:Canvas)
+		If rectsoverlap(Mouse.X,Mouse.Y,1,1,
+						wx,wy+10,ww-sbw,wh-20) = False Then Return
+								
+		Local x:Int=wx
+		Local y:Int=((Mouse.Y-10)/15)*15
+		outline(canvas,x+8,y+10,ww-26,15,Color.White,Color.White)
+						
+	end Method
 	Method drawitems(canvas:Canvas)
 		For Local i:=0 Until ih
 			canvas.DrawText(    item[i+ipos],
@@ -90,6 +103,32 @@ Class listview
 		canvas.DrawLine(x+w,y,x+w,y+h)
 		canvas.DrawLine(x,y+h,x+w,y+h)
 	End Method 
+	Method updatescrollbar()
+
+		If scrollb = False Then 
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,
+							sbx,wy+5,sbw,wh-8-sbh) = False Then Return
+			If Mouse.ButtonDown(MouseButton.Left)
+				ssy = Mouse.Y
+				scrollb = True
+			End If
+		End If
+		If scrollb = True
+			ssy = Mouse.Y
+			If Mouse.ButtonDown(MouseButton.Left) = False
+				scrollb = False
+			End If 
+		End If 
+		If ssy<wy+5 Then ssy=wy+5
+		If ssy+sbh+7 > wy+wh Then ssy = wy+wh-sbh-7
+
+	End Method 
+	Method  rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+	    Return True
+	End Method 
+	
 End Class
 
 Global list:listview
@@ -97,7 +136,7 @@ Global list:listview
 Class MyWindow Extends Window
 
 	Method New()
-		list = New listview(100,100,200,300)
+		list = New listview(0,0,Width,Height)
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
