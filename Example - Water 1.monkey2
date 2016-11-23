@@ -6,13 +6,14 @@ Using mojo..
 
 Class map
 	Field map:= New Int[50,50] 
-	Field floodx:=New List<Int>
-	Field floody:=New List<Int>
-	Field drainx:=New List<Int>
-	Field drainy:=New List<Int>
-	Field olx:=New List<Int>
-	Field oly:=New List<Int>
-	Field clx:=New List<Int>
+	Field floodx:=New Stack<Int>
+	Field floody:=New Stack<Int>
+	Field drainx:=New Stack<Int>
+	Field drainy:=New Stack<Int>
+	Field olx:=New Stack<Int>
+	Field oly:=New Stack<Int>
+	Field clx:=New Stack<Int>
+	Field cly:=New Stack<Int>
 	Field cmap:=New Bool[50,50]
 	Method New()
 	For Local y:=25 Until 50
@@ -30,35 +31,48 @@ Class map
 		updatewater(Rnd()*49,Rnd()*49)
 	End Method 
 	Method updatewater(x:Int,y:Int)
-		If Not map[x,y] = 2 Then Return
-		olx.Clear
-		oly.Clear
-		floodx.Clear
-		floody.Clear
-		drainx.Clear
-		drainy.Clear
+		If map[x,y] <> 2 Then Return
+		clx.Clear()
+		cly.Clear()
+		olx.Clear()
+		oly.Clear()
+		floodx.Clear()
+		floody.Clear()
+		drainx.Clear()
+		drainy.Clear()
 		For Local y:=0 Until 50
 		For Local x:=0 Until 50
 			cmap[x,y] = False
 		Next
 		Next		
-		olx.AddFirst(x)
-		oly.AddFirst(y)
+		olx.Push(x)
+		oly.Push(y)
 		cmap[x,y] = True
-		While olx.Empty() = False
-			Local ax:=Int = olx.First()
-			Local ay:=Int = oly.First()
-			olx.RemoveFirst()
-			oly.RemoveFirst()
+		While olx.Empty <> False
+			Local ax:Int=olx.Get(0)
+			Local ay:Int=oly.Get(0)
+			Print ax+":"+ay
+			olx.Erase(0)
+			oly.Erase(0)
+			clx.Push(ax)
+			cly.Push(ay)
+			cmap[ax,ay] = true
 			For Local bx:=-1 To 1
-			For local by:=-1 To 1
+			For Local by:=-1 To 1
+				If ax+bx>0 And ax+bx<50 And ay+by>0 And ay+by<50
 				If cmap[ax+bx,ay+by] = False
-					olx.AddFirst(ax+bx)
-					oly.AddFirst(ay+by)
+				If map[ax+bx,ay+by] = 2
+					olx.Push(ax+bx)
+					oly.Push(ay+by)
 				End If 
+				End If 
+				End If
 			Next
-			next
+			Next
 		Wend
+		For Local i:=0 Until clx.Length
+			map[clx.Get(i),cly.Get(i)] = 0
+		next		
 	End Method 
 	Method makewater(x:Int,y:Int,w:Int,h:Int)
 		For Local y1:=y Until y+h
@@ -93,6 +107,7 @@ Class MyWindow Extends Window
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
+		mymap.update()
 		mymap.draw(canvas)
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
