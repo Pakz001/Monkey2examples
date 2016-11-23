@@ -1,9 +1,12 @@
 'What it does is rndomly find a pos on the map (thousand times per second)
 'if that map pos is water then see if you can move it down
 'see if it can move left
-' see if it can move right
+'see if it can move right
 'see if it can move left down
-' replace the old position with no water and the place where to go with water value
+'replace the old position with no water and the place where to go with water value
+
+
+' lmb = pour water - mmb = erase tile - rmb = make tile
 
 #Import "<std>"
 #Import "<mojo>"
@@ -49,19 +52,18 @@ Class map
 			End If
 		End If
 
-		For Local i := 0 Until 800
-		updatewater(Rnd()*49,Rnd()*49)
+		For Local i := 0 Until 1200
+		updatewater(Rnd(1,49),Rnd(1,49))
 		Next
 	End Method 
 	Method updatewater(x:Int,y:Int)
 		If map[x,y] = 2 Then
-		If x-1>0 And x+1 < 50 And y-1>0 And y+1 <50
-			Select Round(Rnd(0,3))
+		Select Round(Rnd(0,3))
 			Case 0
 			If map[x-1,y] = 0
 			If map[x+1,y] = 2
-				map[x-1,y] = 2
-				map[x,y] = 0				
+			map[x-1,y] = 2
+			map[x,y] = 0				
 			End If
 			Endif
 			Case 1
@@ -86,7 +88,6 @@ Class map
 			End If 
 			End If 
 			End Select
-		End If
 		End If
 	End Method 
 	Method makewater(x:Int,y:Int,w:Int,h:Int)
