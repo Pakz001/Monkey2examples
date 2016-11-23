@@ -71,13 +71,13 @@ Class map
 			Select s
 			Case 0
 				If map[x-1,y] = 0
-				If map[x+1,y] = 2
+				If map[x+1,y] = 1
 					map[x-1,y] = 2
 					map[x,y] = 0				
 				End If
 				Endif
 			Case 1
-				If map[x-1,y] = 2
+				If map[x-1,y] = 1
 				If map[x+1,y] = 0
 					map[x+1,y] = 2
 					map[x,y] = 0				
@@ -166,7 +166,7 @@ Global mymap:map
 Class MyWindow Extends Window
 
 	Method New()
-		mymap = New map(Width,Height,70,30,2000)
+		mymap = New map(Width,Height,50,50,2000)
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
