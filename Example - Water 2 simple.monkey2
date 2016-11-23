@@ -1,3 +1,10 @@
+'What it does is rndomly find a pos on the map (thousand times per second)
+'if that map pos is water then see if you can move it down
+'see if it can move left
+' see if it can move right
+'see if it can move left down
+' replace the old position with no water and the place where to go with water value
+
 #Import "<std>"
 #Import "<mojo>"
 
@@ -49,7 +56,7 @@ Class map
 	Method updatewater(x:Int,y:Int)
 		If map[x,y] = 2 Then
 		If x-1>0 And x+1 < 50 And y-1>0 And y+1 <50
-			Select Round(Rnd(0,2))
+			Select Round(Rnd(0,3))
 			Case 0
 			If map[x-1,y] = 0
 			If map[x+1,y] = 2
@@ -63,12 +70,21 @@ Class map
 				map[x+1,y] = 2
 				map[x,y] = 0				
 			End If
-			End if
+			End If
 			Case 2
 			If map[x,y+1] = 0
 				map[x,y+1] = 2
 				map[x,y] = 0
+			End If				
+			Case 3
+			If map[x-1,y] = 0
+			If map[x-1,y+1] = 0
+			If map[x,y+1] = 2
+				map[x,y] = 0
+				map[x-1,y+1] = 2
 			End If	
+			End If 
+			End If 
 			End Select
 		End If
 		End If
