@@ -117,7 +117,7 @@ Class map
 	Method overlap:bool(x1:Int,y1:Int,x2:Int,y2:int)
 		For Local y:=y1 Until y2
 		For Local x:=x1 Until x2
-			If x>0 And x<w And y>0 And y<h
+			If x>0 And x<mw And y>0 And y<mh
 				If map[x,y] = 1 Then Return True
 			End If
 		Next
