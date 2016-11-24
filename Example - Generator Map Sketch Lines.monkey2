@@ -81,10 +81,11 @@ Class map
 			olx.Erase(0)
 			oly.Erase(0)
 
-			For Local y3:=-1 To 1
-			For Local x3:=-1 To 1
-				Local x4:Int=x2+x3
-				Local y4:Int=y2+y3
+			Local ax:Int[]=New Int[](0,1,0,-1)
+			Local ay:Int[]=New Int[](-1,0,1,0)
+			For Local i:=0 Until 4
+				Local x4:=x2+ax[i]
+				Local y4:=y2+ay[i]
 				If x4>0 And x4<w And y4>0 And y4<h
 					If map[x4,y4] = 1
 					If imap[x4,y4] = 0						
@@ -95,7 +96,6 @@ Class map
 					End If
 					End If 
 				End If
-			Next
 			Next
 		Wend
 		isize.Push(cnt)
@@ -147,6 +147,8 @@ Global mymap:map
 Class MyWindow Extends Window
 	field time:Int
 	Method New()
+		Super.New("",800,600)
+		'Fullscreen = True
 		Title = "Map generater with sketch Line Function"
 		mymap = New map(Width,Height,50,160)
 	End Method
@@ -156,7 +158,7 @@ Class MyWindow Extends Window
 		time+=1
 		If Mouse.ButtonReleased(MouseButton.Left) Or time>250
 			time=0
-			Local s:Int=Rnd(50,160)
+			Local s:Int=Rnd(76,200)
 			mymap = New map(Width,Height,s,s)
 		End If
 		mymap.draw(canvas)
