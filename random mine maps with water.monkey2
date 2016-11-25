@@ -9,8 +9,8 @@ Class watermap
 	Field tw:Float,th:Float
 	Field w:Int,h:Int
 	Field map:= New Int[1,1] 
-
-	Method New(sw:float,sh:float,w:float,h:Float,freq:int)
+	Field px:Int,py:Int
+	Method New(sw:Float,sh:float,w:float,h:Float,freq:int)
 		Self.freq = freq
 		tw = sw/w
 		th = sh/h
@@ -43,6 +43,26 @@ Class watermap
 
 		For Local i := 0 Until freq
 			updatewater(Rnd(2,w-2),Rnd(2,h-2))
+		Next
+	End Method 
+	Method addwater()
+		For Local y:=-1 To 1
+		For Local x:=-1 To 1
+			If Rnd()<.5 Then 
+				map[px+x,py+y] = 2
+			End If 
+		Next
+		Next
+	End Method
+	Method findpoorspot()
+		For Local y:=0 Until h
+		For Local x:=0 Until w
+			If map[x,y] = 0
+			px=x
+			py=y
+			Return
+			End If 
+		Next
 		Next
 	End Method 
 	Method updatewater(x:Int,y:Int)
@@ -304,31 +324,40 @@ Global mywatermap:watermap
 Class MyWindow Extends Window
 	Field time:Int
 	Method New()
-		SeedRnd(100)
-		local s:Int=180
+		resetmap(Width,Height)
+	End Method
+	
+	Method OnRender( canvas:Canvas ) Override
+		App.RequestRender() ' Activate this method
+		If Keyboard.KeyReleased(Key.Space) Then
+			resetmap(Width,Height)
+		End If  
+		time+=1
+		mywatermap.update()
+		mywatermap.addwater()
+		mywatermap.draw(canvas)
+		'mymap.draw(canvas)
+		' if key escape then quit
+		canvas.Color = Color.White
+		canvas.DrawText(App.FPS+"  Press space for new level.",0,0)
+		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
+	End Method	
+	
+End	Class
+
+Function resetmap(Width:Int,Height:int)
+		SeedRnd(100+Millisecs())
+		Local s:Int=Rnd(150,240)
 		mymap = New map(Width,Height,s,s)
-		mywatermap = New watermap(Width,Height,s,s,23000)
+		mywatermap = New watermap(Width,Height,s,s,50000)
 		For Local y:=0 Until s
 		For Local x:=0 Until s
 			mywatermap.map[x,y] = mymap.mapfinal[x,y]
 			If mywatermap.map[x,y] = 1 Then mywatermap.map[x,y] = 0 Else mywatermap.map[x,y] = 1
 		Next
 		Next
-	End Method
-	
-	Method OnRender( canvas:Canvas ) Override
-		App.RequestRender() ' Activate this method 
-		time+=1
-		mywatermap.update()
-		mywatermap.draw(canvas)
-		'mymap.draw(canvas)
-		' if key escape then quit
-		canvas.Color = Color.White
-		canvas.DrawText(App.FPS,0,0)
-		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
-	End Method	
-	
-End	Class
+		mywatermap.findpoorspot()
+End Function 
 
 Function Main()
 	New AppInstance		
