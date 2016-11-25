@@ -158,7 +158,7 @@ Class watermap
 				canvas.DrawRect(x*tw,y*th,tw,th)
 			End If 
 			If map[x,y] = 3
-				canvas.Color = Color.Brown
+				canvas.Color = New Color(.5,0,0)
 				canvas.DrawRect(x*tw,y*th,tw,th)
 			End If 
 		Next
@@ -172,6 +172,7 @@ Class map
 	Field sw:Float,sh:Float,mmh:Float,mmw:Float
 	Field map:=New Int[1,1]
 	Field mapfinal:=New Int[1,1]
+	Field mapladder:=New Int[1,1]
 	Method New(sw:float,sh:Float,mw:Float,mh:Float)
 		Self.mmw = mw
 		Self.mmh = mh
@@ -183,6 +184,7 @@ Class map
 		th = sh/mmh
 		map = New Int[mw,mh]
 		mapfinal = New Int[mmw,mmh]
+		mapladder = New Int[mmw,mmh]
 		makemap()
 		finalizemap()
 	End Method 
@@ -195,6 +197,31 @@ Class map
 				mapfinal[(x*3)+x2,(y*3)+y2] = 1				
 			Next
 			Next			
+		End If
+	Next
+	Next
+	' make ladders/vines
+	For Local y:=0 Until mh
+	For Local x:=0 Until mw
+		If map[x,y] = 1
+		If map[x-1,y] = 0
+		If map[x+1,y] = 0			
+			Local y2:Int=y
+			While map[x,y2] <> 0				
+				mapladder[(x*3),y2*3] = 1
+				mapladder[(x*3),y2*3-1] = 1
+				mapladder[(x*3),y2*3+1] = 1				
+				y2-=1
+			Wend
+			y2=y
+			While map[x,y2] <> 0				
+				mapladder[(x*3),y2*3] = 1
+				mapladder[(x*3),y2*3-1] = 1
+				mapladder[(x*3),y2*3+1] = 1
+				y2+=1
+			Wend			
+		End If
+		End If 
 		End If
 	Next
 	Next
@@ -304,6 +331,19 @@ Class map
 		Next
 		Return False
 	End Method
+	Method drawladder(canvas:Canvas)
+		For Local y:=0 Until mmh
+		For Local x:=0 Until mmw
+			Select mapladder[x,y]
+				Case 1
+				canvas.Color = New Color(0.2,0,0)
+				canvas.DrawRect(x*tw,y*th,tw,th)
+				canvas.Color = New Color(0.7,0,0)
+				canvas.DrawLine(x*tw,y*th,x*tw,y*th+th-2)
+			End Select			
+		Next
+		Next
+	End Method 
 	Method draw(canvas:Canvas)
 		For Local y:=0 Until mmh
 		For Local x:=0 Until mmw
@@ -337,6 +377,7 @@ Class MyWindow Extends Window
 		mywatermap.update()
 		mywatermap.addwater()
 		mywatermap.draw(canvas)
+		mymap.drawladder(canvas)
 		'mymap.draw(canvas)
 		' if key escape then quit
 		canvas.Color = Color.White
@@ -348,13 +389,17 @@ End	Class
 
 Function resetmap(Width:Int,Height:int)
 		SeedRnd(100+Millisecs())
-		Local s:Int=Rnd(150,240)
+		Local s:Int=Rnd(150,151)
 		mymap = New map(Width,Height,s,s)
-		mywatermap = New watermap(Width,Height,s,s,50000)
+		mywatermap = New watermap(Width,Height,s,s,s*400)
 		For Local y:=0 Until s
 		For Local x:=0 Until s
 			mywatermap.map[x,y] = mymap.mapfinal[x,y]
-			If mywatermap.map[x,y] = 1 Then mywatermap.map[x,y] = 0 Else mywatermap.map[x,y] = 1
+			If mywatermap.map[x,y] = 1 
+				mywatermap.map[x,y] = 0
+			Elseif mywatermap.map[x,y] = 0
+				mywatermap.map[x,y] = 1
+			End If 			
 		Next
 		Next
 		mywatermap.findpoorspot()
