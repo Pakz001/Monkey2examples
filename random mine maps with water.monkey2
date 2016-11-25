@@ -1,3 +1,4 @@
+' slow computers - do not run in debug mode::
 #Import "<std>"
 #Import "<mojo>"
 
