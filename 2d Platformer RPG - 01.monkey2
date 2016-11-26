@@ -173,6 +173,10 @@ Class map
 	Field map:=New Int[1,1]
 	Field mapfinal:=New Int[1,1]
 	Field mapladder:=New Int[1,1]
+	Field mapimage:Image
+	Field mapcanvas:Canvas
+	Field mapladderimage:Image
+	Field mapladdercanvas:Canvas
 	Method New(sw:float,sh:Float,mw:Float,mh:Float)
 		Self.mmw = mw
 		Self.mmh = mh
@@ -180,6 +184,10 @@ Class map
 		Self.mh = mh/3		
 		Self.sw = sw
 		Self.sh = sh
+		mapimage = New Image(sw,sh)
+		mapcanvas = New Canvas(mapimage)
+		mapladderimage = New Image(sw,sh)
+		mapladdercanvas = New Canvas(mapladderimage)
 		tw = sw/mmw
 		th = sh/mmh
 		map = New Int[mw,mh]
@@ -187,6 +195,8 @@ Class map
 		mapladder = New Int[mmw,mmh]
 		makemap()
 		finalizemap()
+		updateladderimage(mapladdercanvas)
+		updateimage(mapcanvas)
 	End Method 
 	Method finalizemap()
 	For Local y:=1 Until mh-1
@@ -232,18 +242,19 @@ Class map
 			map[x,y] = 1
 		Next
 		Next
+		Local minedownx:Int=5+Rnd(mw-15)
 		For Local y:=5 Until mh/2+10
-		map[mw/2,y] = 1
+			map[mw/2,y] = 1
 		Next
 		For Local i:=0 Until (mw*mh)*6
 			Local x:Int=Rnd(2,mw-4)
 			Local y:Int=Rnd(2,mh-4)
-			If map[x,y] = 1				
+			If map[x,y] = 1					
 				Local v:Int=Rnd(0,2)
 				Select v
-					Case 0'go left or right					
+					Case 0'go left or right										
 					If map[x-1,y] = 0
-					If map[x+1,y] = 0					
+					If map[x+1,y] = 0										
 					makeside(x,y,Rnd(0,2))
 					End If 
 					End If
@@ -308,9 +319,9 @@ Class map
 
 	End Method
 	Method makeside(x:Int,y:Int,side:Int)		
-		Local l:Int=Rnd(4,20)
+		Local l:Int=Rnd(4,20)		
 		If x<22 Then Return
-		If x>mw-22 Then Return		
+		If x>mw-22 Then Return				
 		If side=0 Then 'left				
 			If overlap((x-l)-2,y-5,x,y+5) = False				
 				For Local x2:=x-l Until x
@@ -336,10 +347,12 @@ Class map
 		Next
 		Return False
 	End Method
-	Method drawladder(canvas:Canvas)
+	Method updateladderimage(canvas:Canvas)				
+		canvas.Clear(New Color(0,0,0,0))
 		For Local y:=0 Until mmh
 		For Local x:=0 Until mmw
-			Select mapladder[x,y]
+			Select mapladder[x,y]				
+				Case 0
 				Case 1
 				canvas.Color = New Color(0.2,0,0)
 				canvas.DrawRect(x*tw,y*th,tw,th)
@@ -348,8 +361,10 @@ Class map
 			End Select			
 		Next
 		Next
-	End Method 
-	Method draw(canvas:Canvas)
+		canvas.Flush()
+	End Method 	
+	Method updateimage(canvas:Canvas)
+		canvas.Clear(New Color(0,0,0,0))
 		For Local y:=0 Until mmh
 		For Local x:=0 Until mmw
 			Select mapfinal[x,y]
@@ -361,6 +376,7 @@ Class map
 			canvas.DrawRect(x*tw,y*th,tw,th)
 		Next
 		Next
+		canvas.Flush()
 	End Method 
 End Class
 
@@ -381,15 +397,17 @@ Class MyWindow Extends Window
 			resetmap(Width,Height)
 		End If  
 		time+=1
-		If time>2000
+		If time>3000
 		time=0
 		resetmap(Width,Height)
 		End If
 		mywatermap.update()
 		mywatermap.addwater()
-		mywatermap.draw(canvas)
-		mymap.drawladder(canvas)
-		'mymap.draw(canvas)
+		canvas.DrawImage(mymap.mapimage,0,0)		
+		mywatermap.draw(canvas)				
+		canvas.DrawImage(mymap.mapladderimage,0,0)		
+		'mymap.drawladder(canvas)
+		'mymap.draw(canvas)		
 		' if key escape then quit
 		canvas.Color = Color.White
 		canvas.DrawText(App.FPS+"  Press space for new level.",0,0)
