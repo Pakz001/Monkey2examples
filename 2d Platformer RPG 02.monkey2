@@ -463,7 +463,7 @@ Class map
 	Next
 	Next
 	' make doors
-	For Local i:=0 Until mmw*mmh
+	For Local i:=0 Until mmw*mmh/2
 		Local x:=Rnd(2,mmw-4)
 		Local y:=Rnd(2,mmh-2)
 		' door right side of tunnel
@@ -680,7 +680,7 @@ Class map
 				Case 0
 				canvas.Color = Color.Black
 				Case 1
-				canvas.Color = Color.Grey
+				canvas.Color = Color.White
 				canvas.DrawRect(x*tw,y*th,tw,th)
 				Case 3				
 				canvas.Color = Color.Yellow
@@ -692,18 +692,18 @@ Class map
 	Method updateimage(canvas:Canvas)	
 		'canvas.BlendMode = BlendMode.Opaque	
 		canvas.Clear(Color.Black)
-		canvas.BlendMode = BlendMode.Alpha
+		canvas.BlendMode = BlendMode.Opaque
 		For Local y:=0 Until mmh
 		For Local x:=0 Until mmw
 			Select mapfinal[x,y]
 				Case 0
-				canvas.Alpha = 1
-				canvas.Color = Color.Black
+				'canvas.Alpha = 1
+				canvas.Color = Color.Brown
 				canvas.DrawRect(x*tw,y*th,tw,th)
 				Case 1
-				canvas.Alpha = 0.8
-				canvas.Color = Color.Grey
-				canvas.DrawRect(x*tw,y*th,tw,th)
+				'canvas.Alpha = 0.5
+				'canvas.Color = Color.None'New Color(0,0,0,.8)
+				'canvas.DrawRect(x*tw,y*th,tw,th)
 				Case 3			
 				canvas.Alpha = 0.8	
 				canvas.Color = Color.Yellow
@@ -723,7 +723,7 @@ Class MyWindow Extends Window
 	Field time:Int
 	Method New()
 		Super.New("",800,600)
-		Fullscreen = False
+		Fullscreen = false
 		resetmap(Width,Height)
 	End Method
 	
@@ -745,6 +745,7 @@ Class MyWindow Extends Window
 		End If
 		mywatermap.update()
 		mywatermap.addwater()		
+		canvas.Clear(Color.Grey)
 		canvas.DrawImage(mymap.mapimage,0,0)		
 			'mymap.draw(canvas)
 		mywatermap.draw(canvas)				
@@ -789,7 +790,7 @@ End Function
 Function resetmap(Width:Int,Height:int)
 		myflyingmonster.Clear()
 		SeedRnd(100+Microsecs())
-		Local s:Int=Rnd(140,141)
+		Local s:Int=Rnd(140,241)
 		mapwidth = s
 		mapheight = s
 		screenwidth = Width
