@@ -1,5 +1,4 @@
 
-
 ' slow computers - do not run in debug mode::
 #Import "<std>"
 #Import "<mojo>"
@@ -217,6 +216,8 @@ Class watermap
 	Field w:Int,h:Int
 	Field map:= New Int[1,1] 
 	Field px:Int,py:Int
+	Field waterimage:Image
+	Field watercanvas:Canvas
 	Method New(sw:Float,sh:float,w:float,h:Float,freq:int)
 		Self.freq = freq
 		tw = sw/w
@@ -224,6 +225,11 @@ Class watermap
 		map = New Int[w,h]
 		Self.w = w
 		Self.h = h
+		waterimage=New Image(tw+1,th+1)
+		watercanvas = New Canvas(waterimage)
+		watercanvas.Color = Color.Blue
+		watercanvas.DrawRect(0,0,tw+1,th+1)
+		watercanvas.Flush()
 	End Method 
 	Method update()
 		If Mouse.ButtonDown(MouseButton.Left)
@@ -361,8 +367,10 @@ Class watermap
 			'	canvas.DrawRect(x*tw,y*th,tw,th)
 			'End If 
 			If map[x,y] = 2
-				canvas.Color = New Color(0,0,1,.5)'Color.Blue
-				canvas.DrawRect(x*tw,y*th,tw,th)
+				'canvas.Color = New Color(0,0,1,.5)'Color.Blue
+				'canvas.DrawRect(x*tw,y*th,tw,th)
+				canvas.Alpha = 0.5
+				canvas.DrawImage(waterimage,x*tw,y*th)
 			End If 
 			'If map[x,y] = 3
 			'	canvas.Color = New Color(.5,0,0)
@@ -412,7 +420,7 @@ Class map
 			End If
 		Next		
 
-		'updateladderimage(mapladdercanvas)
+		updateladderimage(mapladdercanvas)
 		updateimage(mapcanvas)
 	End Method 
 	Method finalizemap()
@@ -583,19 +591,21 @@ Class map
 	End Method 	
 
 	Method updateladderimage(canvas:Canvas)				
-		canvas.Clear(New Color(0,0,0,0))
+	
+		canvas.BlendMode = BlendMode.Opaque
+		'canvas.Clear(New Color(0,0,0,.5))
 		For Local y:=0 Until mmh
 		For Local x:=0 Until mmw
 			Select mapladder[x,y]				
 				Case 0
-				'canvas.Color = Color.None
-				'canvas.DrawRect(x*tw,y*th,tw,th)
-				Case 1				
-				canvas.Color = Color.Orange
+				canvas.Color = Color.None
 				canvas.DrawRect(x*tw,y*th,tw,th)
-				canvas.DrawRect(0,0,100,100)
-				'canvas.Color = Color.Yellow
-				 '' canvas.DrawLine(x*tw,y*th,x*tw,y*th+th-2)
+				Case 1								
+				canvas.Color = Color.Red
+				canvas.Alpha = 0.5
+				canvas.DrawRect(x*tw,y*th,tw,th)
+				canvas.Color = Color.Yellow
+				canvas.DrawLine(x*tw,y*th,x*tw,y*th+th-2)
 			End Select			
 		Next
 		Next
@@ -618,17 +628,22 @@ Class map
 		Next		
 	End Method 
 	Method updateimage(canvas:Canvas)	
-		canvas.BlendMode = BlendMode.Opaque	
+		'canvas.BlendMode = BlendMode.Opaque	
+		canvas.Clear(Color.Black)
+		canvas.BlendMode = BlendMode.Alpha
 		For Local y:=0 Until mmh
 		For Local x:=0 Until mmw
 			Select mapfinal[x,y]
 				Case 0
-				canvas.Color = Color.None
+				canvas.Alpha = 1
+				canvas.Color = Color.Black
 				canvas.DrawRect(x*tw,y*th,tw,th)
 				Case 1
+				canvas.Alpha = 0.8
 				canvas.Color = Color.Grey
 				canvas.DrawRect(x*tw,y*th,tw,th)
-				Case 3				
+				Case 3			
+				canvas.Alpha = 0.8	
 				canvas.Color = Color.Yellow
 				canvas.DrawRect(x*tw,y*th,tw,th)
 			End Select						
@@ -669,12 +684,12 @@ Class MyWindow Extends Window
 		mywatermap.update()
 		mywatermap.addwater()		
 		canvas.DrawImage(mymap.mapimage,0,0)		
-		'mymap.draw(canvas)
+			'mymap.draw(canvas)
 		mywatermap.draw(canvas)				
-		'canvas.DrawImage(mymap.mapladderimage,0,0)		
-		mymap.drawladder(canvas)
-		'mymap.draw(canvas)		
-		' if key escape then quit
+		canvas.DrawImage(mymap.mapladderimage,0,0)		
+			'mymap.drawladder(canvas)
+			'mymap.draw(canvas)		
+			' if key escape then quit
 
 		For Local i:=Eachin myflyingmonster
 			i.draw(canvas)
@@ -711,8 +726,8 @@ End Function
 
 Function resetmap(Width:Int,Height:int)
 		myflyingmonster.Clear()
-		SeedRnd(100+Millisecs())
-		Local s:Int=Rnd(140,240)
+		SeedRnd(100+Microsecs())
+		Local s:Int=Rnd(140,141)
 		mapwidth = s
 		mapheight = s
 		screenwidth = Width
