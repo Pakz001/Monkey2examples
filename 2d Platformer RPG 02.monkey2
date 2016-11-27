@@ -745,7 +745,7 @@ Class MyWindow Extends Window
 		End If
 		mywatermap.update()
 		mywatermap.addwater()		
-		canvas.Clear(Color.Grey)
+		canvas.Clear(Color.Black)
 		canvas.DrawImage(mymap.mapimage,0,0)		
 			'mymap.draw(canvas)
 		mywatermap.draw(canvas)				
