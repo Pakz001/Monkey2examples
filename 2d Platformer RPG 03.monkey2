@@ -16,32 +16,129 @@ Global screenheight:Int=480
 
 
 Class player
+	Field jump:Bool=False
+	Field incy:Float=0
+	Field movespeed:Int
+	Field px:Float,py:Float
+	Field pmx:Float,pmy:Float
+	Field ptx:Float,pty:Float
+	Field pw:Int,ph:Int
 	Field mcx:Int,mcy:Int,mpx:Int,mpy:Int ' scroll coordinates
 	Field maptileswidth:Int,maptilesheight:Int
 	Field tw:Int=32
 	Field th:Int=32
 	Method New()
+		movespeed = 6
+		px = 120
+		py = 100
+		pw = 32
+		ph = 32
 		maptileswidth = screenwidth / tw
 		maptilesheight = screenheight / th
 		mcx=5
 		mcy=5
 	End Method 
-	Method update()
+	Method updateplayercontrols()
+		pmx = px-(mcx*tw)
+		pmy = py-(mcy*th)
+		ptx = px/tw
+		pty = py/th
+		For Local i:=0 Until movespeed
+			If Keyboard.KeyDown(Key.Right)
+			If playertilecollision(px+1,py) = False
+				px+=1
+			End If
+			End If
+			If Keyboard.KeyDown(Key.Left)
+			If playertilecollision(px-1,py) = False
+				px-=1
+			End If
+		  	End If
+			
+		Next
+		For Local i:=0 Until movespeed/2
+			playergravity()
+		Next
+	End Method
+    Method playergravity()
+        If jump = False And playertilecollision(px,py+1) = False 
+            jump = True
+            incy = 0
+        End If
+        If jump = False And Keyboard.KeyDown(Key.Space) = True            
+            incy = -5
+            jump = True
+        End
+        'If the player is in the jump
+        If jump = True
+            incy += 0.1
+            'if the player is going up
+            If incy <=0
+                For Local i:= 0 Until Abs(incy)                
+                    py -= 1
+                    If playertilecollision(px,py-1) = True
+                        incy = 0
+                        Exit
+                    End If
+                End
+            End
+            ' if the player if going down
+            If incy > 0
+                For Local i:= 0 Until incy
+                    py += 1
+                    'if the player touches the ground
+                    If playertilecollision(px,py+1) = True
+                        jump = False                        
+                        Exit
+                    End
+                End
+                If incy>4 Then incy=4
+            End
+        End
+    End Method	
+	Method playertilecollision:Bool(x:Int,y:Int)
+		Local cx:Int=x/tw
+		Local cy:Int=y/th
+        For Local y2:=cy-1 Until cy+2
+        For Local x2:=cx-1 Until cx+2
+            If x2>=0 And x2<mapwidth And y2>=0 And y2<mapheight	            		        
+                If mymap.mapfinal[x2,y2] = 0           
+	                	                     
+                    If rectsoverlap(x,y,pw,ph,x2*tw,
+                                    y2*th,tw,th) = True                                    	                    
+                        Return True
+                    End If
+                End If
+            End If
+        Next
+        Next
+    
+    Return False
+	End Method
+	Method userscrollmap()
 		If Keyboard.KeyDown(Key.Right)
 			mcx+=1
-			If mcx+maptileswidth>mapwidth-1 Then mcx-=1
+			If mcx+maptileswidth>mapwidth-1 Then 
+			mcx-=1
+			End If 
 		End If 
 		If Keyboard.KeyDown(Key.Left)
 			mcx-=1
-			If mcx<1 Then mcx+=1
+			If mcx<1 Then 
+			mcx+=1
+			End If 
 		End If
 		If Keyboard.KeyDown(Key.Down)
 			mcy+=1
-			If mcy+maptilesheight>mapheight-1 Then mcy-=1
+			If mcy+maptilesheight>mapheight-1 Then 
+			mcy-=1
+			End If
 		End If
 		If Keyboard.KeyDown(Key.Up)
 			mcy-=1
-			If mcy<1 Then mcy+=1
+			If mcy<1 Then 
+			mcy+=1
+			End If
 		End If
 
 	End Method
@@ -140,6 +237,26 @@ Class player
 		End Select
 		Next
 		Next
+		'Draw the ladders		
+		For Local y:=0 Until maptilesheight
+		For Local x:=0 Until maptileswidth
+			Local x2:Int=mcx+x
+			Local y2:Int=mcy+y
+			Local x3:Int=x*tw
+			Local y3:Int=y*th
+			If mymap.mapladder[x2,y2] = 1
+				canvas.Color = Color.Brown
+				canvas.DrawRect(x3,y3,tw,th)
+				canvas.Color = Color.Red
+				canvas.DrawRect(x3,y3,tw/4,th/3)
+			End If
+		Next
+		Next		
+		' Draw the player
+		pmx = px-(mcx*tw)
+		pmy = py-(mcy*th)
+		canvas.Color = Color.White
+		canvas.DrawRect(pmx,pmy,pw,ph)
 		'draw monsters
 		canvas.Color = Color.Red
 		For Local i:=Eachin myflyingmonster
@@ -154,7 +271,12 @@ Class player
 	End Method
 	Method m:int(x:Int,y:Int,offx:int,offy:int)
 		Return mywatermap.map[x+offx,y+offy]
-	End method
+	End Method
+	Method rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+	    Return True
+	End	 Method
 End Class 
 
 Class theflyingmonster
@@ -871,7 +993,7 @@ Class MyWindow Extends Window
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method
-		If Keyboard.KeyReleased(Key.Space) Then
+		If Keyboard.KeyReleased(Key.F1) Then
 			resetmap(Width,Height)
 		End If  
 		
@@ -890,7 +1012,14 @@ Class MyWindow Extends Window
 		
 		'player
 		If Keyboard.KeyDown(Key.LeftShift) = False
-			myplayer.update()
+			Local tp:Bool=False
+			If Keyboard.KeyDown(Key.LeftControl) 
+				myplayer.userscrollmap()
+				tp=True
+			End If
+			If tp=False Then
+				myplayer.updateplayercontrols()
+			end if
 			canvas.Clear(Color.Black)
 			myplayer.draw(canvas)
 		End If
@@ -911,8 +1040,8 @@ Class MyWindow Extends Window
 		addflyingmonster()
 		'
 		canvas.Color = Color.White
-		canvas.DrawText(App.FPS+"  Press space for new level. Left shift for map overview",0,0)
-		canvas.DrawText("Cursors to move around..",0,20)
+		canvas.DrawText(App.FPS+"  Press F1 for new level. Left shift for map overview",0,0)
+		canvas.DrawText("Cursors to move player +ctrl to move map..",0,20)
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 	
