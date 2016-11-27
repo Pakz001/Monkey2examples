@@ -16,12 +16,14 @@ Global screenheight:Int=480
 
 
 Class player
+	Field regularmode:bool=True
 	Field jump:Bool=False
 	Field incy:Float=0
 	Field movespeed:Int
 	Field px:Float,py:Float
 	Field pmx:Float,pmy:Float
 	Field ptx:Float,pty:Float
+	Field mox:Int,moy:Float
 	Field pw:Int,ph:Int
 	Field mcx:Int,mcy:Int,mpx:Int,mpy:Int ' scroll coordinates
 	Field maptileswidth:Int,maptilesheight:Int
@@ -29,8 +31,8 @@ Class player
 	Field th:Int=32
 	Method New()
 		movespeed = 6
-		px = 120
-		py = 100
+		px = 620
+		py = 500
 		pw = 32
 		ph = 32
 		maptileswidth = screenwidth / tw
@@ -38,28 +40,83 @@ Class player
 		mcx=5
 		mcy=5
 	End Method 
-	Method updateplayercontrols()
+	Method updateplayercontrols()		
+		'
 		pmx = px-(mcx*tw)
 		pmy = py-(mcy*th)
 		ptx = px/tw
 		pty = py/th
+		If playerladdercollision(px,py)
+			jump=False
+			laddermode()			
+			Else
+			For Local i:=0 Until movespeed/2
+				playergravity()
+			Next
+		End If
 		For Local i:=0 Until movespeed
 			If Keyboard.KeyDown(Key.Right)
 			If playertilecollision(px+1,py) = False
 				px+=1
+				scrollmap(1,0)
 			End If
 			End If
 			If Keyboard.KeyDown(Key.Left)
 			If playertilecollision(px-1,py) = False
 				px-=1
+				scrollmap(-1,0)
 			End If
 		  	End If
 			
 		Next
-		For Local i:=0 Until movespeed/2
-			playergravity()
-		Next
 	End Method
+	Method scrollmap(x:Int,y:int)
+		If x=-1 Then mox+=1
+		If x=1 Then mox-=1
+		If y=-1 Then moy+=1
+		If y=1 Then moy-=1
+		If mox>31 Then mcx-=1;mox=0
+		If mox<-31 Then mcx+=1;mox=0
+		If moy>31 Then mcy-=1;moy=0
+		If moy<-31 Then mcy+=1;moy=0
+
+	End Method
+    Method laddermode()
+    	For Local i:=0 Until movespeed
+			If Keyboard.KeyDown(Key.Right)
+			If playertilecollision(px+1,py) = False
+			If playerladdercollision(px+1,py) = True
+				px+=1
+				scrollmap(1,0)
+			End If
+			End If
+			End If
+			If Keyboard.KeyDown(Key.Left)			
+			If playertilecollision(px-1,py) = False
+			If playerladdercollision(px-1,py) = True
+				px-=1
+				scrollmap(-1,0)
+			End If
+			End If
+		  	End If			
+			If Keyboard.KeyDown(Key.Up)			
+			If playertilecollision(px,py-1) = False
+			If playerladdercollision(px,py-1) = True
+				py-=1
+				scrollmap(0,-1)
+			End If
+			End If
+		  	End If			
+			If Keyboard.KeyDown(Key.Down)			
+			If playertilecollision(px,py+1) = False
+			If playerladdercollision(px,py+1) = true			
+				py+=1
+				scrollmap(0,1)
+			End If
+			End If
+		  	End If					  			  	
+		Next
+    End Method
     Method playergravity()
         If jump = False And playertilecollision(px,py+1) = False 
             jump = True
@@ -76,6 +133,7 @@ Class player
             If incy <=0
                 For Local i:= 0 Until Abs(incy)                
                     py -= 1
+                    scrollmap(0,-1)
                     If playertilecollision(px,py-1) = True
                         incy = 0
                         Exit
@@ -86,6 +144,7 @@ Class player
             If incy > 0
                 For Local i:= 0 Until incy
                     py += 1
+                    scrollmap(0,1)
                     'if the player touches the ground
                     If playertilecollision(px,py+1) = True
                         jump = False                        
@@ -115,6 +174,25 @@ Class player
     
     Return False
 	End Method
+	Method playerladdercollision:Bool(x:Int,y:Int)
+		Local cx:Int=x/tw
+		Local cy:Int=y/th
+        For Local y2:=cy-1 Until cy+2
+        For Local x2:=cx-1 Until cx+2
+            If x2>=0 And x2<mapwidth And y2>=0 And y2<mapheight	            		        
+                If mymap.mapladder[x2,y2] = 1	                	                     
+                    If rectsoverlap(x,y,pw,ph,x2*tw,
+                                    y2*th,tw,th) = True                                    	                    
+                        Return True
+                    End If
+                End If
+            End If
+        Next
+        Next
+    
+    Return False
+	End Method
+
 	Method userscrollmap()
 		If Keyboard.KeyDown(Key.Right)
 			mcx+=1
@@ -143,13 +221,14 @@ Class player
 
 	End Method
 	Method draw(canvas:Canvas)
+		canvas.Scissor = New Recti(32,32,screenwidth-32,screenheight-64)
 		'draw the map
 		For local y:=0 Until maptilesheight
 		For Local x:=0 Until maptileswidth
 			Local x2:Int=mcx+x
 			Local y2:Int=mcy+y
-			Local x3:Int=x*tw
-			Local y3:Int=y*th
+			Local x3:Int=(x*tw)+mox
+			Local y3:Int=(y*th)+moy
 			If x2>0 And x2<mapwidth And y2>0 And y2<mapheight
 			Select mymap.mapfinal[x2,y2]
 				Case 0
@@ -171,8 +250,8 @@ Class player
 		For Local x:=0 Until maptileswidth
 			Local x2:Int=mcx+x
 			Local y2:Int=mcy+y
-			Local x3:Int=x*tw
-			Local y3:Int=y*th
+			Local x3:Int=(x*tw)+mox
+			Local y3:Int=(y*th)+moy
 			Select mywatermap.map[x2,y2]
 				Case 0				
 				'if water around
@@ -242,8 +321,8 @@ Class player
 		For Local x:=0 Until maptileswidth
 			Local x2:Int=mcx+x
 			Local y2:Int=mcy+y
-			Local x3:Int=x*tw
-			Local y3:Int=y*th
+			Local x3:Int=(x*tw)+mox
+			Local y3:Int=(y*th)+moy
 			If mymap.mapladder[x2,y2] = 1
 				canvas.Color = Color.Brown
 				canvas.DrawRect(x3,y3,tw,th)
@@ -253,8 +332,8 @@ Class player
 		Next
 		Next		
 		' Draw the player
-		pmx = px-(mcx*tw)
-		pmy = py-(mcy*th)
+		pmx = (px-(mcx*tw))+mox
+		pmy = (py-(mcy*th))+moy
 		canvas.Color = Color.White
 		canvas.DrawRect(pmx,pmy,pw,ph)
 		'draw monsters
@@ -262,8 +341,8 @@ Class player
 		For Local i:=Eachin myflyingmonster
 			Local x1:Int=i.x*tw
 			Local y1:Int=i.y*th
-			Local x2:Int=x1-(mcx*tw)
-			Local y2:Int=y1-(mcy*th)
+			Local x2:Int=(x1-(mcx*tw))+mox
+			Local y2:Int=(y1-(mcy*th))+moy
 			canvas.DrawRect(x2,y2,tw,th)
 			
 		Next
@@ -1039,6 +1118,7 @@ Class MyWindow Extends Window
 		End If
 		addflyingmonster()
 		'
+		canvas.Scissor = New Recti(0,0,screenwidth,screenheight)
 		canvas.Color = Color.White
 		canvas.DrawText(App.FPS+"  Press F1 for new level. Left shift for map overview",0,0)
 		canvas.DrawText("Cursors to move player +ctrl to move map..",0,20)
@@ -1070,7 +1150,7 @@ End Function
 Function resetmap(Width:Int,Height:int)
 		myflyingmonster.Clear()
 		SeedRnd(100+Microsecs())
-		Local s:Int=Rnd(140,141)
+		Local s:Int=Rnd(140,150)
 		mapwidth = s
 		mapheight = s
 		screenwidth = Width
