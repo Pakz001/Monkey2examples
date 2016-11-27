@@ -77,6 +77,21 @@ Class player
 			Local x3:Int=x*tw
 			Local y3:Int=y*th
 			Select mywatermap.map[x2,y2]
+				Case 0				
+				'if water around
+				Local cnt:Int=0
+				For Local y4:Int=-1 To 1
+				For Local x4:Int=-1 To 1
+					If m(x2,y2,x4,y4) = 2
+						cnt+=1
+					End If
+				Next
+				Next
+				If cnt>5
+					canvas.Color = New Color(0,0.2,0.9)
+					canvas.DrawRect(x3,y3,tw,th)
+				End If
+				
 				Case 2
 					Local cont:Bool=True
 					' water no left no right solid bottom
@@ -101,6 +116,7 @@ Class player
 					Next
 					Next
 					If cnt=8
+						canvas.Color = Color.Blue
 						canvas.DrawRect(x3+tw/4,y3+th/4,tw/2,th/2)
 						cont=False
 					End If
@@ -109,6 +125,7 @@ Class player
 					If m(x2,y2,0,-1) = 0
 					If m(x2,y2,-1,0) = 0
 					If m(x2,y2,+1,0) = 0
+						canvas.Color = Color.Blue
 						canvas.DrawRect(x3,y3+th/2,tw,th/2)
 						cont = False
 					End If 
@@ -117,6 +134,7 @@ Class player
 					End If 
 					'all else
 					If cont=True
+						canvas.Color = Color.Blue
 						canvas.DrawRect(x3,y3,tw,th)
 					End If
 		End Select
@@ -846,7 +864,7 @@ Global myplayer:player
 Class MyWindow Extends Window
 	Field time:Int
 	Method New()
-		Super.New("",640,480)
+		Super.New("",800,600)
 		Fullscreen = False
 		resetmap(Width,Height)
 	End Method
@@ -865,7 +883,7 @@ Class MyWindow Extends Window
 		time+=1
 		If time>4000
 		time=0
-		resetmap(Width,Height)
+		'resetmap(Width,Height)
 		End If
 		mywatermap.update()
 		mywatermap.addwater()		
@@ -894,6 +912,7 @@ Class MyWindow Extends Window
 		'
 		canvas.Color = Color.White
 		canvas.DrawText(App.FPS+"  Press space for new level. Left shift for map overview",0,0)
+		canvas.DrawText("Cursors to move around..",0,20)
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 	
@@ -922,7 +941,7 @@ End Function
 Function resetmap(Width:Int,Height:int)
 		myflyingmonster.Clear()
 		SeedRnd(100+Microsecs())
-		Local s:Int=Rnd(140,241)
+		Local s:Int=Rnd(140,141)
 		mapwidth = s
 		mapheight = s
 		screenwidth = Width
