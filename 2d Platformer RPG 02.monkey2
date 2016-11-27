@@ -392,6 +392,7 @@ Class map
 	Field mapcanvas:Canvas
 	Field mapladderimage:Image
 	Field mapladdercanvas:Canvas
+	Field mapdoor:=New Int[1,1]
 	Method New(sw:float,sh:Float,mw:Float,mh:Float)
 		Self.mmw = mw
 		Self.mmh = mh
@@ -408,6 +409,7 @@ Class map
 		map = New Int[mw,mh]
 		mapfinal = New Int[mmw,mmh]
 		mapladder = New Int[mmw,mmh]
+		mapdoor = New Int[mmw,mmh]
 		makemap()
 		finalizemap()
 		For Local i:=0 Until 1000
@@ -459,6 +461,66 @@ Class map
 		End If 
 		End If
 	Next
+	Next
+	' make doors
+	For Local i:=0 Until mmw*mmh
+		Local x:=Rnd(2,mmw-4)
+		Local y:=Rnd(2,mmh-2)
+		' door right side of tunnel
+'		If Rnd()<0
+		If mapfinal[x,y] = 0
+		If mapfinal[x+1,y] = 0
+		If mapfinal[x-1,y] = 0
+		If mapfinal[x-2,y] = 0
+		If mapfinal[x-3,y] = 1
+		If mapfinal[x,y+1] = 1
+		If mapfinal[x,y+2]= 1
+		If mapfinal[x,y+3] = 1
+		If mapfinal[x,y+4] = 0
+			mapfinal[x,y+1] = 0
+			mapfinal[x,y+2] = 0
+			mapfinal[x,y+3] = 0
+			mapdoor[x,y+1 ] = 1
+			mapdoor[x,y+2 ] = 1
+			mapdoor[x,y+3 ] = 1
+		End If 
+		End If
+		End If 
+		End If 
+		End If
+		End If 
+		End If
+		End If
+		End If
+'		End If
+		' door left side of tunnel
+		If mapfinal[x-1,y-1] = 0
+		If mapfinal[x,y] = 0
+		If mapfinal[x-1,y] = 0
+		If mapfinal[x+1,y] = 0
+		If mapfinal[x+2,y] = 0
+		If mapfinal[x+3,y] = 1
+		If mapfinal[x,y+1] = 1
+		If mapfinal[x,y+2]= 1
+		If mapfinal[x,y+3] = 1
+		If mapfinal[x,y+4] = 0
+			mapfinal[x,y+1] = 0
+			mapfinal[x,y+2] = 0
+			mapfinal[x,y+3] = 0
+			mapdoor[x,y+1 ] = 1
+			mapdoor[x,y+2 ] = 1
+			mapdoor[x,y+3 ] = 1
+		End If 
+		End If
+		End If 
+		End If 
+		End If 
+		End If
+		End If 
+		End If
+		End If
+		End If
+
 	Next
 	End Method
 	Method makemap()
