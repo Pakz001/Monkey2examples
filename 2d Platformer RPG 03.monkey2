@@ -885,6 +885,10 @@ Class MyWindow Extends Window
 			For Local i:=Eachin myflyingmonster
 				i.draw(canvas)
 			Next
+			canvas.Color = Color.White
+			Local x1:Int=myplayer.mcx*mymap.tw
+			Local y1:Int=myplayer.mcy*mymap.th
+			canvas.DrawRect(x1,y1,mymap.tw*myplayer.maptileswidth,mymap.th*myplayer.maptilesheight)
 		End If
 		addflyingmonster()
 		'
