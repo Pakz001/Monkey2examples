@@ -16,6 +16,115 @@ Global screenwidth:Int=640
 Global screenheight:Int=480
 
 
+Class player
+	Field mcx:Int,mcy:Int,mpx:Int,mpy:Int ' scroll coordinates
+	Field maptileswidth:Int,maptilesheight:Int
+	Field tw:Int=32
+	Field th:Int=32
+	Method New()
+		maptileswidth = screenwidth / tw
+		maptilesheight = screenheight / th
+		mcx=5
+		mcy=5
+	End Method 
+	Method update()
+		If Keyboard.KeyDown(Key.Right)
+			mcx+=1
+			If mcx+maptileswidth>mapwidth-1 Then mcx-=1
+		End If 
+		If Keyboard.KeyDown(Key.Left)
+			mcx-=1
+			If mcx<1 Then mcx+=1
+		End If
+		If Keyboard.KeyDown(Key.Down)
+			mcy+=1
+			If mcy+maptilesheight>mapheight-1 Then mcy-=1
+		End If
+		If Keyboard.KeyDown(Key.Up)
+			mcy-=1
+			If mcy<1 Then mcy+=1
+		End If
+
+	End Method
+	Method draw(canvas:Canvas)
+		'draw the map
+		For local y:=0 Until maptilesheight
+		For Local x:=0 Until maptileswidth
+			Local x2:Int=mcx+x
+			Local y2:Int=mcy+y
+			Local x3:Int=x*tw
+			Local y3:Int=y*th
+			If x2>0 And x2<mapwidth And y2>0 And y2<mapheight
+			Select mymap.mapfinal[x2,y2]
+				Case 0
+				canvas.Color = Color.Brown
+				canvas.DrawRect(x3,y3,tw,th)
+				Case 1
+				canvas.Color = Color.Black
+				canvas.DrawRect(x3,y3,tw,th)
+				Case 3
+				canvas.Color = Color.Yellow
+				canvas.DrawRect(x3,y3,tw,th)
+			End Select			
+			End If
+		Next
+		Next
+		'draw water
+		canvas.Color = Color.Blue
+		For Local y:=0 Until maptilesheight
+		For Local x:=0 Until maptileswidth
+			Local x2:Int=mcx+x
+			Local y2:Int=mcy+y
+			Local x3:Int=x*tw
+			Local y3:Int=y*th
+			Select mywatermap.map[x2,y2]
+				Case 2
+					'water no left no right solid bottom
+					If m(x2,y2,-1,0) = 2
+					If m(x2,y2,1,0) = 2
+					If m(x2,y2,0,1) = 1
+						canvas.DrawRect(x3,y3+th/2,tw,th/2)
+					End If 
+					End If 
+					End If
+					'water no left no right air below
+					If m(x2,y2,-1,0) = 2
+					If m(x2,y2,1,0) = 2
+					If m(x2,y2,0,1) = 0
+						canvas.DrawRect(x3,y3+th/4,tw,th/2)
+					End If 
+					End If 
+					End If
+					'water all surrounded
+					Local cnt:Int=0
+					For Local y:=-1 To 1
+					For Local x:=-1 To 1
+						If m(x2+x,y2+y,0,0) = 2 Then cnt+=1	
+					Next
+					Next
+					If cnt>=7 Then
+					canvas.DrawRect(x3,y3+th/4,tw,th/2)
+					End If
+			End Select
+		Next
+		Next
+		'draw monsters
+		canvas.Color = Color.Red
+		For Local i:=Eachin myflyingmonster
+			Local x1:Int=i.x*tw
+			Local y1:Int=i.y*th
+			Local x2:Int=x1-(mcx*tw)
+			Local y2:Int=y1-(mcy*th)
+			canvas.DrawRect(x2,y2,tw,th)
+			
+		Next
+		
+	End Method
+	Method m:int(x:Int,y:Int,offx:int,offy:int)
+		Return mywatermap.map[x+offx,y+offy]
+	End method
+End Class 
+
 Class theflyingmonster
 	Field x:Int,y:Int
 	Field w:Float,h:Float
@@ -718,12 +827,13 @@ End Class
 Global mymap:map
 Global mywatermap:watermap
 Global myflyingmonster:List<theflyingmonster> = New List<theflyingmonster>
+Global myplayer:player
 
 Class MyWindow Extends Window
 	Field time:Int
 	Method New()
 		Super.New("",800,600)
-		Fullscreen = false
+		Fullscreen = False
 		resetmap(Width,Height)
 	End Method
 	
@@ -745,18 +855,16 @@ Class MyWindow Extends Window
 		End If
 		mywatermap.update()
 		mywatermap.addwater()		
-		canvas.Clear(Color.Black)
-		canvas.DrawImage(mymap.mapimage,0,0)		
-			'mymap.draw(canvas)
-		mywatermap.draw(canvas)				
-		canvas.DrawImage(mymap.mapladderimage,0,0)		
-			'mymap.drawladder(canvas)
-			'mymap.draw(canvas)		
-			' if key escape then quit
-
-		For Local i:=Eachin myflyingmonster
-			i.draw(canvas)
-		Next
+		myplayer.update()
+		myplayer.draw(canvas)
+		'minimap
+		'canvas.Clear(Color.Black)
+		'canvas.DrawImage(mymap.mapimage,0,0)		
+		'mywatermap.draw(canvas)				
+		'canvas.DrawImage(mymap.mapladderimage,0,0)		
+		'For Local i:=Eachin myflyingmonster
+		'	i.draw(canvas)
+		'Next
 		'
 		addflyingmonster()
 		'
@@ -790,7 +898,7 @@ End Function
 Function resetmap(Width:Int,Height:int)
 		myflyingmonster.Clear()
 		SeedRnd(100+Microsecs())
-		Local s:Int=Rnd(140,241)
+		Local s:Int=Rnd(140,141)
 		mapwidth = s
 		mapheight = s
 		screenwidth = Width
@@ -812,6 +920,7 @@ Function resetmap(Width:Int,Height:int)
 		Next
 		mywatermap.findpoorspot()
 		'
+		myplayer = New player()
 End Function 
 
 Function Main()
