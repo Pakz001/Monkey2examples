@@ -348,7 +348,8 @@ Class watermap
 		Next
 		Next
 	End Method
-	Method draw(canvas:Canvas)		
+	Method draw(canvas:Canvas)
+		canvas.BlendMode = BlendMode.Alpha		
 		For Local y:=0 Until h
 		For Local x:=0 Until w
 			'If map[x,y] = 0
@@ -360,7 +361,7 @@ Class watermap
 			'	canvas.DrawRect(x*tw,y*th,tw,th)
 			'End If 
 			If map[x,y] = 2
-				canvas.Color = Color.Blue
+				canvas.Color = New Color(0,0,1,.5)'Color.Blue
 				canvas.DrawRect(x*tw,y*th,tw,th)
 			End If 
 			'If map[x,y] = 3
@@ -644,7 +645,7 @@ Global myflyingmonster:List<theflyingmonster> = New List<theflyingmonster>
 Class MyWindow Extends Window
 	Field time:Int
 	Method New()
-		Super.New("",640,480)
+		Super.New("",800,600)
 		Fullscreen = False
 		resetmap(Width,Height)
 	End Method
@@ -661,7 +662,7 @@ Class MyWindow Extends Window
 		
 		
 		time+=1
-		If time>3000
+		If time>4000
 		time=0
 		resetmap(Width,Height)
 		End If
@@ -711,7 +712,7 @@ End Function
 Function resetmap(Width:Int,Height:int)
 		myflyingmonster.Clear()
 		SeedRnd(100+Millisecs())
-		Local s:Int=Rnd(140,141)
+		Local s:Int=Rnd(140,240)
 		mapwidth = s
 		mapheight = s
 		screenwidth = Width
@@ -725,7 +726,10 @@ Function resetmap(Width:Int,Height:int)
 				mywatermap.map[x,y] = 0
 			Elseif mywatermap.map[x,y] = 0
 				mywatermap.map[x,y] = 1
-			End If 			
+			End If 	
+			If mywatermap.map[x,y] = 3 Then 
+				mywatermap.map[x,y] = 0
+			End If
 		Next
 		Next
 		mywatermap.findpoorspot()
