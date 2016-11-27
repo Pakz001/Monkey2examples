@@ -1,4 +1,3 @@
-
 ' slow computers - do not run in debug mode::
 #Import "<std>"
 #Import "<mojo>"
@@ -79,33 +78,48 @@ Class player
 			Local y3:Int=y*th
 			Select mywatermap.map[x2,y2]
 				Case 2
-					'water no left no right solid bottom
-					If m(x2,y2,-1,0) = 2
-					If m(x2,y2,1,0) = 2
+					Local cont:Bool=True
+					' water no left no right solid bottom
+					If m(x2,y2,0,-1) = 0
+					If m(x2,y2,-1,0) = 0
+					If m(x2,y2,1,0) = 0
 					If m(x2,y2,0,1) = 1
+						canvas.Color = Color.Blue
 						canvas.DrawRect(x3,y3+th/2,tw,th/2)
+						cont=False
 					End If 
 					End If 
 					End If
-					'water no left no right air below
-					If m(x2,y2,-1,0) = 2
-					If m(x2,y2,1,0) = 2
-					If m(x2,y2,0,1) = 0
-						canvas.DrawRect(x3,y3+th/4,tw,th/2)
-					End If 
-					End If 
 					End If
-					'water all surrounded
+					' if not surrounded by water
 					Local cnt:Int=0
-					For Local y:=-1 To 1
-					For Local x:=-1 To 1
-						If m(x2+x,y2+y,0,0) = 2 Then cnt+=1	
+					For Local y4:=-1 To 1
+					For Local x4:=-1 To 1
+						If m(x2,y2,x4,y4) = 0
+							cnt+=1
+						End If
 					Next
 					Next
-					If cnt>=7 Then
-					canvas.DrawRect(x3,y3+th/4,tw,th/2)
+					If cnt=8
+						canvas.DrawRect(x3+tw/4,y3+th/4,tw/2,th/2)
+						cont=False
 					End If
-			End Select
+					'if water below and no abow and no left and right
+					If m(x2,y2,0,1) = 2
+					If m(x2,y2,0,-1) = 0
+					If m(x2,y2,-1,0) = 0
+					If m(x2,y2,+1,0) = 0
+						canvas.DrawRect(x3,y3+th/2,tw,th/2)
+						cont = False
+					End If 
+					End If
+					End If 
+					End If 
+					'all else
+					If cont=True
+						canvas.DrawRect(x3,y3,tw,th)
+					End If
+		End Select
 		Next
 		Next
 		'draw monsters
@@ -832,7 +846,7 @@ Global myplayer:player
 Class MyWindow Extends Window
 	Field time:Int
 	Method New()
-		Super.New("",800,600)
+		Super.New("",640,480)
 		Fullscreen = False
 		resetmap(Width,Height)
 	End Method
@@ -855,21 +869,27 @@ Class MyWindow Extends Window
 		End If
 		mywatermap.update()
 		mywatermap.addwater()		
-		myplayer.update()
-		myplayer.draw(canvas)
+		
+		'player
+		If Keyboard.KeyDown(Key.LeftShift) = False
+			myplayer.update()
+			canvas.Clear(Color.Black)
+			myplayer.draw(canvas)
+		End If
 		'minimap
-		'canvas.Clear(Color.Black)
-		'canvas.DrawImage(mymap.mapimage,0,0)		
-		'mywatermap.draw(canvas)				
-		'canvas.DrawImage(mymap.mapladderimage,0,0)		
-		'For Local i:=Eachin myflyingmonster
-		'	i.draw(canvas)
-		'Next
-		'
+		If Keyboard.KeyDown(Key.LeftShift)		
+			canvas.Clear(Color.Black)
+			canvas.DrawImage(mymap.mapimage,0,0)		
+			mywatermap.draw(canvas)				
+			canvas.DrawImage(mymap.mapladderimage,0,0)		
+			For Local i:=Eachin myflyingmonster
+				i.draw(canvas)
+			Next
+		End If
 		addflyingmonster()
 		'
 		canvas.Color = Color.White
-		canvas.DrawText(App.FPS+"  Press space for new level.",0,0)
+		canvas.DrawText(App.FPS+"  Press space for new level. Left shift for map overview",0,0)
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 	
@@ -898,7 +918,7 @@ End Function
 Function resetmap(Width:Int,Height:int)
 		myflyingmonster.Clear()
 		SeedRnd(100+Microsecs())
-		Local s:Int=Rnd(140,141)
+		Local s:Int=Rnd(140,241)
 		mapwidth = s
 		mapheight = s
 		screenwidth = Width
