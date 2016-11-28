@@ -45,7 +45,11 @@ Class texteditor
 			End If
 			If a = 65744 'cursor left
 				cursorposx-=1
-				If cursorposx < 0 Then cursorposx = 0
+				If cursorposx < 0 Then 
+					cursorposx = 0				
+					If currentline >0 Then currentline-=1
+					cursorposx = lines[currentline].Length
+				End If
 				Return
 			End If
 			If a = 65745 'cursor down				
@@ -60,17 +64,38 @@ Class texteditor
 			End If
 			' backspace
 			If a=8 And lines[currentline].Length>0 Then 				
+				If cursorposx=0 ' if at left of line
+				If currentline>0 'copy line(s) into previous line (backspace on begin of line)
+					Local aa:String=lines[currentline-1]
+					Local bb:String=lines[currentline]
+					cursorposx = aa.Length
+					lines[currentline-1] = aa+bb
+					For Local i:=currentline until maxnumlines-1
+						lines[i] = lines[i+1]
+					Next
+					currentline-=1
+				End If 
+				Return
+				Endif								
 				Local l1:Int=lines[currentline].Length
 				cursorposx-=1
-				lines[currentline] = lines[currentline].Left(cursorposx) + lines[currentline].Right(l1-cursorposx-1)
-				Return
-				Elseif lines[currentline].Length=0
-				Return
+				If cursorposx+1 = l1 Then ' if at end of line
+					lines[currentline] = lines[currentline].Left(l1-1)
+					Return
+				Endif
+				If cursorposx>0 And cursorposx<l1  'If in middle of line
+					lines[currentline] = lines[currentline].Left(cursorposx) + lines[currentline].Right(l1-cursorposx-1)				
+					Return				
+				End If
 			End If
+			
 			Local l1:Int=lines[currentline].Length
-			lines[currentline] = lines[currentline].Left(cursorposx)+String.FromChar(a)+lines[currentline].Right(l1-cursorposx)
-			cursorposx+=1
-		end If
+			Local aa:String=lines[currentline].Mid(0,cursorposx)
+			Local bb:String=lines[currentline].Mid(cursorposx,l1-cursorposx)
+			lines[currentline] = aa+String.FromChar(a)+bb
+			cursorposx+=1			
+		
+		End If
 	End Method
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.Black
