@@ -1,3 +1,4 @@
+' if last correction fixed a syntax error then do not show/remove suggestion/codecompletion
 #Import "<std>"
 #Import "<mojo>"
 
@@ -7,7 +8,10 @@ Using mojo..
 Class texteditor
 	Field wx:int,wy:Int,ww:Int,wh:Int
 	Field lines:String[]
+	Field maxlinewidth:Int=99
 	Field maxnumlines:Int=99
+	Field currentline:Int=0
+	Field cursorposx:Int	
 	Method New(x:Int,y:Int,w:Int,h:int)
 
 		wx = x
@@ -17,8 +21,56 @@ Class texteditor
 		lines = New String[99]
 		lines[0] = "Testing..."
 		lines[1] = "Line two.."
+		cursorposx = lines[0].Length
 	End Method 
-	Method update()
+	Method update()		
+		Local a:Int = Keyboard.GetChar()				
+		If a>0
+			Print "Last keycode : "+ a
+			If a = 65743 'cursor right
+				Local l1:Int=lines[currentline].Length
+				cursorposx+=1
+				If cursorposx>l1 Then ' if cursor right and end of text
+					currentline += 1
+					cursorposx = 0
+				End If
+				Return
+			End If
+			If a = 65746 'cursor up
+				currentline -= 1
+				If currentline<0 Then currentline=0
+				Local l1:Int=lines[currentline].Length
+				If cursorposx > l1 Then cursorposx=l1
+				Return
+			End If
+			If a = 65744 'cursor left
+				cursorposx-=1
+				If cursorposx < 0 Then cursorposx = 0
+				Return
+			End If
+			If a = 65745 'cursor down				
+				currentline+=1
+				Local l1:Int=lines[currentline].Length
+				If cursorposx>l1 Then 'if the cursor position of previous line then
+								' put cursor at end of shorter next line
+					cursorposx = l1
+					Return
+				Endif
+				Return
+			End If
+			' backspace
+			If a=8 And lines[currentline].Length>0 Then 				
+				Local l1:Int=lines[currentline].Length
+				cursorposx-=1
+				lines[currentline] = lines[currentline].Left(cursorposx) + lines[currentline].Right(l1-cursorposx-1)
+				Return
+				Elseif lines[currentline].Length=0
+				Return
+			End If
+			Local l1:Int=lines[currentline].Length
+			lines[currentline] = lines[currentline].Left(cursorposx)+String.FromChar(a)+lines[currentline].Right(l1-cursorposx)
+			cursorposx+=1
+		end If
 	End Method
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.Black
@@ -31,6 +83,7 @@ Class texteditor
 				next			
 			End If
 		Next
+		canvas.DrawRect(wx+(cursorposx*10),wy+(currentline*15)+12,10,3)
 	End Method
 	Method outline(canvas:Canvas,x:Int,y:Int,w:Int,h:Int,col1:Color,col2:Color)
 		canvas.Color = col1
@@ -52,6 +105,7 @@ Class MyWindow Extends Window
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
+		mytexteditor.update()
 		mytexteditor.draw(canvas)
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
