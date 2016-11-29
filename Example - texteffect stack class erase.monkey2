@@ -17,7 +17,7 @@ Class texteffect
 	Method New(x:Int,y:Int)
 		Self.x = x
 		Self.y = y
-		text = "This is a test"
+		text = "T e   s ting123 "
 		l = text.Length
 	End Method 
 	Method update()
@@ -26,10 +26,11 @@ Class texteffect
 			time=0
 			If type = "begin"
 				cnt+=1
-				While text.Mid(cnt,1) = " " 
+				while text[cnt-1] = 32 
+					If cnt>=l Then exit
 					cnt+=1
 				Wend
-				If cnt>l Then type = "finished"
+				If cnt>=l Then type = "finished"
 			End If
 		End If
 		If type = "finished"
@@ -67,7 +68,7 @@ Class MyWindow Extends Window
 
 	Method New()
 		Title = "Tinted Gradient background Example.."
-		
+		mytexteffect.Push(New texteffect(Rnd(50,Width-100),Rnd(20,Height-40)))
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -75,7 +76,7 @@ Class MyWindow Extends Window
 		'
 		canvas.Clear(Color.Black)
 		'
-		If Millisecs() Mod 30 = 1 Then
+		If Millisecs() Mod 30 = 1 Then'
 		If Rnd()<.5
 		mytexteffect.Push(New texteffect(Rnd(50,Width-100),Rnd(20,Height-40)))
 		End If
