@@ -14,10 +14,10 @@ Class texteffect
 	Field delay:Float=60
 	Field timeend:Int=60
 	Field deleteme:Bool=False
-	Method New(x:Int,y:Int)
-		Self.x = x
-		Self.y = y
-		text = "T e   s ting123 "
+	Method New(text:String,x:Int,y:Int)
+		Self.x = x/2
+		Self.y = y/2
+		Self.text = text
 		l = text.Length
 	End Method 
 	Method update()
@@ -40,6 +40,8 @@ Class texteffect
 	End Method 
 
 	Method draw(canvas:Canvas)
+		canvas.PushMatrix()
+		canvas.Scale(2,2)	
 		canvas.Color = New Color(0.7,0.7,0.7)
 		Select type
 		Case "begin"
@@ -49,14 +51,16 @@ Class texteffect
 				Local s:Float=(0.3/delay)*time
 				canvas.Color = New Color(1-s,1-s,1-s)
 			End If
-			canvas.DrawText(text.Mid(x2,1),x+(x2*10),y)
+			
+			canvas.DrawText(text.Mid(x2,1),x+(x2*14),y)
 			
 		Next
 		Case "finished"
 			For Local x2:Int=0 Until l
-				canvas.DrawText(text.Mid(x2,1),x+(x2*10),y)
+				canvas.DrawText(text.Mid(x2,1),x+(x2*14),y)
 			Next
-		End Select
+		End Select		
+		canvas.PopMatrix()
 	End Method
 end Class
 
@@ -65,10 +69,14 @@ Global mytexteffect:Stack<texteffect> = New Stack<texteffect>
 
 
 Class MyWindow Extends Window
-
+	Field t:String[] = New String[](    "This is a test.",
+										"Monkey 2 is great!",
+										"Programming",
+										"Coding Coding..")
 	Method New()
 		Title = "Tinted Gradient background Example.."
-		mytexteffect.Push(New texteffect(Rnd(50,Width-100),Rnd(20,Height-40)))
+		
+		mytexteffect.Push(New texteffect(t[Rnd(0,t.Length)],Rnd(50,Width-100),Rnd(20,Height-40)))
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -76,9 +84,9 @@ Class MyWindow Extends Window
 		'
 		canvas.Clear(Color.Black)
 		'
-		If Millisecs() Mod 30 = 1 Then'
+		If Millisecs() Mod 15 = 1 Then'
 		If Rnd()<.5
-		mytexteffect.Push(New texteffect(Rnd(50,Width-100),Rnd(20,Height-40)))
+		mytexteffect.Push(New texteffect(t[Rnd(0,t.Length)],Rnd(-50,Width+50),Rnd(0,Height)))
 		End If
 		End If
 		'	
@@ -92,8 +100,7 @@ Class MyWindow Extends Window
 		    Local item:=it.Current
 		    If item.deleteme it.Erase() Else it.Bump()
 		Wend
-		' if key escape then quit
-		
+		' if key escape then quit		
 		canvas.Color = Color.White
 		canvas.DrawText("Press space for new screen..",0,0)
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
