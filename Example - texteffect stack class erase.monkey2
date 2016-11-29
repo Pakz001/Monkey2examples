@@ -102,7 +102,7 @@ Class MyWindow Extends Window
 		Wend
 		' if key escape then quit		
 		canvas.Color = Color.White
-		canvas.DrawText("Press space for new screen..",0,0)
+		canvas.DrawText("Press escape to end..",0,0)
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 	
