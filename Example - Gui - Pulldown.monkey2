@@ -5,35 +5,62 @@ Using std..
 Using mojo..
 
 Class pulldownmenu
-	Class menudata
-		Field id:String
-		Field item:Stack<String>		
-		Method New(id:String)
-			Self.id = id
+	Field menu:String[] = New String[]("About","File","Settings","Selection")
+	Field mysubmenu:= New Stack<alist>
+	Class alist
+		Field lx:Int,ly:Int
+		Field lw:Int,lh:Int
+		Field item:= New Stack<String>
+		Method New(x:Int,y:Int,w:Int,h:int)
+		lx = x
+		ly = y
+		lw = w
+		lh = h
+		item.Push("This")
+		item.Push("is")
+		item.Push("a")
+		item.Push("test")
 		End Method
+		Method draw(canvas:Canvas)
+			canvas.Color=Color.White
+			canvas.DrawRect(lx,ly,lw,lh)
+			Local y:=0
+			For Local i:=Eachin item
+				canvas.DrawText(i,lx,ly+y*15)
+				y+=1
+			Next
+		End Method		
 	End Class
-	Class menu
-		Field id:String
-		Field title:String
-		Method New(id:String,title:String)
-			Self.id=id
-			Self.title=title
-		End Method
-	End Class
-	Field mymenu:Stack<pulldownmenu.menu> = New Stack<pulldownmenu.menu>
 	Method New()
-		mymenu.Push(New menu("About","About"))
+		
 	End Method
 	Method update()
+		' press on menu items
+		If Mouse.ButtonReleased(MouseButton.Left) Then 
+		For Local i:=0 Until menu.Length
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,i*80,0,80,15)
+				'App.Terminate()
+				If i=0
+					mysubmenu.Push(New alist(0,15,200,300))			
+				End If
+			Endif
+		Next		
+		End If 
 	End Method
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.White
-		Local x:Int=0
-		For Local i:=Eachin mymenu
-			canvas.DrawText(i.title,x*64,0)
-			x+=64
+		For Local x:=0 Until menu.Length
+			canvas.DrawText(menu[x],x*80,0)			
+		Next
+		For Local i:=Eachin mysubmenu
+			i.draw(canvas)
 		Next
 	End Method
+	method rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+	    Return True
+	End Method	
 End Class
 
 Global mypulldownmenu:pulldownmenu
