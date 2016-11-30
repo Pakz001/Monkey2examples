@@ -19,13 +19,34 @@ Class background
 		map = New Color[width,height]
 		'drawclineto(50,50,70,30,.5,Color.White)
 		For Local i:=0 Until mw*mh/10
-		Local x1:Int=Rnd(mw)
-		Local y1:Int=Rnd(mh)
-		Local x2:Int=x1+Rnd(-10,10)
-		Local rgb:Float=Rnd()
-		Local col:Color = New Color(rgb,rgb,0)
-		Local y2:Int=y1+Rnd(-10,10)
-		drawclineto(x1,y1,x2,y2,.5,col)
+			Local x1:Int=Rnd(mw)
+			Local y1:Int=Rnd(mh)
+			Local rgb:Float=Rnd()
+			Local col:Color = New Color(rgb,rgb,0)
+			Local x2:Int=x1+Rnd(-10,10)						
+			Local y2:Int=y1+Rnd(-10,10)
+			drawclineto(x1,y1,x2,y2,.5,col)
+		Next
+		For Local i:=0 Until mw*mh
+			Local cnt:Int
+			Local x1:Int=Rnd(mw)
+			Local y1:Int=Rnd(mh)
+			For Local y2:=-1 To 1
+			For Local x2:=-1 To 1
+				Local x3:Int=x1+x2
+				Local y3:Int=y1+y2
+				If x3>0 And x3<mw And y3>0 And y3<mh
+					If map[x3,y3].r >.7 Then 					
+					cnt+=1
+					Elseif map[x3,y3].g>.7 
+					cnt+=1
+					Elseif map[x3,y3].b>.7 
+					cnt+=1
+					End If
+				End If
+			Next
+			Next			
+			If cnt>5 Then map[x1,y1] = Color.White
 		Next
 	End Method
 	Method drawclinetofadeout(x1:Int,y1:Int,x2:Int,y2:Int,freq:Float,color:Color)
@@ -123,7 +144,7 @@ Class MyWindow Extends Window
 	Field time:Int
 	Field n:Int=0
 	Method New()
-		mybg = New background(Width,Height,Width/2,Height/2)
+		mybg = New background(Width,Height,Width,Height)
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
