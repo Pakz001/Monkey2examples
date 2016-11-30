@@ -8,10 +8,12 @@ Class pulldownmenu
 	Field menu:String[] = New String[]("About","File","Settings","Selection")
 	Field mysubmenu:= New Stack<alist>
 	Class alist
+		Field id:String
 		Field lx:Int,ly:Int
 		Field lw:Int,lh:Int
 		Field item:= New Stack<String>
-		Method New(x:Int,y:Int,w:Int,h:int)
+		Method New(id:String,x:Int,y:Int,w:Int,h:int)
+		Self.id = id
 		lx = x
 		ly = y
 		lw = w
@@ -41,8 +43,22 @@ Class pulldownmenu
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,i*80,0,80,15)
 				'App.Terminate()
 				If i=0
-					mysubmenu.Push(New alist(0,15,200,300))			
+					mysubmenu.Clear()
+					mysubmenu.Push(New alist("About",i*80,15,200,300))			
 				End If
+				If i=1
+					mysubmenu.Clear()
+					mysubmenu.Push(New alist("File",i*80,15,200,300))			
+				End If
+				If i=2
+					mysubmenu.Clear()
+					mysubmenu.Push(New alist("Settings",i*80,15,200,300))			
+				End If
+				If i=3
+					mysubmenu.Clear()
+					mysubmenu.Push(New alist("Selection",i*80,15,200,300))			
+				End If
+				
 			Endif
 		Next		
 		End If 
