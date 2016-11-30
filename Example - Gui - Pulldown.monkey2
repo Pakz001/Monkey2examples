@@ -27,6 +27,7 @@ Class pulldownmenu
 		Method draw(canvas:Canvas)
 			canvas.Color=Color.White
 			canvas.DrawRect(lx,ly,lw,lh)
+			canvas.Color=Color.Black
 			Local y:=0
 			For Local i:=Eachin item
 				canvas.DrawText(i,lx,ly+y*15)
