@@ -7,6 +7,7 @@ Using mojo..
 Class pulldownmenu
 	Field menu:String[] = New String[]("About","File","Settings","Selection")
 	Field mysubmenu:= New Stack<alist>
+	Field menuopen:Bool=False
 	Class alist
 		Field id:String
 		Field lx:Int,ly:Int
@@ -42,21 +43,53 @@ Class pulldownmenu
 		For Local i:=0 Until menu.Length
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,i*80,0,80,15)
 				'App.Terminate()
-				If i=0
-					mysubmenu.Clear()
-					mysubmenu.Push(New alist("About",i*80,15,200,300))			
+				If i=0					
+					If menuopen = True
+						mysubmenu.Clear()
+						menuopen = False
+						return
+					End If 
+					If menuopen = False
+						mysubmenu.Clear()
+						mysubmenu.Push(New alist("About",i*80,15,200,300))			
+						menuopen = True
+					End If
 				End If
 				If i=1
-					mysubmenu.Clear()
-					mysubmenu.Push(New alist("File",i*80,15,200,300))			
+					If menuopen = True
+						mysubmenu.Clear()
+						menuopen = False
+						return
+					End If 
+					If menuopen = False
+						mysubmenu.Clear()
+						mysubmenu.Push(New alist("File",i*80,15,200,300))			
+						menuopen = True
+					End If
 				End If
 				If i=2
-					mysubmenu.Clear()
-					mysubmenu.Push(New alist("Settings",i*80,15,200,300))			
+					If menuopen = True
+						mysubmenu.Clear()
+						menuopen = False
+						Return
+					End If 
+					If menuopen = False
+						mysubmenu.Clear()
+						mysubmenu.Push(New alist("Settings",i*80,15,200,300))			
+						menuopen = True
+					End If
 				End If
 				If i=3
-					mysubmenu.Clear()
-					mysubmenu.Push(New alist("Selection",i*80,15,200,300))			
+					If menuopen = True
+						mysubmenu.Clear()
+						menuopen = False
+						Return
+					End If 
+					If menuopen = False
+						mysubmenu.Clear()
+						mysubmenu.Push(New alist("Selection",i*80,15,200,300))			
+						menuopen = True
+					End If
 				End If
 				
 			Endif
