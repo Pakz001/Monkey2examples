@@ -127,6 +127,7 @@ Global myworld:world
 Class MyWindow Extends Window
 	Field cnt:Int
 	Method New()
+		SeedRnd(Microsecs())
 		Title="Monkey 2 - One Room Map/Cave Generator"
 		myworld = New world(Width,Height,100,100)
 	End Method
@@ -139,6 +140,8 @@ Class MyWindow Extends Window
 			cnt=0
 			myworld = New world(Width,Height,100,100)
 		End If
+		canvas.Color = Color.Red
+		canvas.DrawText("One Room Map or Cave Generator",0,0)
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
