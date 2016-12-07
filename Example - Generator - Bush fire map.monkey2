@@ -69,7 +69,7 @@ Class MyWindow Extends Window
 		App.RequestRender() ' Activate this method 
 		canvas.Clear(Color.Black)
 		cnt+=1
-		If cnt>800 Or Mouse.ButtonDown(MouseButton.Left)
+		If cnt>800 Or Mouse.ButtonReleased(MouseButton.Left)
 			cnt=0
 			num=Rnd(3,40)
 			mybushfire = New bushfire(Width,Height,num)			
