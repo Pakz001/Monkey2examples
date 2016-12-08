@@ -38,7 +38,7 @@ Class player
 	Field lock:Bool=False
 	Enum inventory
 		gold=1,
-		experience=2,
+		xp=2,
 		flowers=3
 	End Enum 
 	Method New(x:Int,y:int)
@@ -68,11 +68,28 @@ Class player
 		If delay>Millisecs() Then Return
 		For Local i:=Eachin mynpc
 			If rectsoverlap(px,py,pw,ph,i.nx,i.ny,i.nw,i.nh)
-				myquestui.active = true				
-				myquestui.delay = Millisecs()+300
-				myplayer.lock=true
+				If i.id = "Old man"
+					If hasquest("Old man") = False
+						myquest.Push(New quest("Old man",10,10))
+						myquestui.setquest(i.id)
+						myquestui.delay = Millisecs() + 300
+						myplayer.lock = True
+						myquestui.active = True
+					Else 'has a quest						
+						myquestui.setquest(i.id)
+						myquestui.delay = Millisecs() + 300
+						myplayer.lock = True
+						myquestui.active = True
+					End If
+				End If
 			End If 	
 		Next
+	End Method
+	Method hasquest:Bool(id:string)
+		For Local i:=Eachin myquest
+			If i.id = id Then Return True
+		Next
+		Return False
 	End Method
 	Method harvest()
 		Local tx:Int=(px+myworld.tw/2)/myworld.tw
@@ -95,6 +112,8 @@ Class player
 		canvas.DrawRect(0,y,myworld.sw,32)
 		canvas.Color = Color.White
 		canvas.DrawText("Flowers :"+pinv[inventory.flowers],x,y+4)
+		canvas.DrawText("Gold :"+pinv[inventory.gold],x+100,y+4)
+		canvas.DrawText("Xp :"+pinv[inventory.xp],x+200,y+4)
 	End Method
 	Method rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
 	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
@@ -238,13 +257,26 @@ Class world
 End Class
 
 Class quest
-	Field questid:String
+	Field id:String
 	Field isquestcomplete:Bool
 	Field goldreward:Int
-	Field xpreward:Int	
+	Field xpreward:Int
+	Field queststate:Int
+	Enum state
+		begin=1,
+		waiting=2,
+		complete=3
+	End Enum 
+	Method New(id:String,xp:Int,gold:int)
+		queststate = state.begin
+		Self.id = id
+		goldreward = gold
+		xpreward = xp
+	End Method	
 End Class 
 
 Class questui
+	Field id:String
 	Field questtext:String
 	Field queststatus:String
 	Field active:Bool
@@ -256,62 +288,97 @@ Class questui
 		qw = 320
 		qh = 200
 		active = False
-		questtext = "Please bring me 5 flowers|and I will reward you with|5 gold."
-		queststatus="begin"
+	End Method
+	Method setquest(id:String)
+		Self.id = id
+		For Local i:=Eachin myquest
+			If i.id = id Then 
+				Select id
+					Case "Old man"
+					Select i.queststate
+						Case i.state.begin
+						questtext = "Would you please get me|"
+						questtext+= "5 flowers?|I will pay you|"
+						questtext+= "10 gold.(Press a to accept)"
+						Case i.state.waiting
+						questtext = "Did you get me the flowers?|"
+						questtext+= "(Press g to give)"
+						Case i.state.complete
+						questtext = "Nice day is it not?"						
+					End Select
+				End Select
+			End If
+		Next
 	End Method
 	Method update()
 		If active = False Then Return
-		'		
+		'
+		If Keyboard.KeyReleased(Key.A) 'accept quest from npc
+			For Local i:=Eachin myquest
+				If i.id = id
+					If i.queststate = i.state.begin Then 'accept quest from id
+						i.queststate = i.state.waiting
+						active = false
+						myplayer.lock = False
+					End If
+				End If
+			Next				
+		End If
+		If Keyboard.KeyReleased(Key.G) 'Give fetched
+			For Local i:=Eachin myquest
+				If i.id = id
+					If i.queststate = i.state.waiting Then 'Give if possible
+						If myplayer.pinv[myplayer.inventory.flowers] >= 5
+							myplayer.pinv[myplayer.inventory.flowers] -=5
+							myplayer.pinv[myplayer.inventory.gold] += 10
+							myplayer.pinv[myplayer.inventory.xp] += 3
+							i.queststate = i.state.complete
+							active = false
+							myplayer.lock = False							
+						End If
+					End If
+				End If
+			Next				
+		End If
+
+		'
 		If delay>Millisecs() Then Return
 		If Keyboard.KeyReleased(Key.Space)
 			active = False
 			myplayer.delay = Millisecs()+300
 			myplayer.lock = False
 		End If
-		If queststatus="begin"
-			If Keyboard.KeyReleased(Key.A)
-				queststatus = "getflowers"
-				active = False
-				myplayer.delay = Millisecs()+300
-				myplayer.lock = false
-			End If
-		End If
 	End Method
 	Method draw(canvas:Canvas)
 		If active = False Then Return
 		canvas.Color = Color.Black
 		canvas.DrawRect(qx,qy,qw,qh)
-		If queststatus = "begin"
-			canvas.Color = Color.White
-			Local x1:Int=qx+10
-			Local y1:Int=qy+10
-			Local x2:Int=0
-			For Local i:=0 Until questtext.Length
-				Local s:String=questtext.Mid(i,1)
-				If s="|" Then 
-					y1+=15
-					x2=0
-					s = ""
-				End If
-				canvas.DrawText(s,x1+x2,y1)
-				If s<>"" Then x2+=10
-			Next
-			canvas.DrawText("Press 'a' to accept quest",qx,qy+qh-20)
-		End If
-		If queststatus = "getflowers"
-			canvas.Color = Color.White
-			canvas.DrawText("Have you got the flowers?",qx,qy+10)
-			canvas.DrawText("Press space to exit.",qx,qy+qh-20)
-		End If
+		canvas.Color = Color.White
+		Local y1:Int=qx+10
+		Local x1:Int=qy+10
+		Local x2:Int=0
+		Local y2:Int=0
+		For Local i:=0 Until questtext.Length
+			Local s:String=questtext.Mid(i,1)
+			If s="|" Then 
+				y2+=15
+				x2=0
+				s=""
+			End If
+			If s<>"" Then x2+=10			
+			canvas.DrawText(s,x1+x2,y1+y2)
+		Next
+		canvas.DrawText("Press space to exit.",x1,y1+qh-30)
 	End Method 
 End Class
 
-Global myquest:quest
+Global myquest:Stack<quest> = New Stack<quest>
 Global myquestui:questui
 Global myworld:world
 Global myworlditems:worlditems
 Global myplayer:player
 Global mynpc:Stack<npc> = New Stack<npc>
+
 
 Class MyWindow Extends Window
 
@@ -336,6 +403,10 @@ Class MyWindow Extends Window
 		myquestui.update()
 		myquestui.draw(canvas)
 		' if key escape then quit
+		canvas.Color = Color.Black
+		canvas.DrawRect(0,0,Width,12)
+		canvas.Color = Color.White
+		canvas.DrawText("Press space on npc to interact. Cursors to move.",0,0)
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 	
