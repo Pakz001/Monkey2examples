@@ -6,6 +6,30 @@
 Using std..
 Using mojo..
 
+Class npc
+	Field nx:Int,ny:Int,nw:Int,nh:Int
+	Field id:String
+	Field hasquest:Bool
+	Method New(id:String,x:Int,y:Int)
+		Self.nx = x
+		Self.ny = y
+		Self.nw = 10
+		Self.nh = 10
+		Self.id = id
+		Select id
+			Case "Old man"
+			hasquest = True
+		End Select
+	End Method
+	Method draw(canvas:Canvas)
+		Select id
+			Case "Old man"
+			canvas.Color = Color.Yellow
+			canvas.DrawRect(nx,ny,nw,nh)
+		End Select
+	End Method	
+End Class
+
 Class player
 	Field px:Float,py:Float
 	Field pw:Int,ph:Int
@@ -35,6 +59,14 @@ Class player
 			py+=1
 		End If
 		harvest()
+		If Keyboard.KeyReleased(Key.Space) Then interact()
+	End Method
+	Method Interact()
+		For Local i:=Eachin mynpc
+			If rectsoverlap(px,py,pw,ph,i.nx,i.ny,i.nw,i.nh)
+				myquestui.active = true				
+			End If 	
+		Next
 	End Method
 	Method harvest()
 		Local tx:Int=(px+myworld.tw/2)/myworld.tw
@@ -44,7 +76,7 @@ Class player
 			pinv[inventory.flowers] +=1
 			myworlditems.mapinvisible[tx,ty] = True
 			myworlditems.mapregrow[tx,ty] = 10
-		End if
+		End If
 		End If 
 	End Method
 	Method draw(canvas:Canvas)
@@ -58,6 +90,11 @@ Class player
 		canvas.Color = Color.White
 		canvas.DrawText("Flowers :"+pinv[inventory.flowers],x,y+4)
 	End Method
+	Method rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+	    Return True
+	End	Method
 End Class
 
 Class worlditems
@@ -203,6 +240,27 @@ End Class
 
 Class questui
 	Field questtext:String
+	Field active:Bool
+	Field qx:Int,qy:Int,qw:Int,qh:Int
+	Method New()
+		qx = 50
+		qy = 50
+		qw = 320
+		qh = 200
+		active = False
+	End Method
+	Method update()
+		If active = False Then Return
+		If Keyboard.KeyHit(Key.Space)
+			active = False
+			Keyboard.FlushChars()
+		End If
+	End Method
+	Method draw(canvas:Canvas)
+		If active = False Then Return
+		canvas.Color = Color.Black
+		canvas.DrawRect(qx,qy,qw,qh)
+	End Method 
 End Class
 
 Global myquest:quest
@@ -210,13 +268,16 @@ Global myquestui:questui
 Global myworld:world
 Global myworlditems:worlditems
 Global myplayer:player
+Global mynpc:Stack<npc> = New Stack<npc>
 
 Class MyWindow Extends Window
 
 	Method New()
 		myworld = New world(Width,Height,64,64)
 		myworlditems = New worlditems(Width,Height,64,64)
+		myquestui = New questui()
 		myplayer = New player(300,300)
+		mynpc.Push(New npc("Old man",500,200))
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -225,7 +286,12 @@ Class MyWindow Extends Window
 		myworlditems.update()
 		myworld.draw(canvas)
 		myworlditems.draw(canvas)
+		For Local i:=Eachin mynpc
+			i.draw(canvas)
+		Next
 		myplayer.draw(canvas)
+		myquestui.update()
+		myquestui.draw(canvas)
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
