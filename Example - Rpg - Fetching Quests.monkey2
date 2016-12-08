@@ -63,6 +63,12 @@ Class player
 		End If
 		harvest()
 		If Keyboard.KeyReleased(Key.Space) Then inact()
+		If Keyboard.KeyReleased(Key.Q) Then resetquests()
+	End Method
+	Method resetquests()
+		For Local i:=Eachin myquest
+			i.queststate = i.state.begin
+		Next
 	End Method
 	Method inact()
 		If delay>Millisecs() Then Return
@@ -258,7 +264,6 @@ End Class
 
 Class quest
 	Field id:String
-	Field isquestcomplete:Bool
 	Field goldreward:Int
 	Field xpreward:Int
 	Field queststate:Int
@@ -406,7 +411,7 @@ Class MyWindow Extends Window
 		canvas.Color = Color.Black
 		canvas.DrawRect(0,0,Width,12)
 		canvas.Color = Color.White
-		canvas.DrawText("Press space on npc to interact. Cursors to move.",0,0)
+		canvas.DrawText("Press space on npc to interact. Cursors to move. q - reset quest",0,0)
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 	
