@@ -35,6 +35,7 @@ Class player
 	Field pw:Int,ph:Int
 	Field pinv:Int[] = New Int[50]
 	Field delay:Double
+	Field lock:Bool=False
 	Enum inventory
 		gold=1,
 		experience=2,
@@ -47,6 +48,7 @@ Class player
 		Self.py = y		
 	End Method
 	Method update()
+		If lock = True Then Return
 		If Keyboard.KeyDown(Key.Right)
 			px+=1
 		End If
@@ -68,6 +70,7 @@ Class player
 			If rectsoverlap(px,py,pw,ph,i.nx,i.ny,i.nw,i.nh)
 				myquestui.active = true				
 				myquestui.delay = Millisecs()+300
+				myplayer.lock=true
 			End If 	
 		Next
 	End Method
@@ -243,6 +246,7 @@ End Class
 
 Class questui
 	Field questtext:String
+	Field queststatus:String
 	Field active:Bool
 	Field qx:Int,qy:Int,qw:Int,qh:Int
 	Field delay:Double
@@ -252,19 +256,53 @@ Class questui
 		qw = 320
 		qh = 200
 		active = False
+		questtext = "Please bring me 5 flowers|and I will reward you with|5 gold."
+		queststatus="begin"
 	End Method
 	Method update()
 		If active = False Then Return
+		'		
 		If delay>Millisecs() Then Return
-		If Keyboard.KeyHit(Key.Space)
+		If Keyboard.KeyReleased(Key.Space)
 			active = False
 			myplayer.delay = Millisecs()+300
+			myplayer.lock = False
+		End If
+		If queststatus="begin"
+			If Keyboard.KeyReleased(Key.A)
+				queststatus = "getflowers"
+				active = False
+				myplayer.delay = Millisecs()+300
+				myplayer.lock = false
+			End If
 		End If
 	End Method
 	Method draw(canvas:Canvas)
 		If active = False Then Return
 		canvas.Color = Color.Black
 		canvas.DrawRect(qx,qy,qw,qh)
+		If queststatus = "begin"
+			canvas.Color = Color.White
+			Local x1:Int=qx+10
+			Local y1:Int=qy+10
+			Local x2:Int=0
+			For Local i:=0 Until questtext.Length
+				Local s:String=questtext.Mid(i,1)
+				If s="|" Then 
+					y1+=15
+					x2=0
+					s = ""
+				End If
+				canvas.DrawText(s,x1+x2,y1)
+				If s<>"" Then x2+=10
+			Next
+			canvas.DrawText("Press 'a' to accept quest",qx,qy+qh-20)
+		End If
+		If queststatus = "getflowers"
+			canvas.Color = Color.White
+			canvas.DrawText("Have you got the flowers?",qx,qy+10)
+			canvas.DrawText("Press space to exit.",qx,qy+qh-20)
+		End If
 	End Method 
 End Class
 
