@@ -34,6 +34,7 @@ Class player
 	Field px:Float,py:Float
 	Field pw:Int,ph:Int
 	Field pinv:Int[] = New Int[50]
+	Field delay:Double
 	Enum inventory
 		gold=1,
 		experience=2,
@@ -59,12 +60,14 @@ Class player
 			py+=1
 		End If
 		harvest()
-		If Keyboard.KeyReleased(Key.Space) Then interact()
+		If Keyboard.KeyReleased(Key.Space) Then inact()
 	End Method
-	Method Interact()
+	Method inact()
+		If delay>Millisecs() Then Return
 		For Local i:=Eachin mynpc
 			If rectsoverlap(px,py,pw,ph,i.nx,i.ny,i.nw,i.nh)
 				myquestui.active = true				
+				myquestui.delay = Millisecs()+300
 			End If 	
 		Next
 	End Method
@@ -242,6 +245,7 @@ Class questui
 	Field questtext:String
 	Field active:Bool
 	Field qx:Int,qy:Int,qw:Int,qh:Int
+	Field delay:Double
 	Method New()
 		qx = 50
 		qy = 50
@@ -251,9 +255,10 @@ Class questui
 	End Method
 	Method update()
 		If active = False Then Return
+		If delay>Millisecs() Then Return
 		If Keyboard.KeyHit(Key.Space)
 			active = False
-			Keyboard.FlushChars()
+			myplayer.delay = Millisecs()+300
 		End If
 	End Method
 	Method draw(canvas:Canvas)
