@@ -14,7 +14,6 @@ him start moving towards the player. If that number gets higher(player runs away
 then he could stop chasing you.
 #end
 
-
 #Import "<std>"
 #Import "<mojo>"
 
@@ -131,7 +130,13 @@ Class MyWindow Extends Window
 		' mouse x and y is end position of the flood path
 		Local x:Int=Mouse.X/mypath.tw
 		Local y:Int=Mouse.Y/mypath.th
+		If Mouse.ButtonReleased(MouseButton.Left) Then mypath.floodmap(x,y)
 		mypath.floodmap(x,y)
+		'
+		canvas.Color = Color.Black
+		canvas.DrawRect(0,0,Width,15)
+		canvas.Color = Color.White
+		canvas.DrawText("Monkey 2 - 4 directions - Flood fill pathfinding.",0,0)
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
