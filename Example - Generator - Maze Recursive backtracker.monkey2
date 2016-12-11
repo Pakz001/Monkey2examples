@@ -110,7 +110,8 @@ Class MyWindow Extends Window
 		App.RequestRender() ' Activate this method 
 		
 		'
-		If Keyboard.KeyReleased(Key.Space) Then				
+		If Keyboard.KeyReleased(Key.Space) Or Mouse.ButtonReleased(MouseButton.Left) Then
+			SeedRnd(Millisecs())				
 			mymaze = New maze(Width,Height,10,10)
 		End If
 		'
