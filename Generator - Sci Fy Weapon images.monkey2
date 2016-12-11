@@ -7,8 +7,9 @@ Using mojo..
 Class item
 	Field can:Canvas
 	Field image:Image
+	Field buffer:Int 'bug fix
 	Field rot:Double
-	Field rotspd:Double
+	Field rotspd:double
 	Field firstname:String
 	Field secondname:String
 	Field name:String[] = New String[]( "Hardcore",
@@ -42,7 +43,7 @@ Class item
 										"Spoon")
 	Method New()
 		rot=Rnd(TwoPi)
-		rotspd=Rnd(-0.1,0.1)
+		rotspd=Rnd(-0.2,0.2)
 		image = New Image(64,64)
 		can = New Canvas(image)
 		image.Handle=New Vec2f( .5,.5 )
@@ -88,12 +89,10 @@ End Class
 Global myitem:List<item> = New List<item>
 
 Class MyWindow Extends Window
-
+	Field cnt:Int
 	Method New()
-		Super.New("Graphics Generator - Spaceships or Items",1366,768)
-		'Fullscreen = True
-		For Local y:=0 To 5
-		For Local x:=0 To 8
+		For Local y:=0 To 3
+		For Local x:=0 To 3
 			myitem.AddLast(New item())
 		Next
 		Next
@@ -102,8 +101,9 @@ Class MyWindow Extends Window
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
-		' if key escape then quit
-		If Keyboard.KeyReleased(Key.Space)
+		cnt+=1		
+		If Keyboard.KeyReleased(Key.Space) Or cnt>500
+			cnt=0
 			Local a:Int=Microsecs()
 			SeedRnd(a)
 			For Local i:=Eachin myitem
@@ -119,13 +119,15 @@ Class MyWindow Extends Window
 			canvas.DrawText(i.firstname,x*120+96,y*96+32+32+32)
 			canvas.DrawText(i.secondname,x*120+96,y*96+32+32+20+32)
 			i.rot+=i.rotspd
+
 			If i.rot<0 Then i.rot=TwoPi
 			If i.rot>TwoPi Then i.rot=0
 			x+=1
-			If x>8 Then y+=1;x=0
+			If x>3 Then y+=1;x=0
 		Next
 		canvas.Color = Color.White
 		canvas.DrawText("Press Space to generate new items - press escape to end",0,0)
+		'if press escape then end
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 	
