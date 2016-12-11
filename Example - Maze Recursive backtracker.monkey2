@@ -10,9 +10,6 @@ Class maze
 	Field tw:Float,th:Float
 	Field mazex:Stack<Int> = New Stack<Int>
 	Field mazey:Stack<Int> = New Stack<Int>	
-	Field bmazex:Stack<Int> = New Stack<Int>
-	Field bmazey:Stack<Int> = New Stack<Int>	
-
 	Field map:Int[,] = New Int[1,1]
 	Field map2:Int[,,] = New Int[1,1,1]
 	Enum wall
@@ -115,7 +112,9 @@ Class MyWindow Extends Window
 		App.RequestRender() ' Activate this method 
 		
 		'
-		If Keyboard.KeyReleased(Key.Space) Then	mymaze = New maze(Width,Height,10,10)
+		If Keyboard.KeyReleased(Key.Space) Then				
+			mymaze = New maze(Width,Height,10,10)
+		End If
 		'
 		mymaze.draw(canvas)
 		'
