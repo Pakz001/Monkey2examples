@@ -33,7 +33,7 @@ Class maze
 		Local ax:Int[] = New Int[](0,1,0,-1)
 		Local ay:Int[] = New Int[](-1,0,1,0)
 		mazex.Push(Rnd(mw))
-		mazey.Push(Rnd(mh))
+		mazey.Push(Rnd(mh))								
 		While mazex.Empty = False			
 			Local x:Int=mazex.Top
 			Local y:Int=mazey.Top
@@ -56,15 +56,13 @@ Class maze
 					Local r:Int=Rnd(0,4)
 					If d[r] = 1 Then						
 						eloop = True
-						map[x,y] = 1
-						'setwall(x,y)
 						Local nx:Int=x+ax[r]
 						Local ny:Int=y+ay[r]
 						map2[x,y,r] = 1																		
 						mazex.Push(nx)
 						mazey.Push(ny)						
+						map[x,y] = 1
 						map[nx,ny] = 1
-				'		Print nx+","+ny
 					End If
 				Wend
 			Else	' if nothing happened than backtrace
