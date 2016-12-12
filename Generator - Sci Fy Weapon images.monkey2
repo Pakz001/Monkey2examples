@@ -7,9 +7,8 @@ Using mojo..
 Class item
 	Field can:Canvas
 	Field image:Image
-	Field buffer:Int 'bug fix
-	Field rot:Double
-	Field rotspd:double
+	Field rot:float
+	Field rotspd:Float
 	Field firstname:String
 	Field secondname:String
 	Field name:String[] = New String[]( "Hardcore",
@@ -43,7 +42,8 @@ Class item
 										"Spoon")
 	Method New()
 		rot=Rnd(TwoPi)
-		rotspd=Rnd(-0.2,0.2)
+		rotspd= Rnd(-0.2,0.2)
+
 		image = New Image(64,64)
 		can = New Canvas(image)
 		image.Handle=New Vec2f( .5,.5 )
@@ -120,8 +120,8 @@ Class MyWindow Extends Window
 			canvas.DrawText(i.secondname,x*120+96,y*96+32+32+20+32)
 			i.rot+=i.rotspd
 
-			If i.rot<0 Then i.rot=TwoPi
-			If i.rot>TwoPi Then i.rot=0
+			If i.rot<0 Then i.rot=Float(TwoPi)
+			If i.rot>Float(TwoPi) Then i.rot=0
 			x+=1
 			If x>3 Then y+=1;x=0
 		Next
