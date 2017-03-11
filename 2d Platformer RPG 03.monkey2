@@ -5,16 +5,128 @@
 Using std..
 Using mojo..
 
+Global gamestate:String="select"
 Global egghatchspeed:Float = 0.1 'how fast eggs hatch
 Global egglayingfreq:Float = 0.1 ' lay lots of eggs 1 lay less eggs 0 '0 to 1
 Global startingeggfreq:Float = 0.2 '0 to 1 0 is none 1 is full
 Global maxflyingmonsters:Int=30
 Global mapwidth:Int=320
 Global mapheight:Int=240
-Global screenwidth:Int=640
-Global screenheight:Int=480
+Global screenwidth:Int=800
+Global screenheight:Int=600
 Global tilewidth:Int=20
 Global tileheight:Int=20
+
+Class menuselect
+	Field image:Image	
+	Field icanvas:Canvas
+	Field m:map
+	Field index:Int=0
+	Method New()
+		image=New Image(800,600)
+		image.Handle=New Vec2f( 0,0 )
+		icanvas=New Canvas( image )
+		icanvas.Clear(Color.Black)
+		Local x:Int=50
+		Local y:Int=100
+		Local w:Int=150
+		Local h:Int=150
+		Local sw:Int=150
+		Local sh:Int=150
+		SeedRnd(1)
+		m = New map(sw,sh,w,h)
+		drawmap(icanvas,x,y,w,h)
+		x = 200
+		y = 100
+		w = 250
+		h = 250
+		sw = 250
+		sh = 250
+		m = New map(sw,sh,w,h)
+		drawmap(icanvas,x,y,w,h)
+		x = 450
+		y = 100
+		w = 300
+		h = 300
+		sw = 300
+		sh = 300
+		m = New map(sw,sh,w,h)
+		drawmap(icanvas,x,y,w,h)		
+		icanvas.Flush()		
+	End Method
+	Method update()
+		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
+		If Keyboard.KeyReleased(Key.Left) Then index-=1
+		If Keyboard.KeyReleased(Key.Right) Then index+=1
+		If index<0 Then index = 0
+		If index>2 Then index = 2
+		If Keyboard.KeyReleased(Key.Enter) Then
+			Select index
+				Case 0
+					mapwidth = 150
+					mapheight = 150
+				Case 1
+					mapwidth = 250
+					mapheight = 250
+				Case 2
+					mapwidth = 300
+					mapheight = 300
+			End Select
+			resetmap(screenwidth,screenheight)
+			gamestate="play"			
+		End If
+	End Method
+	Method draw(canvas:Canvas)
+		canvas.DrawImage(image,0,0)
+		canvas.DrawText("Use Cursor left and Right to select Enter to Play",0,0)
+		canvas.PushMatrix()
+		canvas.Scale(2,2)
+		canvas.DrawText("Select Difficulty",400/2,50/2,.5,.5)
+		canvas.PopMatrix()
+		canvas.Color = Color.Yellow
+		Local x:int=50
+		Local y:Int=100
+		Local w:Int=150
+		Local h:int=150
+		If index = 0 Then 
+			mydrawrect(canvas,x,y,w,h)
+			mydrawrect(canvas,x+1,y+1,w-2,h-2)
+		End If
+		x = 200
+		y = 100
+		w = 250
+		h = 250
+		If index = 1 Then 
+			mydrawrect(canvas,x,y,w,h)
+			mydrawrect(canvas,x+1,y+1,w-2,h-2)
+		End If
+		x = 450
+		y = 100
+		w = 300
+		h = 300
+		If index = 2 Then 
+			mydrawrect(canvas,x,y,w,h)
+			mydrawrect(canvas,x+1,y+1,w-2,h-2)
+		End If
+	End Method
+	Method drawmap(canvas:Canvas,x:Int,y:Int,w:Int,h:Int)
+		For Local y1:Int=0 Until h
+		For Local x1:Int=0 Until w
+			Select m.mapfinal[x1,y1]
+				Case 1
+					canvas.Color = New Color(1,1,1)
+					canvas.DrawRect(x1+x,y1+y,1,1)
+			End Select 
+		Next
+		Next
+	End Method
+	Method mydrawrect(canvas:Canvas,x:Int,y:Int,w:Int,h:Int)
+		canvas.DrawLine(x,y,x+w,y)
+		canvas.DrawLine(x+w,y,x+w,y+h)
+		canvas.DrawLine(x,y,x,y+h)
+		canvas.DrawLine(x,y+h,x+w,y+h)
+	End Method
+End Class
 
 Class player
 	Field regularmode:Bool=True
@@ -1080,6 +1192,7 @@ Class map
 	End Method 
 End Class
 
+Global mymenuselect:menuselect
 Global mymap:map
 Global mywatermap:watermap
 Global myflyingmonster:List<theflyingmonster> = New List<theflyingmonster>
@@ -1090,13 +1203,20 @@ Class MyWindow Extends Window
 	Method New()
 		Super.New("",800,600)
 		Fullscreen = False
-		resetmap(Width,Height)
+		mymenuselect = New menuselect()
+		'resetmap(Width,Height)
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method
+		
+		If gamestate="select" Then 
+			mymenuselect.update()
+			mymenuselect.draw(canvas)
+		End If
+		If gamestate<>"play" Then Return
 		If Keyboard.KeyReleased(Key.F1) Then
-			resetmap(Width,Height)
+			resetmap(screenwidth,screenheight)
 		End If  
 		
 		For Local i:=Eachin myflyingmonster
@@ -1173,15 +1293,15 @@ End Function
 Function resetmap(Width:Int,Height:int)
 		myflyingmonster.Clear()
 		SeedRnd(100+Microsecs())
-		Local s:Int=Rnd(140,150)
-		mapwidth = s
-		mapheight = s
+		'Local s:Int=Rnd(140,150)
+		'mapwidth = 
+		'mapheight = s
 		screenwidth = Width
 		screenheight = Height
-		mymap = New map(Width,Height,s,s)
-		mywatermap = New watermap(Width,Height,s,s,s*400)
-		For Local y:=0 Until s
-		For Local x:=0 Until s
+		mymap = New map(Width,Height,mapwidth,mapheight)
+		mywatermap = New watermap(Width,Height,mapwidth,mapheight,mapwidth*400)
+		For Local y:=0 Until mapheight
+		For Local x:=0 Until mapwidth
 			mywatermap.map[x,y] = mymap.mapfinal[x,y]
 			If mywatermap.map[x,y] = 1 
 				mywatermap.map[x,y] = 0
