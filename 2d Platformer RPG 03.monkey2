@@ -13,10 +13,10 @@ Global mapwidth:Int=320
 Global mapheight:Int=240
 Global screenwidth:Int=640
 Global screenheight:Int=480
-
+Global tilewidth:Int=16,tileheight:Int=16
 
 Class player
-	Field regularmode:bool=True
+	Field regularmode:Bool=True
 	Field jump:Bool=False
 	Field incy:Float=0
 	Field movespeed:Int
@@ -27,18 +27,19 @@ Class player
 	Field pw:Int,ph:Int
 	Field mcx:Int,mcy:Int,mpx:Int,mpy:Int ' scroll coordinates
 	Field maptileswidth:Int,maptilesheight:Int
-	Field tw:Int=32
-	Field th:Int=32
+	Field tw:Int=tilewidth
+	Field th:Int=tileheight
+	
 	Method New()
 		movespeed = 6
-		px = 620
-		py = 500
-		pw = 32
-		ph = 32
+		px = tilewidth*10
+		py = tileheight*10
+		pw = tilewidth
+		ph = tileheight
 		maptileswidth = screenwidth / tw
 		maptilesheight = screenheight / th
-		mcx=5
-		mcy=5
+		mcx=0
+		mcy=0
 	End Method 
 	Method updateplayercontrols()		
 		'
@@ -75,11 +76,11 @@ Class player
 		If x=1 Then mox-=1
 		If y=-1 Then moy+=1
 		If y=1 Then moy-=1
-		If mox>31 Then mcx-=1;mox=0
-		If mox<-31 Then mcx+=1;mox=0
-		If moy>31 Then mcy-=1;moy=0
-		If moy<-31 Then mcy+=1;moy=0
-
+		If mox>tw-1 Then mcx-=1;mox=0
+		If mox<-(tw-1) Then mcx+=1;mox=0
+		If moy>th-1 Then mcy-=1;moy=0
+		If moy<-(th-1) Then mcy+=1;moy=0
+		
 	End Method
     Method laddermode()
     	For Local i:=0 Until movespeed
@@ -245,6 +246,7 @@ Class player
 		Next
 		Next
 		'draw water
+#rem
 		canvas.Color = Color.Blue
 		For Local y:=0 Until maptilesheight
 		For Local x:=0 Until maptileswidth
@@ -316,6 +318,8 @@ Class player
 		End Select
 		Next
 		Next
+#end
+
 		'Draw the ladders		
 		For Local y:=0 Until maptilesheight
 		For Local x:=0 Until maptileswidth
@@ -323,12 +327,14 @@ Class player
 			Local y2:Int=mcy+y
 			Local x3:Int=(x*tw)+mox
 			Local y3:Int=(y*th)+moy
+			If x2>=0 And x2<mapwidth And y2>=0 And y2<mapheight
 			If mymap.mapladder[x2,y2] = 1
 				canvas.Color = Color.Brown
 				canvas.DrawRect(x3,y3,tw,th)
 				canvas.Color = Color.Red
 				canvas.DrawRect(x3,y3,tw/4,th/3)
 			End If
+			End if
 		Next
 		Next		
 		' Draw the player
@@ -361,9 +367,12 @@ End Class
 Class theflyingmonster
 	Field x:Int,y:Int
 	Field w:Float,h:Float
+	' movement between tiles
+	Field ox:Int,oy:Int
+	' tx and ty are the next tile the flying monster
+	' are on.
+	Field tx:Int,ty:Int
 	Field state:String
-	Field tx:Float
-	Field ty:Float
 	Field substate:String
 	Method New(x:Int,y:Int)
 		Self.x = x
@@ -376,7 +385,7 @@ Class theflyingmonster
 		Select state
 			Case "hatched"
 				state="takeoff"
-				ty=3 'move distance
+'				ty=3 'move distance
 			Case "takeoff"
 				takeoff()
 			Case "roam"				
@@ -440,7 +449,6 @@ Class theflyingmonster
 				
 				End If
 				state="takeoff"
-				ty=3
 		End Select
 	End Method
 	Method landandlayegg()
@@ -529,8 +537,7 @@ Class theflyingmonster
 	End Method
 	Method takeoff()
 		y-=1
-		ty-=1
-		If ty<0 Or mymap.mapfinal[x,y-1] = 0 Then 
+		If mymap.mapfinal[x,y-1] = 0 Then 
 		state="roam"
 		If Rnd(0,1) < 0.5 
 			substate="left"
@@ -1086,8 +1093,8 @@ Class MyWindow Extends Window
 		time=0
 		'resetmap(Width,Height)
 		End If
-		mywatermap.update()
-		mywatermap.addwater()		
+		'mywatermap.update()
+		'mywatermap.addwater()		
 		
 		'player
 		If Keyboard.KeyDown(Key.LeftShift) = False
@@ -1098,7 +1105,7 @@ Class MyWindow Extends Window
 			End If
 			If tp=False Then
 				myplayer.updateplayercontrols()
-			end if
+			End If
 			canvas.Clear(Color.Black)
 			myplayer.draw(canvas)
 		End If
@@ -1111,7 +1118,7 @@ Class MyWindow Extends Window
 			For Local i:=Eachin myflyingmonster
 				i.draw(canvas)
 			Next
-			canvas.Color = Color.White
+			canvas.Color = New Color(255,255,255,0.5)
 			Local x1:Int=myplayer.mcx*mymap.tw
 			Local y1:Int=myplayer.mcy*mymap.th
 			canvas.DrawRect(x1,y1,mymap.tw*myplayer.maptileswidth,mymap.th*myplayer.maptilesheight)
