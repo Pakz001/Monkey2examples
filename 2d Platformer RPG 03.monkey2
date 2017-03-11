@@ -13,13 +13,14 @@ Global mapwidth:Int=320
 Global mapheight:Int=240
 Global screenwidth:Int=640
 Global screenheight:Int=480
-Global tilewidth:Int=16,tileheight:Int=16
+Global tilewidth:Int=20
+Global tileheight:Int=20
 
 Class player
 	Field regularmode:Bool=True
 	Field jump:Bool=False
 	Field incy:Float=0
-	Field movespeed:Int
+	Field movespeed:Float
 	Field px:Float,py:Float
 	Field pmx:Float,pmy:Float
 	Field ptx:Float,pty:Float
@@ -31,7 +32,7 @@ Class player
 	Field th:Int=tileheight
 	
 	Method New()
-		movespeed = 6
+		movespeed = 1
 		px = tilewidth*10
 		py = tileheight*10
 		pw = tilewidth
@@ -51,11 +52,27 @@ Class player
 			jump=False
 			laddermode()			
 			Else
-			For Local i:=0 Until movespeed/2
+			For Local i:=0 Until 2
 				playergravity()
 			Next
 		End If
-		For Local i:=0 Until movespeed
+
+		movespeed +=.1
+		If movespeed > 4 Then movespeed = 4
+		
+		' If no movement left and right up and down then slow down
+		' movement
+		If Keyboard.KeyDown(Key.Right) = False
+		If Keyboard.KeyDown(Key.Left) = False			
+		If Keyboard.KeyDown(Key.Up) = False
+		If Keyboard.KeyDown(Key.Down) = False			
+			movespeed = 1
+		End If
+		End If
+		End If
+		End If
+						
+		For Local i:Int=0 Until Ceil(movespeed)
 			If Keyboard.KeyDown(Key.Right)
 			If playertilecollision(px+1,py) = False
 				px+=1
@@ -67,11 +84,10 @@ Class player
 				px-=1
 				scrollmap(-1,0)
 			End If
-		  	End If
-			
+		  	End If			
 		Next
 	End Method
-	Method scrollmap(x:Int,y:int)
+	Method scrollmap(x:Int,y:Int)
 		If x=-1 Then mox+=1
 		If x=1 Then mox-=1
 		If y=-1 Then moy+=1
@@ -83,7 +99,7 @@ Class player
 		
 	End Method
     Method laddermode()
-    	For Local i:=0 Until movespeed
+    	For Local i:=0 Until Ceil(movespeed)
 			If Keyboard.KeyDown(Key.Right)
 			If playertilecollision(px+1,py) = False
 			If playerladdercollision(px+1,py) = True
@@ -354,7 +370,7 @@ Class player
 		Next
 		
 	End Method
-	Method m:int(x:Int,y:Int,offx:int,offy:int)
+	Method m:Int(x:Int,y:Int,offx:int,offy:int)
 		Return mywatermap.map[x+offx,y+offy]
 	End Method
 	Method rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
