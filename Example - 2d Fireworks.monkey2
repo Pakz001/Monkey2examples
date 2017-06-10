@@ -18,7 +18,7 @@ Class particle
 	Method New(x:Int,y:Int,direction:Double)
 			Self.x = x
 			Self.y = y
-			Self.speed = 2
+			Self.speed = 3
 			If Rnd(20)<3 Then Self.speed += Rnd(-.5,.5)
 			Self.direction = direction
 			Self.col = New Color(1,1,1)
@@ -32,6 +32,8 @@ Class particle
 		y+=Sin(direction)*speed
 		' Dim out the color.
 		col = New Color(col.R-1.0/60,col.G-1.0/60,col.B-1.0/60)
+		' Slow the speed by a fraction
+		speed -= speed/60
 	End Method
 	Method draw(canvas:Canvas)
 		canvas.Color = col
