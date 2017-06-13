@@ -42,27 +42,27 @@ Class map
 		If Mouse.ButtonDown(MouseButton.Left)
 			Local x:Int= Mouse.X/tw
 			Local y:Int = Mouse.Y/th
-			If x>0 And x<w And y>0 And y<h 
+			If x>0 And x<w-1 And y>1 And y<h-1 
 				map[x,y] = 2
 			End If
 		End If
 		If Mouse.ButtonDown(MouseButton.Right)
 			Local x:Int= Mouse.X/tw
 			Local y:Int = Mouse.Y/th
-			If x>0 And x<w And y>0 And y<h 
+			If x>0 And x<w-1 And y>1 And y<h-1
 				map[x,y] = 1
 			End If
 		End If
 		If Mouse.ButtonDown(MouseButton.Middle)
 			Local x:Int= Mouse.X/tw
 			Local y:Int = Mouse.Y/th
-			If x>0 And x<w And y>0 And y<h 
+			If x>0 And x<w-1 And y>1 And y<h-1 
 				map[x,y] = 0
 			End If
 		End If
 
 		For Local i := 0 Until freq
-			updatewater(Rnd(2,w-2),Rnd(2,h-2))
+			updatewater(Rnd(1,w-1),Rnd(2,h-2))
 		Next
 	End Method 
 	Method updatewater(x:Int,y:Int)
@@ -98,6 +98,7 @@ Class map
 				End If 
 				End If
 			Case 4 'swooop right
+				If x<w Then
 				If map[x+1,y] = 0
 				If map[x-1,y] = 2
 					Local exitloop:Bool=False
@@ -105,6 +106,7 @@ Class map
 					While exitloop = False										
 						If map[mx,y] <> 2 Then exitloop = True					
 						mx-=1
+						If mx=0 Then return
 					Wend
 					
 					map[x+1,y] = 2
@@ -117,15 +119,16 @@ Class map
 					map[v,y] = 0												
 				End If
 				End If 
-			
+				End if
 			Case 5 'swooop left
 				If map[x-1,y] = 0
 				If map[x+1,y] = 2
 					Local exitloop:Bool=False
 					Local mx:Int=x
 					While exitloop = False										
-						If map[mx,y] <> 2 Then exitloop = True					
+						If map[mx,y] <> 2 Then exitloop = True						
 						mx+=1
+						If mx>=w Then Return
 					Wend
 					map[x-1,y] = 2
 					map[Rnd(x,mx-1),y] = 0												
