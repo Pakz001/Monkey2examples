@@ -166,6 +166,7 @@ Global mymap:map
 Class MyWindow Extends Window
 
 	Method New()
+		Title="Monkey2 2d water example"
 		mymap = New map(Width,Height,50,50,2000)
 	End Method
 	
@@ -174,6 +175,14 @@ Class MyWindow Extends Window
 		mymap.update()
 		mymap.draw(canvas)
 		' if key escape then quit
+		canvas.Color = Color.White
+		canvas.DrawText("Lmb to drop water",32,0)
+		canvas.DrawText("Mmb to Erase solids",232,0)
+		canvas.DrawText("Rmb to Draw solids",432,0)
+		canvas.DrawText("Space - Reset map",32,20)
+		If Keyboard.KeyReleased(Key.Space) Then 
+			mymap = New map(Width,Height,50,50,2000)
+		End If
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 	
