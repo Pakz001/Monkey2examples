@@ -4,24 +4,135 @@
 Using std..
 Using mojo..
 
-Global blinkspeed:Int=5
+Global blinkspeed:Int=5 ' lower is faster
 
+' Controls like mouse pressed and keyboard
 Class controls
+	' if mouse on unit then activate unit
+	Method activateunit()
+		If Mouse.ButtonReleased(MouseButton.Left) = False Then Return		
+		Local x:Int=Mouse.X / myworld.tw
+		Local y:Int=Mouse.Y / myworld.th
+		If myunitmethod.isunitatpos(x,y) = False Then return
+		myunitmethod.unitsactivedisable()
+		myunitmethod.activateunitatpos(x,y)
+	End Method
+	' if pressed b then build city at active unit
+	Method buildcity()
+		If Keyboard.KeyReleased(Key.B)
+			Local x:Int,y:Int
+			'get the active unit x and y coordinates
+			For Local i:=Eachin myunit
+				If i.active = True
+					x = i.x
+					y = i.y
+					Exit
+				End If
+			Next
+			mycity.Add(New city(x,y))
+		End If
+	End Method
+	' add a unit to the map (cheat)
 	Method addunit()
+		If Keyboard.KeyDown(Key.LeftShift)
 		If Mouse.ButtonReleased(MouseButton.Left)
 			myunit.Add(New unit(Mouse.X/myworld.tw,Mouse.Y/myworld.th))
 		End If
+		End if
 	End Method
 	Method moveunit()
 		If Mouse.ButtonReleased(MouseButton.Right)
 			Local x:Int=Mouse.X / myworld.tw
 			Local y:Int=Mouse.Y / myworld.th
-			myunitmethod.moveactiveunitto(x,y)
+			myunitmethod.moveactiveunitto(x,y)			
 		End If
 	End Method
 End Class
 
+Class city
+	Field x:Int
+	Field y:Int
+	Field size:Int=1
+	Field deleteme:Bool=False
+	Method New(x:Int,y:int)
+		If cityatpos(x,y) = True Then deleteme = True ; Return
+		Self.x = x
+		Self.y = y
+		myunitmethod.removeactiveunit()
+	End Method
+	'return true if there is a city at the input coords
+	Method cityatpos:Bool(x:Int,y:Int)
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y Then Return True
+		Next
+		Return False
+	End Method
+	'draw the city
+	Method draw(canvas:Canvas)
+		Local mx:Int=x*myworld.tw
+		Local my:Int=y*myworld.th
+		Local tw:Int=myworld.tw
+		Local th:Int=myworld.th
+		canvas.Color = New Color(1,0,0)
+		canvas.DrawRect(mx,my,tw,th)
+		canvas.Color = New Color(1,1,1)
+		canvas.DrawRect(mx+4,my+4,tw-8,th-8)
+		canvas.Color = New Color(0,0,0)
+		canvas.DrawText(size,mx+tw/2,my+th/2,.5,.5)
+	End Method
+End Class
+
+' Methods to modify units
 Class unitmethod
+	'activate unit at position
+	
+	Method activateunitatpos(x:int,y:int)
+		For Local i:=Eachin myunit
+			If i.x = x And i.y = y
+				i.active = True
+				i.ontop = True
+				i.visible = True
+				i.blinktimer = 0
+				return
+			End If
+		Next
+	End Method
+	' disable ontop flag at pos x,y
+	Method disableunitontopat(x:Int,y:Int)
+		For Local i:=Eachin myunit
+			If i.x = x And i.y = y
+				i.ontop = False
+			End If
+		Next
+	End Method
+	'see if there is a unit at pos x,y
+	Method isunitatpos:bool(x:Int,y:Int)
+		For Local i:=Eachin myunit
+			If i.x = x And i.y = y
+				Return True
+			End If
+		Next
+		Return False
+	End Method
+	'disable the active unit state
+	Method unitsactivedisable()
+		For Local i:=Eachin myunit
+			If i.active = True
+				i.active = False
+				i.visible = True
+				return
+			End If
+		Next
+	End Method
+	' Remove the current active unit
+	Method removeactiveunit()
+		For Local i:=Eachin myunit
+			If i.active = True Then 
+				i.active = False
+				i.deleteme = True
+			End If
+		Next
+	End Method
 	' Move active unit to this possition if possible
 	' checks if reachable. 
 	Method moveactiveunitto(x:Int,y:Int)
@@ -29,18 +140,20 @@ Class unitmethod
 		If myworld.map[x,y] <= 5 Then Return
 		' find unit and move
 		For Local i:=Eachin myunit
-			If i.active = True
-				If i.x = x And i.y = y Then return
+			If i.active = True And i.movesleft >= 1				
+				If i.x = x And i.y = y Then Return
 				' see if we can move here.
-				If rectsoverlap(x,y,1,1,i.x-1,i.y-1,3,3)
+				If rectsoverlap(x,y,1,1,i.x-1,i.y-1,3,3)					
 					' at old position set one unit to visible
 					' and ontop
 					For Local i2:=Eachin myunit
-						 If i2.x = i.x And i2.y = i.y
-							 i2.visible = True
-							 i2.ontop = True
-							 Exit
-						 End if
+						If i<>i2
+						If i2.x = i.x And i2.y = i.y
+							i2.visible = True							 
+							i2.ontop = True							 
+							Exit
+						End If
+						End If
 					Next					
 					' at new pos set units to invible
 					' and not ontop
@@ -53,7 +166,13 @@ Class unitmethod
 					i.x = x
 					i.y = y
 					i.visible = True
+					i.ontop = True
 					i.blinktimer = 0
+					i.movesleft -= 1
+					If i.movesleft <= 0 Then 
+						i.visible = True
+						i.active = False
+					End If
 				End If
 			End If
 		Next
@@ -75,6 +194,7 @@ Class unit
 	Field deleteme:Bool=False
 	Field visible:Bool=True
 	Field blinktimer:Int
+	Field movesleft:Float=1
 	Method New(mx:Int,my:Int)
 		If myworld.map[mx,my] <= 5 Then deleteme=True ; return		
 		Self.x = mx
@@ -107,11 +227,20 @@ Class unit
 			Next
 	End Method
 	Method draw(canvas:Canvas)
-		If ontop = True And visible = true
+		If ontop = True And visible = True			
 			Local mx:Float = x * myworld.tw
-			Local my:Float = y * myworld.th				
+			Local my:Float = y * myworld.th
+			canvas.Scissor = New Recti(mx,my,myworld.tw,myworld.th)
 			canvas.Color = New Color(1,1,1)
 			canvas.DrawRect(mx,my,myworld.tw,myworld.th)
+			'
+			If movesleft <= 0 
+				canvas.Color = New Color(.5,.5,.5)
+				
+				For Local x1:Int = mx-10 Until mx+myworld.tw Step 5				
+					canvas.DrawLine(x1,my,x1+10,my+myworld.th)
+				Next				
+			End If
 		End If
 	End Method
 End Class
@@ -295,6 +424,7 @@ Global myworld:world
 Global mytile:tile
 Global myunit:List<unit> = New List<unit>
 Global myunitmethod:unitmethod
+Global mycity:List<city> = New List<city>
 
 Class MyWindow Extends Window
 	Method New()
@@ -310,8 +440,15 @@ Class MyWindow Extends Window
 		'
 		mycontrols.addunit()
 		mycontrols.moveunit()
-		'
+		mycontrols.buildcity()
+		mycontrols.activateunit()
+		'Draw world
 		myworld.draw(canvas)
+		' Draw cities
+		For Local i:=Eachin mycity
+			i.draw(canvas)
+		Next
+		'Draw units
 		For Local i:=Eachin myunit
 			i.draw(canvas)
 		Next		
@@ -327,7 +464,10 @@ Class MyWindow Extends Window
 			End If
 			If i.deleteme = True Then myunit.Remove(i)
 		Next
-				
+		' Refresh city list
+		For Local i:=Eachin mycity
+			If i.deleteme = True Then mycity.Remove(i)
+		Next	
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
