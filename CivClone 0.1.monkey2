@@ -5,17 +5,28 @@ Using std..
 Using mojo..
 
 Global blinkspeed:Int=5 ' lower is faster
+Global turn:Int=1
 
 ' Controls like mouse pressed and keyboard
 Class controls
+	' End of turn
+	Method endofturn()
+		If Keyboard.KeyReleased(Key.Enter)
+			For Local i:=Eachin myunit
+				i.movesleft = i.originalmoves
+			Next
+			turn+=1
+			myunitmethod.activateamovableunit()
+		End If
+	End Method
 	' if mouse on unit then activate unit
 	Method activateunit()
 		If Mouse.ButtonReleased(MouseButton.Left) = False Then Return		
 		Local x:Int=Mouse.X / myworld.tw
 		Local y:Int=Mouse.Y / myworld.th
-		If myunitmethod.isunitatpos(x,y) = False Then return
+		If myunitmethod.ismovableunitatpos(x,y) = False Then return
 		myunitmethod.unitsactivedisable()
-		myunitmethod.activateunitatpos(x,y)
+		myunitmethod.activatemovableunitatpos(x,y)
 	End Method
 	' if pressed b then build city at active unit
 	Method buildcity()
@@ -26,10 +37,12 @@ Class controls
 				If i.active = True
 					x = i.x
 					y = i.y
+					i.deleteme = true
 					Exit
 				End If
 			Next
 			mycity.Add(New city(x,y))
+			myunitmethod.activateamovableunit()
 		End If
 	End Method
 	' add a unit to the map (cheat)
@@ -84,16 +97,33 @@ End Class
 
 ' Methods to modify units
 Class unitmethod
-	'activate unit at position
-	
-	Method activateunitatpos(x:int,y:int)
+	' this function finds a unit that has not moved yet.
+	'note : currently it only activas ontop units.
+	Method activateamovableunit()
+		For Local i:=Eachin myunit
+			If i.deleteme = False
+			If i.ontop = True
+			If i.movesleft > 0
+				i.active = True
+				i.visible = True
+				i.blinktimer = 0
+				Return
+			End If
+			End If
+			End if
+		Next
+	End Method
+	'activate unit at position	
+	Method activatemovableunitatpos(x:int,y:int)
 		For Local i:=Eachin myunit
 			If i.x = x And i.y = y
+			If i.movesleft > 0
 				i.active = True
 				i.ontop = True
 				i.visible = True
 				i.blinktimer = 0
 				return
+			End if
 			End If
 		Next
 	End Method
@@ -106,10 +136,12 @@ Class unitmethod
 		Next
 	End Method
 	'see if there is a unit at pos x,y
-	Method isunitatpos:bool(x:Int,y:Int)
+	Method ismovableunitatpos:bool(x:Int,y:Int)
 		For Local i:=Eachin myunit
 			If i.x = x And i.y = y
-				Return True
+				If i.movesleft > 0
+					Return True
+				End If
 			End If
 		Next
 		Return False
@@ -172,6 +204,7 @@ Class unitmethod
 					If i.movesleft <= 0 Then 
 						i.visible = True
 						i.active = False
+						myunitmethod.activateamovableunit()
 					End If
 				End If
 			End If
@@ -195,6 +228,7 @@ Class unit
 	Field visible:Bool=True
 	Field blinktimer:Int
 	Field movesleft:Float=1
+	Field originalmoves:Float=1
 	Method New(mx:Int,my:Int)
 		If myworld.map[mx,my] <= 5 Then deleteme=True ; return		
 		Self.x = mx
@@ -230,13 +264,17 @@ Class unit
 		If ontop = True And visible = True			
 			Local mx:Float = x * myworld.tw
 			Local my:Float = y * myworld.th
-			canvas.Scissor = New Recti(mx,my,myworld.tw,myworld.th)
+			Local rec:Recti<Int>
+			rec.X = mx
+			rec.Y = my
+			rec.Size = New Vec2i(myworld.tw,myworld.th)
+			canvas.Scissor = rec
+			
 			canvas.Color = New Color(1,1,1)
 			canvas.DrawRect(mx,my,myworld.tw,myworld.th)
 			'
 			If movesleft <= 0 
-				canvas.Color = New Color(.5,.5,.5)
-				
+				canvas.Color = New Color(.5,.5,.5)				
 				For Local x1:Int = mx-10 Until mx+myworld.tw Step 5				
 					canvas.DrawLine(x1,my,x1+10,my+myworld.th)
 				Next				
@@ -442,6 +480,7 @@ Class MyWindow Extends Window
 		mycontrols.moveunit()
 		mycontrols.buildcity()
 		mycontrols.activateunit()
+		mycontrols.endofturn()
 		'Draw world
 		myworld.draw(canvas)
 		' Draw cities
@@ -468,6 +507,17 @@ Class MyWindow Extends Window
 		For Local i:=Eachin mycity
 			If i.deleteme = True Then mycity.Remove(i)
 		Next	
+		'
+		Local rec:Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)
+		canvas.Scissor = rec
+		
+		canvas.Color = New Color(0,0,0)
+		canvas.DrawRect(0,Height-20,50,20)
+		canvas.Color = New Color(1,1,1)
+		canvas.DrawText("Turn:"+turn,0,Height-15)
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
