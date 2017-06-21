@@ -8,9 +8,42 @@ Global blinkspeed:Int=5 ' lower is faster
 Global turn:Int=1
 Global activeunitmovesleft:Float=1
 Global gamehasmovesleft:Bool=True
+Global cityscreenopen:Bool=False
+Global keydelay:Int=0
+
+Class citycontrols
+	Method controls()
+		If Keyboard.KeyReleased(Key.Escape)
+			cityscreenopen = False
+			keydelay = 0
+		End If
+	End Method
+	
+End Class
+
+Class cityscreen
+	Field Width:Int,Height:Int
+	Method New(Width:Int,Height:Int)
+		Self.Width = Width
+		Self.Height = Height
+	End Method
+	Method draw(canvas:Canvas)
+		canvas.Color = Color.Black
+		canvas.DrawRect(50,50,Width-100,Height-100)	
+	End Method
+End Class
 
 ' Controls like mouse pressed and keyboard
 Class controls
+	'If press on city then open city sceen
+	Method opencityscreen()
+		If Mouse.ButtonReleased(MouseButton.Left)
+		If mycitymethod.hascityatmousepos()
+			cityscreenopen = true
+		End If
+		End If
+		
+	End Method
 	'unit skip turn (space)
 	Method activeunitskipturn()
 		If Keyboard.KeyReleased(Key.Space)
@@ -114,6 +147,20 @@ Class city
 		canvas.DrawText(size,mx+tw/2,my+th/2,.5,.5)
 	End Method
 End Class
+
+'city methods
+Class citymethod
+	Method hascityatmousepos:Bool()
+		Local x:Int=Mouse.X / myworld.tw
+		Local y:Int=Mouse.Y / myworld.th
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y
+				Return True
+			End If
+		Next
+		Return False
+	End Method
+End class
 
 ' Methods to modify units
 Class unitmethod
@@ -225,7 +272,7 @@ Class unitmethod
 			End If
 		Next
 		gamehasmovesleft=False
-End Method
+	End Method
 	'activate unit at position	
 	Method activatemovableunitatpos(x:int,y:int)
 		For Local i:=Eachin myunit
@@ -651,6 +698,9 @@ Global mytile:tile
 Global myunit:List<unit> = New List<unit>
 Global myunitmethod:unitmethod
 Global mycity:List<city> = New List<city>
+Global mycityscreen:cityscreen
+Global mycitymethod:citymethod
+Global mycitycontrols:citycontrols
 
 Class MyWindow Extends Window
 	Method New()
@@ -659,11 +709,16 @@ Class MyWindow Extends Window
 		mytile = New tile()
 		myunit.Add(New unit(5,5))
 		myunitmethod = New unitmethod()
+		mycityscreen = New cityscreen(Width,Height)
+		mycitymethod = New citymethod()
+		mycitycontrols = New citycontrols()
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
+		keydelay+=1
 		App.RequestRender() ' Activate this method 
 		'
+		If cityscreenopen = False
 		If Keyboard.KeyDown(Key.F1) = False
 		mycontrols.addunit()
 		mycontrols.moveunit()
@@ -672,12 +727,31 @@ Class MyWindow Extends Window
 		mycontrols.myendofturn()
 		mycontrols.buildroad()
 		mycontrols.activeunitskipturn()
+		mycontrols.opencityscreen()
 		End If
+		End If
+		If cityscreenopen = True
+			mycitycontrols.controls()
+			mycityscreen.draw(canvas)
+		End If
+		If cityscreenopen = False
+			updatemaingame(canvas,Width,Height)
+		End If
+		
+		' if key escape then quit
+		If keydelay>10 And cityscreenopen = False
+			If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
+		End If
+	End Method	
+	
+End	Class
+
+Function updatemaingame(canvas:Canvas,Width:Int,Height:int)
 		'Draw world
 		myworld.draw(canvas)
 		'Draw roads
 		myworld.drawroads(canvas)
-		
+
 		' Draw cities
 		For Local i:=Eachin mycity
 			i.draw(canvas)
@@ -734,12 +808,7 @@ Class MyWindow Extends Window
 
 
 		If Keyboard.KeyDown(Key.F1) Then drawhelpscreen(canvas,Width,Height)
-
-		' if key escape then quit
-		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
-	End Method	
-	
-End	Class
+End function
 
 Function drawhelpscreen(canvas:Canvas,Width:int,Height:Int)
 	canvas.Color = New Color(0,0,0)
@@ -753,6 +822,7 @@ Function drawhelpscreen(canvas:Canvas,Width:int,Height:Int)
 	canvas.DrawText("B - Build City",60,160)
 	canvas.DrawText("Enter - Next Turn",60,180)
 	canvas.DrawText("Space - Unit Skip Turn.",60,200)
+	canvas.DrawText("Left Mouse on City - Open city screen",60,220)
 	
 End Function
 
