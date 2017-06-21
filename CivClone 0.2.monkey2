@@ -41,7 +41,7 @@ Class controls
 	'fortify unit (f key)
 	Method fortifyunit()
 		If Keyboard.KeyReleased(Key.F)
-			myunitmethod.fortifyactiveunit()
+			myunitmethod.unitactivefortify()
 			myunitmethod.activateamovableunit()
 		End If
 	End Method
@@ -112,23 +112,27 @@ Class controls
 		End If
 	End Method
 	' add a unit to the map (cheat)
-	Method addunit()
+	Method addunit(canvas:Canvas,Width:int,Height:Int)
 		If Keyboard.KeyDown(Key.LeftShift)
 		If Mouse.Y / myworld.th < myworld.mh-1
 		If Mouse.ButtonReleased(MouseButton.Left)
 		If myworld.map[Mouse.X/myworld.tw,Mouse.Y/myworld.th] > 5
 			myunit.Add(New unit(Mouse.X/myworld.tw,Mouse.Y/myworld.th))
+			myunitmethod.removefog(Mouse.X/myworld.tw,Mouse.Y/myworld.th)
+			redrawgame()
 		End if
 		End if
 		End If
 		End If
 	End Method
-	Method moveunit()
+	Method moveunit(canvas:Canvas,Width:int,Height:Int)
 		If Mouse.ButtonReleased(MouseButton.Right)
 		If Mouse.Y / myworld.th < myworld.mh-1
 			Local x:Int=Mouse.X / myworld.tw
 			Local y:Int=Mouse.Y / myworld.th
 			myunitmethod.moveactiveunitto(x,y)
+			'updatemapingame(canvas,Width,Height)
+			redrawgame()
 		End If			
 		End If
 	End Method
@@ -231,8 +235,29 @@ End class
 
 ' Methods to modify units
 Class unitmethod
+	Method removefog(x:int,y:int)
+		Local lefttop:Bool=False
+		Local righttop:Bool=False
+		Local leftbottom:Bool=False
+		Local rightbottom:Bool=False
+		If x-2 >= 0 And y-2 >= 0 And myworld.fogmap[x-2,y-2] = True Then lefttop = True
+		If x+2 < myworld.mw And y-2 >=0 And myworld.fogmap[x+2,y-2] = True Then righttop = True
+		If x-2 >= 0 And y+2 <myworld.mh And myworld.fogmap[x-2,y+2] = True Then leftbottom = True
+		If x+2 < myworld.mw And y+2 < myworld.mh And myworld.fogmap[x+2,y+2] = True Then rightbottom = True
+		For Local y1:=y-2 To y+2
+		For Local x1:=x-2 To x+2
+			If x1>=0 And y1>=0 And x1<myworld.mw And y1<myworld.mh
+				myworld.fogmap[x1,y1] = False
+			End if
+		Next
+		Next	
+		If lefttop = True Then myworld.fogmap[x-2,y-2] = True
+		If righttop = True Then myworld.fogmap[x+2,y-2] = true
+		If leftbottom = True Then myworld.fogmap[x-2,y+2] = True
+		If rightbottom = True Then myworld.fogmap[x+2,y+2] = True
+	End Method
 	'fortify the active unit
-	Method fortifyactiveunit()
+	Method unitactivefortify()
 		For Local i:=Eachin myunit
 			If i.active = True
 				i.active = False
@@ -442,6 +467,7 @@ Class unitmethod
 					Next					
 					i.x = newposx
 					i.y = newposy
+					myunitmethod.removefog(i.x,i.y)					
 					i.visible = True
 					i.ontop = True
 					i.blinktimer = 0
@@ -694,6 +720,7 @@ Class world
 	End Class
 	Field roadmap:roadconnection[,] = New roadconnection[1,1]
 	Field map:Int[,] = New Int[1,1]
+	Field fogmap:Bool[,] = New bool[1,1]
 	Field tw:Float,th:Float
 	Field sw:Int,sh:Int
 	Field mw:Int,mh:Int
@@ -712,6 +739,12 @@ Class world
 		For Local my:=0 Until mh
 		For Local mx:=0 Until mw
 			roadmap[mx,my] = New roadconnection()
+		Next
+		Next
+		fogmap = New Bool[mw,mh]
+		For Local y:=0 Until mh
+		For Local x:=0 Until mw
+			fogmap[x,y] = True
 		Next
 		Next
 		makemap()
@@ -787,6 +820,19 @@ Class world
 		Next
 		canvas.Flush()
 	End Method
+	Method updatedrawfog(canvas:Canvas)
+		canvas.Color = Color.Black
+		For Local y:Float=0 Until mh-1 Step 1
+		For Local x:Float=0 Until mw Step 1			
+			Local x2:Float=x*tw
+			Local y2:Float=y*th
+			If fogmap[x,y] = True Then
+				canvas.DrawRect(x2,y2,tw,th)
+			end If			
+		Next
+		Next		
+		canvas.Flush()
+	End Method
 	Method updatedrawroads(canvas:Canvas)	
 		canvas.Color = New Color(.7,.3,0)
 		For Local y:Float=0 Until mh-1 Step 1
@@ -841,6 +887,57 @@ Class world
 			If rectsoverlap(x3,y3,2,2,x2,y2,2,2) Then Exit
 		Forever
 	End Method
+	Method updatedrawfogedge(canvas:Canvas)
+		For Local my:=0 Until mh-1
+		For Local mx:=0 Until mw
+			Local lefttopx:Int=mx*tw
+			Local lefttopy:Int=my*th
+			Local righttopx:Int=mx*tw+tw
+			Local righttopy:Int=my*th
+			Local rightbottomx:Int=mx*tw+tw
+			Local rightbottomy:Int=my*th+th
+			Local leftbottomx:Int=mx*tw
+			Local leftbottomy:Int=my*th+th
+			If fogmap[mx,my] = true 'if fog tile
+			If mx-1>=0 And fogmap[mx-1,my] = False 'if left is visible
+				drawfogline(canvas,lefttopx,lefttopy,leftbottomx,leftbottomy)
+			End If
+			If my-1>=0 And fogmap[mx,my-1] = False 'if top is visible
+				drawfogline(canvas,lefttopx,lefttopy,righttopx,righttopy)
+			End If
+			If mx+1<mw And fogmap[mx+1,my] = False 'if right is visible
+				drawfogline(canvas,righttopx,righttopy,rightbottomx,rightbottomy)
+			End If
+			If my+1<mh And fogmap[mx,my+1] = false 'if bottom is visible
+				drawfogline(canvas,leftbottomx,leftbottomy,rightbottomx,rightbottomy)
+			End If
+			End If
+		Next
+		Next
+		canvas.Flush()
+	End Method	
+	Method drawfogline(canvas:Canvas,x1:Float,y1:Float,x2:float,y2:float)		
+		SeedRnd(x1*y1)
+		Local oldx:Float=x1,oldy:Float=y1
+		Local x3:Float=x1,y3:Float=y1
+		Repeat
+			If x3<x2 Then x3+=Rnd(1)
+			If y3<y2 Then y3+=Rnd(1)
+			If x3>x2 Then x3-=Rnd(1)
+			If y3>y2 Then y3-=Rnd(1)
+			Local c:Float=0
+			If Rnd(1)<.5
+			canvas.Color = New Color(c,c,c)
+			canvas.DrawRect(x3+Rnd(-4,4),y3+Rnd(-4,4),Rnd(2,4),Rnd(2,4))
+			End If
+			'If Rnd(1)<.5
+			'canvas.Color = New Color(1,1,1)
+			'canvas.DrawPoint(x3,y3)
+			'End If
+			If rectsoverlap(x3,y3,2,2,x2,y2,2,2) Then Return
+		Forever
+	End Method	
+
 	Method updatedrawwateredge(canvas:Canvas)
 		For Local my:=0 Until mh-1
 		For Local mx:=0 until mw
@@ -870,7 +967,7 @@ Class world
 		Next
 		canvas.Flush()
 	End Method
-	Method drawwaterline(canvas:Canvas,x1:float,y1:Float,x2:float,y2:float)		
+	Method drawwaterline(canvas:Canvas,x1:Float,y1:Float,x2:float,y2:float)		
 		SeedRnd(0)
 		Local oldx:Float=x1,oldy:Float=y1
 		Local x3:Float=x1,y3:Float=y1
@@ -908,7 +1005,7 @@ Global mycitycontrols:citycontrols
 Class MyWindow Extends Window
 	Method New()
 		Title="CivClone"
-		newgame(Width,Height,0)
+		startnewgame(Width,Height,0)
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -917,8 +1014,8 @@ Class MyWindow Extends Window
 		'
 		If cityscreenopen = False
 		If Keyboard.KeyDown(Key.F1) = False
-		mycontrols.addunit()
-		mycontrols.moveunit()
+		mycontrols.addunit(canvas,Width,Height)
+		mycontrols.moveunit(canvas,Width,Height)
 		mycontrols.buildcity()
 		mycontrols.activateunit()
 		mycontrols.myendofturn()
@@ -941,7 +1038,7 @@ Class MyWindow Extends Window
 			If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 		End If
 		If Keyboard.KeyReleased(Key.F2)
-			newgame(Width,Height,Millisecs())
+			startnewgame(Width,Height,Millisecs())
 		End If
 	End Method	
 	
@@ -993,7 +1090,7 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 			If i.deleteme = True Then mycity.Remove(i)
 		Next	
 		'
-		rec = new Recti<Int>
+		rec = New Recti<Int>
 		rec.X = 0
 		rec.Y = 0
 		rec.Size = New Vec2i(Width,Height)
@@ -1025,7 +1122,8 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 		canvas.DrawText(App.FPS,0,0)
 
 		If Keyboard.KeyDown(Key.Key1) Then drawhelpscreen(canvas,Width,Height)
-End function
+		
+End Function
 
 Function drawhelpscreen(canvas:Canvas,Width:int,Height:Int)
 	canvas.Color = New Color(0,0,0)
@@ -1049,9 +1147,11 @@ Function redrawgame()
 	myworld.updatedraw(myworld.icanvas)
 	myworld.updatedrawwateredge(myworld.icanvas)
 	myworld.updatedrawroads(myworld.icanvas)	
+	myworld.updatedrawfog(myworld.icanvas)
+	myworld.updatedrawfogedge(myworld.icanvas)
 End Function
 
-Function newgame(Width:Int,Height:int,seed:Double)
+Function startnewgame(Width:Int,Height:int,seed:Double)
 	SeedRnd(seed)	
 	myunit = New List<unit>		
 	mycity = New List<city>	
@@ -1072,7 +1172,8 @@ Function findunitstartingposition()
 		Local y:Int=Rnd(myworld.mh-1)
 		If myworld.map[x,y] > 5
 			myunit.Add(New unit(x,y))
-			exit
+			myunitmethod.removefog(x,y)
+			Exit
 		End If
 	Forever
 End Function
