@@ -672,33 +672,47 @@ Class world
 			If roadmap[x,y].hasroad = True
 				canvas.DrawRect(x2+tw/2,y2+th/2,4,4)			
 				If roadmap[x,y].n = True Then
-					canvas.DrawLine(cx,cy,cx,cy-th/2)				
+					drawroadline(canvas,cx,cy,cx,cy-th/2)				
 				End If
 				If roadmap[x,y].ne = True Then
-					canvas.DrawLine(cx,cy,cx+tw/2,cy-th/2)				
+					drawroadline(canvas,cx,cy,cx+tw/2,cy-th/2)				
 				End If
 				If roadmap[x,y].e = True Then
-					canvas.DrawLine(cx,cy,cx+tw/2,cy)				
+					drawroadline(canvas,cx,cy,cx+tw/2,cy)				
 				End If
 				If roadmap[x,y].se = True Then
-					canvas.DrawLine(cx,cy,cx+tw/2,cy+th/2)				
+					drawroadline(canvas,cx,cy,cx+tw/2,cy+th/2)				
 				End If
 				If roadmap[x,y].s = True Then
-					canvas.DrawLine(cx,cy,cx,cy+th/2)				
+					drawroadline(canvas,cx,cy,cx,cy+th/2)				
 				End If
 				If roadmap[x,y].sw = True Then
-					canvas.DrawLine(cx,cy,cx-tw/2,cy+th/2)				
+					drawroadline(canvas,cx,cy,cx-tw/2,cy+th/2)				
 				End If
 				If roadmap[x,y].w = True Then
-					canvas.DrawLine(cx,cy,cx-tw/2,cy)				
+					drawroadline(canvas,cx,cy,cx-tw/2,cy)				
 				End If
 				If roadmap[x,y].nw = True Then
-					canvas.DrawLine(cx,cy,cx-tw/2,cy-th/2)				
+					drawroadline(canvas,cx,cy,cx-tw/2,cy-th/2)				
 				End If
 				
 			End If
 		Next
 		Next		
+	End Method
+	Method drawroadline(canvas:Canvas,x1:float,y1:Float,x2:Float,y2:Float)
+		SeedRnd(0)
+		Local x3:Float=x1
+		Local y3:Float=y1
+		Repeat
+			If x3<x2 Then x3+=Rnd(2)
+			If y3<y2 Then y3+=Rnd(2)
+			If x3>x2 Then x3-=Rnd(2)
+			If y3>y2 Then y3-=Rnd(2)
+			canvas.Color = New Color(Rnd(0.4,.7),Rnd(0.0,.3),0)
+			canvas.DrawCircle(x3,y3,Rnd(1,3))
+			If rectsoverlap(x3,y3,2,2,x2,y2,2,2) Then Exit
+		Forever
 	End Method
 	Method drawwateredge(canvas:Canvas)
 		For Local my:=0 Until mh
