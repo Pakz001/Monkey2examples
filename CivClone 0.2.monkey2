@@ -577,16 +577,18 @@ Class tile
 		SeedRnd(x*y)
 		canvas.Color = New Color(.5,0.6,0.2)
 		canvas.DrawRect(x,y,tw,th)
-
+		Local w:Float=tw/10
+		Local h:Float=th/10
+		
 		For Local i1:=0 Until 5
-		Local x1:Float=x+tw/2+Rnd(-4,4)
-		Local y1:Float=y+th/2+Rnd(-4,4)
+		Local x1:Float=x+tw/2+Rnd(-w,w)
+		Local y1:Float=y+th/2+Rnd(-h,h)
 		For Local i2:=0 Until 12
 			Local x2:float=x1+Rnd(-tw/3,tw/3)
 			Local y2:float=y1+Rnd(-th/3,th/3)
 			canvas.Color = New Color(.5+Rnd(.2),0.6+Rnd(.2),0.2+Rnd(.1))
 			
-			canvas.DrawCircle(x2,y2,Rnd(2,8))
+			canvas.DrawCircle(x2,y2,Rnd(w/2,w*1/5))
 		Next
 		Next
 
@@ -605,16 +607,18 @@ Class tile
 		SeedRnd(x*y)
 		canvas.Color = New Color(.5,0.3,0)
 		canvas.DrawRect(x,y,tw,th)
+		Local w:Float=tw/10
+		Local h:Float=th/10
 		
 		For Local i1:=0 Until 5
-		Local x1:Float=x+tw/2+Rnd(-4,4)
-		Local y1:Float=y+th/2+Rnd(-4,4)
+		Local x1:Float=x+tw/2+Rnd(-w,w)
+		Local y1:Float=y+th/2+Rnd(-h,h)
 		For Local i2:=0 Until 3
 			Local x2:float=x1+Rnd(-tw/3,tw/3)
 			Local y2:float=y1+Rnd(-th/3,th/3)
 			canvas.Color = New Color(.5+Rnd(0.2),.3+Rnd(.1),0)
 			'canvas.Color = New Color(0,Rnd(0,0.5),0)
-			canvas.DrawCircle(x2,y2,Rnd(5,8))
+			canvas.DrawCircle(x2,y2,Rnd(w,w*1.5))
 		Next
 		Next
 		
@@ -633,15 +637,16 @@ Class tile
 		SeedRnd(1)
 		canvas.Color = New Color(0,0.5,0)
 		canvas.DrawRect(x,y,tw,th)		
-
+		Local w:Float=tw/8
+		Local h:Float=th/8
 		For Local i1:=0 Until 5
 		Local x1:Float=x+Rnd(tw)
 		Local y1:Float=y+Rnd(th)
 		For Local i2:=0 Until 5
-			Local x2:float=x1+Rnd(-5,5)
-			Local y2:float=y1+Rnd(-5,5)
+			Local x2:float=x1+Rnd(-w,w)
+			Local y2:float=y1+Rnd(-h,h)
 			canvas.Color = New Color(0,Rnd(0,0.5),0)
-			canvas.DrawCircle(x2,y2,5)
+			canvas.DrawCircle(x2,y2,w)
 		Next
 		Next
 		For Local y2:Int=y Until y+th
