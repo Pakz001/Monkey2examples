@@ -6,14 +6,23 @@ Using mojo..
 
 Global blinkspeed:Int=5 ' lower is faster
 Global turn:Int=1
+Global activeunitmovesleft:Float=1
 
 ' Controls like mouse pressed and keyboard
 Class controls
+	' build a road
+	Method buildroad()
+		If Keyboard.KeyReleased(Key.R)
+			myunitmethod.buildroadatactiveunitpos()				
+		End If
+	End Method
+	
 	' End of turn
-	Method endofturn()
+	Method myendofturn()
 		If Keyboard.KeyReleased(Key.Enter)
 			For Local i:=Eachin myunit
 				i.movesleft = i.originalmoves
+				i.active = False				
 			Next
 			turn+=1
 			myunitmethod.activateamovableunit()
@@ -97,31 +106,102 @@ End Class
 
 ' Methods to modify units
 Class unitmethod
-	' this function finds a unit that has not moved yet.
-	'note : currently it only activas ontop units.
-	Method activateamovableunit()
+	Method buildroadatactiveunitpos()
 		For Local i:=Eachin myunit
-			If i.deleteme = False
-			If i.ontop = True
-			If i.movesleft > 0
-				i.active = True
+			If i.active = True And myworld.roadmap[i.x,i.y].hasroad = False
+				i.active = False
+				i.movesleft = 0
 				i.visible = True
-				i.blinktimer = 0
-				Return
+				myworld.roadmap[i.x,i.y].hasroad = True
+				' has road north
+				If i.y-1 >=0
+					If myworld.roadmap[i.x,i.y-1].hasroad = True Then
+						myworld.roadmap[i.x,i.y].n = True
+						myworld.roadmap[i.x,i.y-1].s = true
+					End If
+				End If
+				'has a road north east
+				If i.x+1<myworld.mw And i.y-1 >=0
+					If myworld.roadmap[i.x+1,i.y-1].hasroad = True
+						myworld.roadmap[i.x,i.y].ne = True
+						myworld.roadmap[i.x+1,i.y-1].sw = True
+					End If
+				End If
+				'has a road east
+				If i.x+1<myworld.mw 
+					If myworld.roadmap[i.x+1,i.y].hasroad = True
+						myworld.roadmap[i.x,i.y].e = True
+						myworld.roadmap[i.x+1,i.y].w = True
+					End If
+				End If
+				'has a road south east
+				If i.x+1<myworld.mw 
+					If myworld.roadmap[i.x+1,i.y+1].hasroad = True
+						myworld.roadmap[i.x,i.y].se = True
+						myworld.roadmap[i.x+1,i.y+1].nw = True
+					End If
+				End If
+				'has a road south
+				If i.y+1<myworld.mh
+					If myworld.roadmap[i.x,i.y+1].hasroad = True
+						myworld.roadmap[i.x,i.y].s = True
+						myworld.roadmap[i.x,i.y+1].n = True
+					End If
+				End If
+				'has a road south west
+				If i.x-1 >=0 And i.y+1<myworld.mh
+					If myworld.roadmap[i.x-1,i.y+1].hasroad = True
+						myworld.roadmap[i.x,i.y].sw = True
+						myworld.roadmap[i.x-1,i.y+1].ne = True
+					End If
+				End If
+				'has a road west
+				If i.x-1 >=0 
+					If myworld.roadmap[i.x-1,i.y].hasroad = True
+						myworld.roadmap[i.x,i.y].w = True
+						myworld.roadmap[i.x-1,i.y].e = True
+					End If
+				End If
+				'has a north west
+				If i.x-1 >=0 And i.y-1>=0
+					If myworld.roadmap[i.x-1,i.y-1].hasroad = True
+						myworld.roadmap[i.x,i.y].nw = True
+						myworld.roadmap[i.x-1,i.y-1].se = True
+					End If
+				End If
+				'find next movable unit
+				activateamovableunit()
+				Exit
 			End If
-			End If
-			End if
 		Next
 	End Method
-	'activate unit at position	
-	Method activatemovableunitatpos(x:int,y:int)
+	' this function finds a unit that has not moved yet.
+	Method activateamovableunit()
 		For Local i:=Eachin myunit
-			If i.x = x And i.y = y
-			If i.movesleft > 0
+			If i.deleteme = False			
+			If i.movesleft > .3				
+				myunitmethod.disableunitontopat(i.x,i.y)
 				i.active = True
 				i.ontop = True
 				i.visible = True
 				i.blinktimer = 0
+				activeunitmovesleft = i.movesleft
+				Return
+			End If			
+			End If
+		Next
+End Method
+	'activate unit at position	
+	Method activatemovableunitatpos(x:int,y:int)
+		For Local i:=Eachin myunit
+			If i.x = x And i.y = y
+			If i.movesleft > .3
+				i.active = True
+				myunitmethod.disableunitontopat(i.x,i.y)
+				i.ontop = True
+				i.visible = True
+				i.blinktimer = 0
+				activeunitmovesleft = i.movesleft
 				return
 			End if
 			End If
@@ -167,20 +247,22 @@ Class unitmethod
 	End Method
 	' Move active unit to this possition if possible
 	' checks if reachable. 
-	Method moveactiveunitto(x:Int,y:Int)
+	Method moveactiveunitto(newposx:Int,newposy:Int)
 		' if destination is water then return
-		If myworld.map[x,y] <= 5 Then Return
+		If myworld.map[newposx,newposy] <= 5 Then Return
 		' find unit and move
 		For Local i:=Eachin myunit
-			If i.active = True And i.movesleft >= 1				
-				If i.x = x And i.y = y Then Return
+			If i.active = True And i.movesleft > .3				
+				If i.x = newposx And i.y = newposy Then Return
+				Local oldposx:Int=i.x
+				Local oldposy:Int=i.y
 				' see if we can move here.
-				If rectsoverlap(x,y,1,1,i.x-1,i.y-1,3,3)					
+				If rectsoverlap(newposx,newposy,1,1,oldposx-1,oldposy-1,3,3)										
 					' at old position set one unit to visible
 					' and ontop
 					For Local i2:=Eachin myunit
 						If i<>i2
-						If i2.x = i.x And i2.y = i.y
+						If i2.x = oldposx And i2.y = oldposy
 							i2.visible = True							 
 							i2.ontop = True							 
 							Exit
@@ -190,21 +272,28 @@ Class unitmethod
 					' at new pos set units to invible
 					' and not ontop
 					For Local i2:=Eachin myunit
-						If i2.x = x And i2.y = y
+						If i2.x = newposx And i2.y = newposy
 							i2.visible = False
 							i2.ontop = False
 						End If
 					Next					
-					i.x = x
-					i.y = y
+					i.x = newposx
+					i.y = newposy
 					i.visible = True
 					i.ontop = True
 					i.blinktimer = 0
-					i.movesleft -= 1
-					If i.movesleft <= 0 Then 
+					' here we do the movement cost
+					If myworld.roadmap[newposx,newposy].hasroad = True
+						i.movesleft -=.33
+					Else
+						i.movesleft -= 1
+					End If
+					activeunitmovesleft = i.movesleft
+					If i.movesleft < .3 Then 
 						i.visible = True
 						i.active = False
 						myunitmethod.activateamovableunit()
+						return
 					End If
 				End If
 			End If
@@ -273,7 +362,7 @@ Class unit
 			canvas.Color = New Color(1,1,1)
 			canvas.DrawRect(mx,my,myworld.tw,myworld.th)
 			'
-			If movesleft <= 0 
+			If movesleft <= .3 
 				canvas.Color = New Color(.5,.5,.5)				
 				For Local x1:Int = mx-10 Until mx+myworld.tw Step 5				
 					canvas.DrawLine(x1,my,x1+10,my+myworld.th)
@@ -378,6 +467,25 @@ Class tile
 End Class
 
 Class world
+	Class roadconnection
+		Field hasroad:Bool = False
+		Field n:Bool=False,ne:Bool=False
+		Field e:Bool=False,se:Bool=False
+		Field s:Bool=False,sw:Bool=False
+		Field w:Bool=False,nw:Bool=false
+		Method New()
+			'n=True
+			'e=True
+			's=True
+			'w=True
+			'ne=True
+			'se=True
+			'sw=True
+			'nw=True
+			'hasroad=true
+		End Method	
+	End Class
+	Field roadmap:roadconnection[,] = New roadconnection[1,1]
 	Field map:Int[,] = New Int[1,1]
 	Field tw:Float,th:Float
 	Field sw:Int,sh:Int
@@ -390,6 +498,12 @@ Class world
 		tw = Float(sw)/Float(mw)
 		th = Float(sh)/Float(mh)
 		map = New Int[mw,mh]
+		roadmap = New roadconnection[mw,mh]
+		For Local my:=0 Until mh
+		For Local mx:=0 Until mw
+			roadmap[mx,my] = New roadconnection()
+		Next
+		Next
 		makemap()
 	End Method
 	Method makemap()
@@ -455,6 +569,45 @@ Class world
 		Next
 		Next
 	End Method
+	Method drawroads(canvas:Canvas)	
+		canvas.Color = New Color(.7,.3,0)
+		For Local y:Float=0 Until mh Step 1
+		For Local x:Float=0 Until mw Step 1			
+			Local x2:Float=x*tw
+			Local y2:Float=y*th
+			Local cx:Float=x2+tw/2
+			Local cy:Float=y2+th/2
+			If roadmap[x,y].hasroad = True
+				canvas.DrawRect(x2+tw/2,y2+th/2,4,4)			
+				If roadmap[x,y].n = True Then
+					canvas.DrawLine(cx,cy,cx,cy-th/2)				
+				End If
+				If roadmap[x,y].ne = True Then
+					canvas.DrawLine(cx,cy,cx+tw/2,cy-th/2)				
+				End If
+				If roadmap[x,y].e = True Then
+					canvas.DrawLine(cx,cy,cx+tw/2,cy)				
+				End If
+				If roadmap[x,y].se = True Then
+					canvas.DrawLine(cx,cy,cx+tw/2,cy+th/2)				
+				End If
+				If roadmap[x,y].s = True Then
+					canvas.DrawLine(cx,cy,cx,cy+th/2)				
+				End If
+				If roadmap[x,y].sw = True Then
+					canvas.DrawLine(cx,cy,cx-tw/2,cy+th/2)				
+				End If
+				If roadmap[x,y].w = True Then
+					canvas.DrawLine(cx,cy,cx-tw/2,cy)				
+				End If
+				If roadmap[x,y].nw = True Then
+					canvas.DrawLine(cx,cy,cx-tw/2,cy-th/2)				
+				End If
+				
+			End If
+		Next
+		Next		
+	End Method
 End Class
 
 Global mycontrols:controls
@@ -480,9 +633,13 @@ Class MyWindow Extends Window
 		mycontrols.moveunit()
 		mycontrols.buildcity()
 		mycontrols.activateunit()
-		mycontrols.endofturn()
+		mycontrols.myendofturn()
+		mycontrols.buildroad()
 		'Draw world
 		myworld.draw(canvas)
+		'Draw roads
+		myworld.drawroads(canvas)
+		
 		' Draw cities
 		For Local i:=Eachin mycity
 			i.draw(canvas)
@@ -518,6 +675,13 @@ Class MyWindow Extends Window
 		canvas.DrawRect(0,Height-20,50,20)
 		canvas.Color = New Color(1,1,1)
 		canvas.DrawText("Turn:"+turn,0,Height-15)
+
+		canvas.Color = New Color(0,0,0)
+		canvas.DrawRect(100,Height-20,50,20)
+		canvas.Color = New Color(1,1,1)
+		canvas.DrawText("Moves Left:"+activeunitmovesleft,100,Height-15)
+
+
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
