@@ -7,9 +7,17 @@ Using mojo..
 Global blinkspeed:Int=5 ' lower is faster
 Global turn:Int=1
 Global activeunitmovesleft:Float=1
+Global gamehasmovesleft:Bool=True
 
 ' Controls like mouse pressed and keyboard
 Class controls
+	'unit skip turn (space)
+	Method activeunitskipturn()
+		If Keyboard.KeyReleased(Key.Space)
+			myunitmethod.activeunitskipturn()
+			myunitmethod.activateamovableunit()
+		End If
+	End Method
 	' build a road
 	Method buildroad()
 		If Keyboard.KeyReleased(Key.R)
@@ -24,8 +32,10 @@ Class controls
 				i.movesleft = i.originalmoves
 				i.active = False				
 			Next
+			gamehasmovesleft = true
 			turn+=1
 			myunitmethod.activateamovableunit()
+			
 		End If
 	End Method
 	' if mouse on unit then activate unit
@@ -40,6 +50,7 @@ Class controls
 	' if pressed b then build city at active unit
 	Method buildcity()
 		If Keyboard.KeyReleased(Key.B)
+			If myunitmethod.iscityatactiveunitpos() = true Then Return
 			Local x:Int,y:Int
 			'get the active unit x and y coordinates
 			For Local i:=Eachin myunit
@@ -106,6 +117,29 @@ End Class
 
 ' Methods to modify units
 Class unitmethod
+	' skip the turn of a unit (set its moves to 0)
+	Method activeunitskipturn()
+		For Local i:=Eachin myunit
+			If i.active = True
+				i.active = False
+				i.visible = true
+				i.movesleft = 0
+				Return
+			End If
+		Next
+	End Method
+	' returns if there is a city at the active unit its position	
+	Method iscityatactiveunitpos:bool()	
+		For Local i:=Eachin myunit
+			If i.active=True
+				For Local i2:=Eachin mycity
+					If i2.x = i.x And i2.y = i.y Then Return true
+				Next
+			End If
+		Next
+		Return False
+	End Method
+	' build a road at the active unit its position
 	Method buildroadatactiveunitpos()
 		For Local i:=Eachin myunit
 			If i.active = True And myworld.roadmap[i.x,i.y].hasroad = False
@@ -190,6 +224,7 @@ Class unitmethod
 			End If			
 			End If
 		Next
+		gamehasmovesleft=False
 End Method
 	'activate unit at position	
 	Method activatemovableunitatpos(x:int,y:int)
@@ -629,12 +664,15 @@ Class MyWindow Extends Window
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
 		'
+		If Keyboard.KeyDown(Key.F1) = False
 		mycontrols.addunit()
 		mycontrols.moveunit()
 		mycontrols.buildcity()
 		mycontrols.activateunit()
 		mycontrols.myendofturn()
 		mycontrols.buildroad()
+		mycontrols.activeunitskipturn()
+		End If
 		'Draw world
 		myworld.draw(canvas)
 		'Draw roads
@@ -672,21 +710,51 @@ Class MyWindow Extends Window
 		canvas.Scissor = rec
 		
 		canvas.Color = New Color(0,0,0)
-		canvas.DrawRect(0,Height-20,50,20)
+		canvas.DrawRect(0,Height-20,70,20)
 		canvas.Color = New Color(1,1,1)
 		canvas.DrawText("Turn:"+turn,0,Height-15)
 
 		canvas.Color = New Color(0,0,0)
-		canvas.DrawRect(100,Height-20,50,20)
+		canvas.DrawRect(100,Height-20,180,20)
 		canvas.Color = New Color(1,1,1)
-		canvas.DrawText("Moves Left:"+activeunitmovesleft,100,Height-15)
+		Local mystr:String = "Moves Left:"+activeunitmovesleft
+		canvas.DrawText(mystr.Mid(0,14),100,Height-15)
+		
+		If gamehasmovesleft = False
+		canvas.Color = New Color(0,0,0)
+		canvas.DrawRect(300,Height-20,200,20)
+		canvas.Color = New Color(1,1,1)
+		canvas.DrawText("Press Enter for new turn",300,Height-15)
+		End If
 
+		canvas.Color = New Color(0,0,0)
+		canvas.DrawRect(500,Height-20,200,20)
+		canvas.Color = New Color(1,1,1)
+		canvas.DrawText("Hold F1 for help.",500,Height-15)
+
+
+		If Keyboard.KeyDown(Key.F1) Then drawhelpscreen(canvas,Width,Height)
 
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 	
 End	Class
+
+Function drawhelpscreen(canvas:Canvas,Width:int,Height:Int)
+	canvas.Color = New Color(0,0,0)
+	canvas.DrawRect(50,50,Width-100,Height-100)
+	canvas.Color = Color.White
+	canvas.DrawText("F1 - This help screen",60,60)
+	canvas.DrawText("Left Mouse on movable Unit - Activate unit",60,80)
+	canvas.DrawText("Left Mouse and Shift - Create unit",60,100)
+	canvas.DrawText("Right Mouse - Move active unit.",60,120)
+	canvas.DrawText("R - Build Road",60,140)
+	canvas.DrawText("B - Build City",60,160)
+	canvas.DrawText("Enter - Next Turn",60,180)
+	canvas.DrawText("Space - Unit Skip Turn.",60,200)
+	
+End Function
 
 Function Main()
 	New AppInstance		
