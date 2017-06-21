@@ -6,8 +6,8 @@ Using mojo..
 
 ' Here is how many tiles there are drawn on the screen.
 ' Currently tested from 16x16 up to 32x32
-Global mystartmapwidth:Int=16
-Global mystartmapheight:Int=16
+Global mystartmapwidth:Int=24
+Global mystartmapheight:Int=24
 
 Global blinkspeed:Int=5 ' lower is faster
 Global turn:Int=1
@@ -18,6 +18,245 @@ Global cityscreenopen:Bool=False
 'if a key is pressed and this value is >  0 then this 
 'variable is set to 0 again.
 Global keydelay:Int=0
+Global mousedelay:Int=0
+
+Class unituserinterface
+	Field Width:Int,Height:Int
+	Field arrowimage:Image
+	Field arrowcanvas:Canvas
+	Field ix:Int,iy:Int
+	Field undockx:Int,undocky:Int
+	Field undockw:Int,undockh:Int
+	Field dockx:Int,docky:Int
+	Field dockw:Int,dockh:Int
+
+	Field docked:Bool=false	
+	Method New(Width:Int,Height:Int)
+		Self.Width = Width
+		Self.Height = Height
+		dockside("Left")
+		arrowimage = New Image(Width/10,Height/10)
+		arrowcanvas = New Canvas(arrowimage)
+		arrowimage.Handle = New Vec2f( .5,.5 )
+		makearrow(arrowcanvas)
+	End Method
+	Method update()
+		If docked = False
+			If Mouse.ButtonReleased(MouseButton.Left)
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,dockx,docky,dockw,dockh)
+				docked = true
+				Return
+			End If
+			End If
+		End If		
+		If docked = True
+			If Mouse.ButtonReleased(MouseButton.Left)
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,undockx,undocky,undockw,undockh)
+				docked = false
+				Return
+			End If
+			End If
+		End If		
+
+		'unit movement
+		If Mouse.ButtonReleased(MouseButton.Left)
+			Local x:Int=ix-Width/20
+			Local y:Int=iy-Height/20
+			Local dx:Int,dy:Int
+			'find current active unit x and y position
+			For Local i:=Eachin myunit
+				If i.active = True
+					dx=i.x
+					dy=i.y
+					Exit
+				End If
+			Next
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x,y,Width/10,Height/10)
+				'Print "Up"+Millisecs()
+				myunitmethod.moveactiveunitto(dx,dy-1)
+			End If
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x,y+100,Width/10,Height/10)
+				'Print "Down"+Millisecs()
+				myunitmethod.moveactiveunitto(dx,dy+1)
+			End If
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-50,y+50,Width/10,Height/10)
+				'Print "Left"+Millisecs()
+				myunitmethod.moveactiveunitto(dx-1,dy)
+			End If
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+50,y+50,Width/10,Height/10)
+				'Print "Right"+Millisecs()
+				myunitmethod.moveactiveunitto(dx+1,dy)
+			End If
+
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-45,y,Width/10,Height/10)
+				'Print "LeftUp"+Millisecs()
+				myunitmethod.moveactiveunitto(dx-1,dy-1)
+			End If
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-45,y+100,Width/10,Height/10)
+				'Print "LeftDown"+Millisecs()
+				myunitmethod.moveactiveunitto(dx-1,dy+1)
+			End If
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+45,y,Width/10,Height/10)
+				'Print "RightUp"+Millisecs()
+				myunitmethod.moveactiveunitto(dx+1,dy-1)
+			End If
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+45,y+100,Width/10,Height/10)
+				'Print "RightDown"+Millisecs()
+				myunitmethod.moveactiveunitto(dx+1,dy+1)
+			End If
+			
+		End If
+		
+
+	End Method
+	Method dockside(side:string)
+		Select side
+			Case "Right"
+				ix = Width-150
+				iy = Height-200
+				undockx = ix + 100
+				undocky = iy + 160
+				undockw = 32
+				undockh = 20
+				dockx = ix + 100
+				docky = iy - 32
+				dockw = 32
+				dockh = 20
+			Case "Left"
+				ix = 150
+				iy = Height-200
+				undockx = ix - 140
+				undocky = iy + 160
+				undockw = 32
+				undockh = 20
+				dockx = ix - 140
+				docky = iy - 32
+				dockw = 32
+				dockh = 20
+				
+		End Select
+	End Method
+	Method draw(canvas:Canvas)
+
+		If docked = False Then				
+			
+			Local x:Int=ix
+			Local y:Int=iy
+			
+			drawarrow(canvas,x,y,"Up")
+			drawarrow(canvas,x-50,y+50,"Left")
+			drawarrow(canvas,x+50,y+50,"Right")
+			drawarrow(canvas,x,y+100,"Down")
+	
+			drawarrow(canvas,x-35,y,"LeftUp")
+			drawarrow(canvas,x-35,y+100,"LeftDown")
+			drawarrow(canvas,x+35,y,"RightUp")
+			drawarrow(canvas,x+35,y+100,"RightDown")
+	
+			drawarrow2(canvas,x,y,"Up")
+			drawarrow2(canvas,x-50,y+50,"Left")
+			drawarrow2(canvas,x+50,y+50,"Right")
+			drawarrow2(canvas,x,y+100,"Down")
+	
+			drawarrow2(canvas,x-45,y,"LeftUp")
+			drawarrow2(canvas,x-45,y+100,"LeftDown")
+			drawarrow2(canvas,x+45,y,"RightUp")
+			drawarrow2(canvas,x+45,y+100,"RightDown")
+			
+			'draw the dock
+			canvas.Color = Color.White
+			canvas.DrawRect(dockx,docky,dockw,dockh)
+			canvas.Color = Color.Black
+			canvas.DrawLine(dockx,docky,dockx+dockw/2,docky+dockh)
+			canvas.DrawLine(dockx+dockw,docky,dockx+dockw/2,docky+dockh)
+		End If
+		If docked = True
+			'draw the dock
+			canvas.Color = Color.White
+			canvas.DrawRect(undockx,undocky,undockw,undockh)
+			canvas.Color = Color.Black
+			canvas.DrawLine(undockx,undocky+undockh/2,undockx+undockw/2,undocky)
+			canvas.DrawLine(undockx+undockw,undocky+undockh/2,undockx+undockw/2,undocky)
+		End If			
+	End Method
+	Method drawarrow(canvas:Canvas,x:Int,y:Int,d:String)
+		Local rotation:Float=0
+		Select d
+			Case "RightUp"
+				rotation=-Pi/1.4
+			Case "RightDown"
+				rotation=Pi/1.4
+			Case "LeftDown"
+				rotation=Pi/3.3
+			Case "LeftUp"
+				rotation=-Pi/3.3
+			Case "Up"
+				rotation=-Pi/2
+			Case "Down"
+				rotation=Pi/2
+			Case "Left"
+				rotation=0
+			Case "Right"
+				rotation=-Pi
+		End Select				
+		canvas.Color = Color.Grey
+		canvas.DrawCircle(x,y,Width/20)
+		canvas.DrawImage(arrowimage,x,y,rotation)
+	end Method
+	Method drawarrow2(canvas:Canvas,x:Int,y:Int,d:String)
+		Local rotation:Float=0
+		Select d
+			Case "RightUp"
+				rotation=-Pi/1.4
+			Case "RightDown"
+				rotation=Pi/1.4
+			Case "LeftDown"
+				rotation=Pi/3.3
+			Case "LeftUp"
+				rotation=-Pi/3.3
+			Case "Up"
+				rotation=-Pi/2
+			Case "Down"
+				rotation=Pi/2
+			Case "Left"
+				rotation=0
+			Case "Right"
+				rotation=-Pi
+		End Select				
+		canvas.Color = Color.Red
+		canvas.DrawImage(arrowimage,x,y,rotation)
+	end Method
+
+	Method makearrow(canvas:Canvas)
+		canvas.Clear(New Color(0,0,0,0))
+		Local pol:= New Float[14]
+		Local w:Float = Width/10
+		Local h:Float = Height/10
+		pol[0] = 0
+		pol[1] = h/2		
+		pol[2] = w/3
+		pol[3] = h		
+		pol[4] = w/3
+		pol[5] = h/1.5		
+		pol[6] = w
+		pol[7] = h/1.5		
+		pol[8] = w
+		pol[9] = h/3		
+		pol[10] = w/3
+		pol[11] = 0+h/3		
+		pol[12] = w/3
+		pol[13] = 0
+		canvas.Color = Color.Grey
+		canvas.DrawPoly(pol)
+		canvas.Flush()
+	End Method
+	Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+	    Return True
+	End	 Function
+
+End Class
 
 Class citycontrols
 	Method controls()
@@ -124,7 +363,13 @@ Class controls
 		If myworld.map[Mouse.X/myworld.tw,Mouse.Y/myworld.th] > 5
 			myunit.Add(New unit(Mouse.X/myworld.tw,Mouse.Y/myworld.th))
 			myunitmethod.removefog(Mouse.X/myworld.tw,Mouse.Y/myworld.th)
+			If Mouse.X > Width/2 Then 
+				myunituserinterface.dockside("Left")
+				Else
+				myunituserinterface.dockside("Right")
+			End If
 			redrawgame()
+			
 		End if
 		End if
 		End If
@@ -377,6 +622,11 @@ Class unitmethod
 				i.visible = True
 				i.blinktimer = 0
 				activeunitmovesleft = i.movesleft
+				If i.x > myworld.mw/2
+					myunituserinterface.dockside("Left")
+					Else
+					myunituserinterface.dockside("Right")
+				End If
 				Return
 			End If			
 			End If
@@ -441,6 +691,8 @@ Class unitmethod
 	' Move active unit to this possition if possible
 	' checks if reachable. 
 	Method moveactiveunitto(newposx:Int,newposy:Int)
+		If newposx<0 Or newposx>=myworld.mw Then Return
+		If newposy<0 Or newposy>=myworld.mh Then return
 		' if destination is water then return
 		If myworld.map[newposx,newposy] <= 5 Then Return
 		' find unit and move
@@ -1020,6 +1272,7 @@ Global mycity:List<city> = New List<city>
 Global mycityscreen:cityscreen
 Global mycitymethod:citymethod
 Global mycitycontrols:citycontrols
+Global myunituserinterface:unituserinterface
 
 Class MyWindow Extends Window
 	Method New()
@@ -1059,6 +1312,13 @@ Class MyWindow Extends Window
 		If Keyboard.KeyReleased(Key.F2)
 			startnewgame(Width,Height,Millisecs())
 		End If
+		
+		'the arrows to move the player with
+		If cityscreenopen = False
+			myunituserinterface.update()
+			myunituserinterface.draw(canvas)
+		End if
+		
 	End Method	
 	
 End	Class
@@ -1181,6 +1441,7 @@ Function startnewgame(Width:Int,Height:int,seed:Double)
 	mycityscreen = New cityscreen(Width,Height)
 	mycitymethod = New citymethod()
 	mycitycontrols = New citycontrols()
+	myunituserinterface = New unituserinterface(Width,Height)
 	findunitstartingposition()
 	redrawgame()
 End Function
@@ -1192,6 +1453,11 @@ Function findunitstartingposition()
 		If myworld.map[x,y] > 5
 			myunit.Add(New unit(x,y))
 			myunitmethod.removefog(x,y)
+			If x>myworld.mw/2
+				myunituserinterface.dockside("Left")
+				Else
+				myunituserinterface.dockside("Right")
+			End If
 			Exit
 		End If
 	Forever
