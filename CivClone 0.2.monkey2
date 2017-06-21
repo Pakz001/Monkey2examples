@@ -6,8 +6,8 @@ Using mojo..
 
 ' Here is how many tiles there are drawn on the screen.
 ' Currently tested from 16x16 up to 32x32
-Global mystartmapwidth:Int=24
-Global mystartmapheight:Int=24
+Global mystartmapwidth:Int=16
+Global mystartmapheight:Int=16
 
 Global blinkspeed:Int=5 ' lower is faster
 Global turn:Int=1
@@ -40,7 +40,8 @@ Class unituserinterface
 		arrowimage.Handle = New Vec2f( .5,.5 )
 		makearrow(arrowcanvas)
 	End Method
-	Method update()
+	Method update()	
+		' the dock undock buttons controls
 		If docked = False
 			If Mouse.ButtonReleased(MouseButton.Left)
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,dockx,docky,dockw,dockh)
@@ -52,13 +53,14 @@ Class unituserinterface
 		If docked = True
 			If Mouse.ButtonReleased(MouseButton.Left)
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,undockx,undocky,undockw,undockh)
-				docked = false
+				docked = False
 				Return
 			End If
 			End If
 		End If		
 
-		'unit movement
+		'unit movement controls (the arrows)
+		If docked = false
 		If Mouse.ButtonReleased(MouseButton.Left)
 			Local x:Int=ix-Width/20
 			Local y:Int=iy-Height/20
@@ -103,13 +105,65 @@ Class unituserinterface
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+45,y+100,Width/10,Height/10)
 				'Print "RightDown"+Millisecs()
 				myunitmethod.moveactiveunitto(dx+1,dy+1)
-			End If
-			
-		End If
-		
+			End If			
+		End If 'end if rectsoverlap
+		End If 'docked = false
 
+		If docked = False
+			' The unit commands. Taken directly from the controls class
+			' update there means update here (lazy)
+			If Mouse.ButtonReleased(MouseButton.Left)
+				Local x:Int=ix
+				Local y:Int=iy
+				'drawunitbutton(canvas,x+100,y,"R")
+				'drawunitbutton(canvas,x+100,y+32,"B")
+				'drawunitbutton(canvas,x+100,y+64,"F")
+				'drawunitbutton(canvas,x+100,y+96,"S")
+				'drawunitbutton(canvas,x-16,y+34,"E")
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y,32,32)
+					'Print "Build Road"
+					myunitmethod.buildroadatactiveunitpos()
+				End If
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y+32,32,32)
+					'Print "Build City"
+					If myunitmethod.iscityatactiveunitpos() = true Then Return
+					Local x:Int,y:Int
+					'get the active unit x and y coordinates
+					For Local i:=Eachin myunit
+						If i.active = True
+							x = i.x
+							y = i.y
+							i.deleteme = True
+							Exit
+						End If
+					Next
+					mycity.Add(New city(x,y))
+					myunitmethod.activateamovableunit()
+				End If
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y+64,32,32)
+					'Print "Fortify"
+					myunitmethod.unitactivefortify()
+					myunitmethod.activateamovableunit()					
+				End If
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y+96,32,32)
+					'Print "Skip turn"
+					myunitmethod.activeunitskipturn()
+					myunitmethod.activateamovableunit()
+				End If
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-16,y+34,32,32)
+					'Print "End Turn"
+					For Local i:=Eachin myunit
+						i.movesleft = i.originalmoves
+						i.active = False				
+					Next
+					gamehasmovesleft = True
+					turn+=1
+					myunitmethod.activateamovableunit()					
+				End If
+			End If
+		End If 'end if docked is false
 	End Method
-	Method dockside(side:string)
+	Method dockside(side:String)
 		Select side
 			Case "Right"
 				ix = Width-150
@@ -139,9 +193,17 @@ Class unituserinterface
 	Method draw(canvas:Canvas)
 
 		If docked = False Then				
-			
 			Local x:Int=ix
 			Local y:Int=iy
+			
+			'draw the unit commands buttons.
+			drawunitbutton(canvas,x+100,y,"R")
+			drawunitbutton(canvas,x+100,y+32,"B")
+			drawunitbutton(canvas,x+100,y+64,"F")
+			drawunitbutton(canvas,x+100,y+96,"S")
+			drawunitbutton(canvas,x-16,y+34,"E")
+			
+			'draw the arrows
 			
 			drawarrow(canvas,x,y,"Up")
 			drawarrow(canvas,x-50,y+50,"Left")
@@ -170,7 +232,9 @@ Class unituserinterface
 			canvas.DrawLine(dockx,docky,dockx+dockw/2,docky+dockh)
 			canvas.DrawLine(dockx+dockw,docky,dockx+dockw/2,docky+dockh)
 		End If
-		If docked = True
+		
+		' if we are docked
+		If docked = True			
 			'draw the dock
 			canvas.Color = Color.White
 			canvas.DrawRect(undockx,undocky,undockw,undockh)
@@ -178,6 +242,15 @@ Class unituserinterface
 			canvas.DrawLine(undockx,undocky+undockh/2,undockx+undockw/2,undocky)
 			canvas.DrawLine(undockx+undockw,undocky+undockh/2,undockx+undockw/2,undocky)
 		End If			
+	End Method
+	Method drawunitbutton(canvas:Canvas,x:Int,y:Int,t:String)
+		canvas.Color = Color.Red
+		canvas.DrawRect(x,y,32,32)
+		canvas.Color = Color.Black
+		canvas.DrawRect(x+2,y+2,32-4,32-4)		
+		canvas.Color = Color.White
+		canvas.DrawText(t,x+16,y+16,.5,.5)
+		
 	End Method
 	Method drawarrow(canvas:Canvas,x:Int,y:Int,d:String)
 		Local rotation:Float=0
