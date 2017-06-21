@@ -9,6 +9,9 @@ Global turn:Int=1
 Global activeunitmovesleft:Float=1
 Global gamehasmovesleft:Bool=True
 Global cityscreenopen:Bool=False
+'This variable is increased in the main loop
+'if a key is pressed and this value is >  0 then this 
+'variable is set to 0 again.
 Global keydelay:Int=0
 
 Class citycontrols
@@ -120,11 +123,50 @@ Class city
 	Field y:Int
 	Field size:Int=1
 	Field deleteme:Bool=False
+	Field name:String
 	Method New(x:Int,y:int)
 		If cityatpos(x,y) = True Then deleteme = True ; Return
 		Self.x = x
 		Self.y = y
+		name = newrandomcityname()
 		myunitmethod.removeactiveunit()
+	End Method
+	'Give the city a random name
+	Method newrandomcityname:String()
+		Local newname:String
+		Local firstname:String[] = New String[]( 	"New",
+													"Old",
+													"First")													
+													
+		local secondname:String[] = New String[]( 	"Berlin",
+												"Brussel",
+												"Madrid",
+												"Paris",
+												"Antwerp",
+												"Rotterdam",
+												"Rome",
+												"London",
+												"Milan",
+												"Vienna",
+												"Hamburg",
+												"Budapest",
+												"Warsaw",
+												"Barcelona",
+												"Munich",
+												"Prague",
+												"Sofia",
+												"Cologne",
+												"Amsterdam")
+		Local exitloop:Bool=False
+		Repeat
+			newname = firstname[Rnd(firstname.Length)] + " " + secondname[Rnd(secondname.Length)]
+			exitloop=True
+			For Local i:=Eachin mycity
+				If i.name = newname Then exitloop=False
+			Next
+			If exitloop = True Then Exit
+		Forever
+		Return newname
 	End Method
 	'return true if there is a city at the input coords
 	Method cityatpos:Bool(x:Int,y:Int)
@@ -144,7 +186,12 @@ Class city
 		canvas.Color = New Color(1,1,1)
 		canvas.DrawRect(mx+4,my+4,tw-8,th-8)
 		canvas.Color = New Color(0,0,0)
-		canvas.DrawText(size,mx+tw/2,my+th/2,.5,.5)
+		canvas.DrawText(size,mx+tw/2,my+th/2,.5,.5)		
+		canvas.Color = New Color(0,0,0)
+		canvas.DrawText(name,(mx+tw/2),(my),0.5,.8)
+		canvas.Color = New Color(1,1,1)
+		canvas.DrawText(name,(mx+tw/2)+1,(my)+1.2,0.5,.8)
+
 	End Method
 End Class
 
@@ -250,6 +297,7 @@ Class unitmethod
 						myworld.roadmap[i.x-1,i.y-1].se = True
 					End If
 				End If
+				redrawgame()
 				'find next movable unit
 				activateamovableunit()
 				Exit
@@ -559,6 +607,8 @@ Class tile
 End Class
 
 Class world
+	Field image:Image
+	Field icanvas:Canvas	
 	Class roadconnection
 		Field hasroad:Bool = False
 		Field n:Bool=False,ne:Bool=False
@@ -583,6 +633,9 @@ Class world
 	Field sw:Int,sh:Int
 	Field mw:Int,mh:Int
 	Method New(sw:Int,sh:Int,mw:Int,mh:Int)
+		image=New Image( sw,sh)
+		image.Handle=New Vec2f( 0,0 )
+		icanvas=New Canvas( image )
 		Self.mw = mw
 		Self.mh = mh
 		Self.sw = sw
@@ -621,6 +674,12 @@ Class world
 		Next
 	End Method
 	Method draw(canvas:Canvas)
+		canvas.DrawImage(image,0,0)		
+	End Method
+'	Method drawroads(canvas:Canvas)
+'		canvas.DrawImage(image
+'	End Method
+	Method updatedraw(canvas:Canvas)
 		For Local y:Float=0 Until mh Step 1
 		For Local x:Float=0 Until mw Step 1
 			Local t:Int=map[x,y]
@@ -660,8 +719,9 @@ Class world
 			'canvas.DrawRect(x*tw,y*th,tw,th)
 		Next
 		Next
+		canvas.Flush()
 	End Method
-	Method drawroads(canvas:Canvas)	
+	Method updatedrawroads(canvas:Canvas)	
 		canvas.Color = New Color(.7,.3,0)
 		For Local y:Float=0 Until mh Step 1
 		For Local x:Float=0 Until mw Step 1			
@@ -698,7 +758,8 @@ Class world
 				
 			End If
 		Next
-		Next		
+		Next
+		canvas.Flush()		
 	End Method
 	Method drawroadline(canvas:Canvas,x1:float,y1:Float,x2:Float,y2:Float)
 		SeedRnd(0)
@@ -714,7 +775,7 @@ Class world
 			If rectsoverlap(x3,y3,2,2,x2,y2,2,2) Then Exit
 		Forever
 	End Method
-	Method drawwateredge(canvas:Canvas)
+	Method updatedrawwateredge(canvas:Canvas)
 		For Local my:=0 Until mh
 		For Local mx:=0 until mw
 			Local lefttopx:Int=mx*tw
@@ -741,6 +802,7 @@ Class world
 			End If
 		Next
 		Next
+		canvas.Flush()
 	End Method
 	Method drawwaterline(canvas:Canvas,x1:float,y1:Float,x2:float,y2:float)		
 		SeedRnd(0)
@@ -787,6 +849,7 @@ Class MyWindow Extends Window
 		mycityscreen = New cityscreen(Width,Height)
 		mycitymethod = New citymethod()
 		mycitycontrols = New citycontrols()
+		redrawgame()
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -824,9 +887,9 @@ End	Class
 Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 		'Draw world
 		myworld.draw(canvas)
-		myworld.drawwateredge(canvas)
+		'myworld.drawwateredge(canvas)
 		'Draw roads
-		myworld.drawroads(canvas)
+		'myworld.drawroads(canvas)
 
 		' Draw cities
 		For Local i:=Eachin mycity
@@ -882,6 +945,7 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 		canvas.Color = New Color(1,1,1)
 		canvas.DrawText("Hold F1 for help.",500,Height-15)
 
+		canvas.DrawText(App.FPS,0,0)
 
 		If Keyboard.KeyDown(Key.F1) Then drawhelpscreen(canvas,Width,Height)
 End function
@@ -900,6 +964,12 @@ Function drawhelpscreen(canvas:Canvas,Width:int,Height:Int)
 	canvas.DrawText("Space - Unit Skip Turn.",60,200)
 	canvas.DrawText("Left Mouse on City - Open city screen",60,220)
 	
+End Function
+
+Function redrawgame()
+	myworld.updatedraw(myworld.icanvas)
+	myworld.updatedrawwateredge(myworld.icanvas)
+	myworld.updatedrawroads(myworld.icanvas)	
 End Function
 
 Function Main()
