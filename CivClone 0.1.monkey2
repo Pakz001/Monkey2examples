@@ -16,7 +16,7 @@ Global keydelay:Int=0
 
 Class citycontrols
 	Method controls()
-		If Keyboard.KeyReleased(Key.Escape)
+		If Keyboard.KeyReleased(Key.Escape) Or Keyboard.KeyReleased(Key.Space)
 			cityscreenopen = False
 			keydelay = 0
 		End If
@@ -48,11 +48,13 @@ Class controls
 
 	'If press on city then open city sceen
 	Method opencityscreen()
+		If Keyboard.KeyDown(Key.LeftShift) = False
 		If Mouse.ButtonReleased(MouseButton.Left)
 		If mycitymethod.hascityatmousepos()
 			cityscreenopen = True
 		End If
 		End If
+		End if
 		
 	End Method
 	'unit skip turn (space)
@@ -112,16 +114,22 @@ Class controls
 	' add a unit to the map (cheat)
 	Method addunit()
 		If Keyboard.KeyDown(Key.LeftShift)
+		If Mouse.Y / myworld.th < myworld.mh-1
 		If Mouse.ButtonReleased(MouseButton.Left)
+		If myworld.map[Mouse.X/myworld.tw,Mouse.Y/myworld.th] > 5
 			myunit.Add(New unit(Mouse.X/myworld.tw,Mouse.Y/myworld.th))
-		End If
 		End if
+		End if
+		End If
+		End If
 	End Method
 	Method moveunit()
 		If Mouse.ButtonReleased(MouseButton.Right)
+		If Mouse.Y / myworld.th < myworld.mh-1
 			Local x:Int=Mouse.X / myworld.tw
 			Local y:Int=Mouse.Y / myworld.th
-			myunitmethod.moveactiveunitto(x,y)			
+			myunitmethod.moveactiveunitto(x,y)
+		End If			
 		End If
 	End Method
 End Class
@@ -189,6 +197,11 @@ Class city
 		Local my:Int=y*myworld.th
 		Local tw:Int=myworld.tw
 		Local th:Int=myworld.th
+					Local rec:Recti<Int>
+					rec.X = mx
+					rec.Y = my
+					rec.Size = New Vec2i(tw,th)
+					canvas.Scissor = rec
 		canvas.Color = New Color(1,0,0)
 		canvas.DrawRect(mx,my,tw,th)
 		canvas.Color = New Color(1,1,1)
@@ -199,8 +212,7 @@ Class city
 		canvas.DrawText(name,(mx+tw/2),(my),0.5,.8)
 		canvas.Color = New Color(1,1,1)
 		canvas.DrawText(name,(mx+tw/2)+1,(my)+1.2,0.5,.8)
-
-	End Method
+End Method
 End Class
 
 'city methods
@@ -471,7 +483,6 @@ Class unit
 	Field originalmoves:Float=1
 	Field fortify:Bool=False
 	Method New(mx:Int,my:Int)
-		If myworld.map[mx,my] <= 5 Then deleteme=True ; return		
 		Self.x = mx
 		Self.y = my
 		removeontop(mx,my)
@@ -734,7 +745,8 @@ Class world
 '		canvas.DrawImage(image
 '	End Method
 	Method updatedraw(canvas:Canvas)
-		For Local y:Float=0 Until mh Step 1
+		canvas.Clear(Color.Black)
+		For Local y:Float=0 Until mh-1 Step 1
 		For Local x:Float=0 Until mw Step 1
 			Local t:Int=map[x,y]
 			Local x2:Float=x*tw
@@ -777,7 +789,7 @@ Class world
 	End Method
 	Method updatedrawroads(canvas:Canvas)	
 		canvas.Color = New Color(.7,.3,0)
-		For Local y:Float=0 Until mh Step 1
+		For Local y:Float=0 Until mh-1 Step 1
 		For Local x:Float=0 Until mw Step 1			
 			Local x2:Float=x*tw
 			Local y2:Float=y*th
@@ -830,7 +842,7 @@ Class world
 		Forever
 	End Method
 	Method updatedrawwateredge(canvas:Canvas)
-		For Local my:=0 Until mh
+		For Local my:=0 Until mh-1
 		For Local mx:=0 until mw
 			Local lefttopx:Int=mx*tw
 			Local lefttopy:Int=my*th
@@ -896,14 +908,7 @@ Global mycitycontrols:citycontrols
 Class MyWindow Extends Window
 	Method New()
 		Title="CivClone"
-		myworld = New world(Width,Height,16,16)
-		mytile = New tile()
-		myunit.Add(New unit(5,5))
-		myunitmethod = New unitmethod()
-		mycityscreen = New cityscreen(Width,Height)
-		mycitymethod = New citymethod()
-		mycitycontrols = New citycontrols()
-		redrawgame()
+		newgame(Width,Height,0)
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -935,6 +940,9 @@ Class MyWindow Extends Window
 		If keydelay>10 And cityscreenopen = False
 			If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 		End If
+		If Keyboard.KeyReleased(Key.F2)
+			newgame(Width,Height,Millisecs())
+		End If
 	End Method	
 	
 End	Class
@@ -946,14 +954,28 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 		'Draw roads
 		'myworld.drawroads(canvas)
 
-		' Draw cities
-		For Local i:=Eachin mycity
-			i.draw(canvas)
-		Next
+		Local rec:Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)
+		canvas.Scissor = rec
 		'Draw units
 		For Local i:=Eachin myunit
 			i.draw(canvas)
+		Next
+		
+		' Draw cities
+		For Local i:=Eachin mycity
+			i.draw(canvas)
 		Next		
+
+		
+		'draw active unit
+		For Local i:=Eachin myunit
+			If i.active = True
+				i.draw(canvas)
+			End If
+		Next
 		' Refresh unit list
 		For Local i:=Eachin myunit
 			' blink update
@@ -971,7 +993,7 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 			If i.deleteme = True Then mycity.Remove(i)
 		Next	
 		'
-		Local rec:Recti<Int>
+		rec = new Recti<Int>
 		rec.X = 0
 		rec.Y = 0
 		rec.Size = New Vec2i(Width,Height)
@@ -1019,6 +1041,7 @@ Function drawhelpscreen(canvas:Canvas,Width:int,Height:Int)
 	canvas.DrawText("Space - Unit Skip Turn.",60,200)
 	canvas.DrawText("F - Fortify",60,220)
 	canvas.DrawText("Left Mouse on City - Open city screen",60,240)
+	canvas.DrawText("F2 - Reset To New Map",60,260)
 	
 End Function
 
@@ -1026,6 +1049,32 @@ Function redrawgame()
 	myworld.updatedraw(myworld.icanvas)
 	myworld.updatedrawwateredge(myworld.icanvas)
 	myworld.updatedrawroads(myworld.icanvas)	
+End Function
+
+Function newgame(Width:Int,Height:int,seed:Double)
+	SeedRnd(seed)	
+	myunit = New List<unit>		
+	mycity = New List<city>	
+	myworld = New world(Width,Height,16,16)
+	mytile = New tile()
+	'myunit.Add(New unit(5,5))
+	myunitmethod = New unitmethod()
+	mycityscreen = New cityscreen(Width,Height)
+	mycitymethod = New citymethod()
+	mycitycontrols = New citycontrols()
+	findunitstartingposition()
+	redrawgame()
+End Function
+
+Function findunitstartingposition()
+	Repeat
+		Local x:Int=Rnd(myworld.mw)
+		Local y:Int=Rnd(myworld.mh)
+		If myworld.map[x,y] > 5
+			myunit.Add(New unit(x,y))
+			exit
+		End If
+	Forever
 End Function
 
 Function Main()
