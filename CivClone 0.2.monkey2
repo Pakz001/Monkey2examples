@@ -4,6 +4,11 @@
 Using std..
 Using mojo..
 
+' Here is how many tiles there are drawn on the screen.
+' Currently tested from 16x16 up to 32x32
+Global mystartmapwidth:Int=16
+Global mystartmapheight:Int=16
+
 Global blinkspeed:Int=5 ' lower is faster
 Global turn:Int=1
 Global activeunitmovesleft:Float=1
@@ -1169,7 +1174,7 @@ Function startnewgame(Width:Int,Height:int,seed:Double)
 	SeedRnd(seed)	
 	myunit = New List<unit>		
 	mycity = New List<city>	
-	myworld = New world(Width,Height,16,16)
+	myworld = New world(Width,Height,mystartmapwidth,mystartmapheight)
 	mytile = New tile()
 	'myunit.Add(New unit(5,5))
 	myunitmethod = New unitmethod()
