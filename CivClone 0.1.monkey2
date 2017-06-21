@@ -1069,7 +1069,7 @@ End Function
 Function findunitstartingposition()
 	Repeat
 		Local x:Int=Rnd(myworld.mw)
-		Local y:Int=Rnd(myworld.mh)
+		Local y:Int=Rnd(myworld.mh-1)
 		If myworld.map[x,y] > 5
 			myunit.Add(New unit(x,y))
 			exit
