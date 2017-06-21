@@ -1020,18 +1020,18 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 		canvas.Color = New Color(0,0,0)
 		canvas.DrawRect(500,Height-20,200,20)
 		canvas.Color = New Color(1,1,1)
-		canvas.DrawText("Hold F1 for help.",500,Height-15)
+		canvas.DrawText("Hold 1 for help.",500,Height-15)
 
 		canvas.DrawText(App.FPS,0,0)
 
-		If Keyboard.KeyDown(Key.F1) Then drawhelpscreen(canvas,Width,Height)
+		If Keyboard.KeyDown(Key.Key1) Then drawhelpscreen(canvas,Width,Height)
 End function
 
 Function drawhelpscreen(canvas:Canvas,Width:int,Height:Int)
 	canvas.Color = New Color(0,0,0)
 	canvas.DrawRect(50,50,Width-100,Height-100)
 	canvas.Color = Color.White
-	canvas.DrawText("F1 - This help screen",60,60)
+	canvas.DrawText("Key 1 - This help screen",60,60)
 	canvas.DrawText("Left Mouse on movable Unit - Activate unit",60,80)
 	canvas.DrawText("Left Mouse and Shift - Create unit",60,100)
 	canvas.DrawText("Right Mouse - Move active unit.",60,120)
