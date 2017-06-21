@@ -6,8 +6,8 @@ Using mojo..
 
 ' Here is how many tiles there are drawn on the screen.
 ' Currently tested from 16x16 up to 32x32
-Global mystartmapwidth:Int=16
-Global mystartmapheight:Int=16
+Global mystartmapwidth:Int=20
+Global mystartmapheight:Int=20
 
 Global blinkspeed:Int=5 ' lower is faster
 Global turn:Int=1
@@ -42,17 +42,39 @@ Class unituserinterface
 	End Method
 	Method update()	
 		' the dock undock buttons controls
+		Local mx:Int,my:Int
+		
 		If docked = False
+			If Mouse.ButtonReleased(MouseButton.Left) Or Touch.FingerReleased(0)			
+
 			If Mouse.ButtonReleased(MouseButton.Left)
-			If rectsoverlap(Mouse.X,Mouse.Y,1,1,dockx,docky,dockw,dockh)
-				docked = true
+				mx = Mouse.X
+				my = Mouse.Y
+			End If
+			If Touch.FingerReleased(0)
+				mx = Touch.FingerX(0)
+				my = Touch.FingerY(0)
+			End If
+			
+			If rectsoverlap(mx,my,1,1,dockx,docky,dockw,dockh)
+				docked = True
 				Return
 			End If
 			End If
 		End If		
 		If docked = True
+			If Mouse.ButtonReleased(MouseButton.Left) Or Touch.FingerReleased(0)
+
 			If Mouse.ButtonReleased(MouseButton.Left)
-			If rectsoverlap(Mouse.X,Mouse.Y,1,1,undockx,undocky,undockw,undockh)
+				mx = Mouse.X
+				my = Mouse.Y
+			End If
+			If Touch.FingerReleased(0)
+				mx = Touch.FingerX(0)
+				my = Touch.FingerY(0)
+			End If
+				
+			If rectsoverlap(mx,my,1,1,undockx,undocky,undockw,undockh)
 				docked = False
 				Return
 			End If
@@ -60,7 +82,7 @@ Class unituserinterface
 		End If		
 
 		'unit movement controls (the arrows)
-		If docked = false
+		If docked = False
 		If Mouse.ButtonReleased(MouseButton.Left)
 			Local x:Int=ix-Width/20
 			Local y:Int=iy-Height/20
@@ -130,11 +152,12 @@ Class unituserinterface
 				'drawunitbutton(canvas,x-16,y+34,"E")
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y,32,32)
 					'Print "Build Road"
-					myunitmethod.buildroadatactiveunitpos()
+					myunitmethod.buildroadatactiveunitpos()					
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y+32,32,32)
 					'Print "Build City"
 					If myunitmethod.iscityatactiveunitpos() = true Then Return
+					myunitmethod.buildroadatactiveunitpos(False)
 					Local x:Int,y:Int
 					'get the active unit x and y coordinates
 					For Local i:=Eachin myunit
@@ -144,8 +167,8 @@ Class unituserinterface
 							i.deleteme = True
 							Exit
 						End If
-					Next
-					mycity.Add(New city(x,y))
+					Next					
+					mycity.Add(New city(x,y))					
 					myunitmethod.activateamovableunit()
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y+64,32,32)
@@ -392,7 +415,9 @@ Class controls
 	' build a road
 	Method buildroad()
 		If Keyboard.KeyReleased(Key.R)
-			myunitmethod.buildroadatactiveunitpos()				
+			myunitmethod.buildroadatactiveunitpos()	
+			'find next movable unit
+			myunitmethod.activateamovableunit()						
 		End If
 	End Method
 	
@@ -422,17 +447,19 @@ Class controls
 	Method buildcity()
 		If Keyboard.KeyReleased(Key.B)
 			If myunitmethod.iscityatactiveunitpos() = true Then Return
+			' build a road there
+			myunitmethod.buildroadatactiveunitpos(False)	
 			Local x:Int,y:Int
 			'get the active unit x and y coordinates
 			For Local i:=Eachin myunit
 				If i.active = True
 					x = i.x
 					y = i.y
-					i.deleteme = true
+					i.deleteme = True
 					Exit
 				End If
-			Next
-			mycity.Add(New city(x,y))
+			Next			
+			mycity.Add(New city(x,y))			
 			myunitmethod.activateamovableunit()
 		End If
 	End Method
@@ -622,12 +649,14 @@ Class unitmethod
 		Return False
 	End Method
 	' build a road at the active unit its position
-	Method buildroadatactiveunitpos()
+	Method buildroadatactiveunitpos(modifyunit:Bool=True)
 		For Local i:=Eachin myunit
 			If i.active = True And myworld.roadmap[i.x,i.y].hasroad = False
-				i.active = False
-				i.movesleft = 0
-				i.visible = True
+				If modifyunit = True Then
+					i.active = False
+					i.movesleft = 0
+					i.visible = True
+				End If
 				myworld.roadmap[i.x,i.y].hasroad = True
 				' has road north
 				If i.y-1 >=0
@@ -686,8 +715,6 @@ Class unitmethod
 					End If
 				End If
 				redrawgame()
-				'find next movable unit
-				activateamovableunit()
 				Exit
 			End If
 		Next
