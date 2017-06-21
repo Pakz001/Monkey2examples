@@ -38,11 +38,19 @@ End Class
 
 ' Controls like mouse pressed and keyboard
 Class controls
+	'fortify unit (f key)
+	Method fortifyunit()
+		If Keyboard.KeyReleased(Key.F)
+			myunitmethod.fortifyactiveunit()
+			myunitmethod.activateamovableunit()
+		End If
+	End Method
+
 	'If press on city then open city sceen
 	Method opencityscreen()
 		If Mouse.ButtonReleased(MouseButton.Left)
 		If mycitymethod.hascityatmousepos()
-			cityscreenopen = true
+			cityscreenopen = True
 		End If
 		End If
 		
@@ -63,7 +71,7 @@ Class controls
 	
 	' End of turn
 	Method myendofturn()
-		If Keyboard.KeyReleased(Key.Enter)
+		If Keyboard.KeyReleased(Key.Enter) Or Mouse.ButtonReleased(MouseButton.Middle)
 			For Local i:=Eachin myunit
 				i.movesleft = i.originalmoves
 				i.active = False				
@@ -211,12 +219,24 @@ End class
 
 ' Methods to modify units
 Class unitmethod
+	'fortify the active unit
+	Method fortifyactiveunit()
+		For Local i:=Eachin myunit
+			If i.active = True
+				i.active = False
+				i.visible = True
+				i.movesleft = 0
+				i.fortify = True
+				Exit
+			End If
+		Next
+	End Method
 	' skip the turn of a unit (set its moves to 0)
 	Method activeunitskipturn()
 		For Local i:=Eachin myunit
 			If i.active = True
 				i.active = False
-				i.visible = true
+				i.visible = True
 				i.movesleft = 0
 				Return
 			End If
@@ -308,7 +328,7 @@ Class unitmethod
 	Method activateamovableunit()
 		For Local i:=Eachin myunit
 			If i.deleteme = False			
-			If i.movesleft > .3				
+			If i.movesleft > .3	And i.fortify = False			
 				myunitmethod.disableunitontopat(i.x,i.y)
 				i.active = True
 				i.ontop = True
@@ -326,14 +346,15 @@ Class unitmethod
 		For Local i:=Eachin myunit
 			If i.x = x And i.y = y
 			If i.movesleft > .3
+				i.fortify = False
 				i.active = True
 				myunitmethod.disableunitontopat(i.x,i.y)
 				i.ontop = True
 				i.visible = True
 				i.blinktimer = 0
 				activeunitmovesleft = i.movesleft
-				return
-			End if
+				Return
+			End If
 			End If
 		Next
 	End Method
@@ -448,6 +469,7 @@ Class unit
 	Field blinktimer:Int
 	Field movesleft:Float=1
 	Field originalmoves:Float=1
+	Field fortify:Bool=False
 	Method New(mx:Int,my:Int)
 		If myworld.map[mx,my] <= 5 Then deleteme=True ; return		
 		Self.x = mx
@@ -492,11 +514,15 @@ Class unit
 			canvas.Color = New Color(1,1,1)
 			canvas.DrawRect(mx,my,myworld.tw,myworld.th)
 			'
-			If movesleft <= .3 
+			If movesleft <= .3 or fortify=true
 				canvas.Color = New Color(.5,.5,.5)				
 				For Local x1:Int = mx-10 Until mx+myworld.tw Step 5				
 					canvas.DrawLine(x1,my,x1+10,my+myworld.th)
 				Next				
+			End If
+			If fortify = True
+				canvas.Color = New Color(.2,.2,.2)
+				canvas.DrawText("F",mx+myworld.tw/2,my+myworld.th/2,.5,.5)
 			End If
 		End If
 	End Method
@@ -866,6 +892,7 @@ Class MyWindow Extends Window
 		mycontrols.buildroad()
 		mycontrols.activeunitskipturn()
 		mycontrols.opencityscreen()
+		mycontrols.fortifyunit()
 		End If
 		End If
 		If cityscreenopen = True
@@ -960,9 +987,10 @@ Function drawhelpscreen(canvas:Canvas,Width:int,Height:Int)
 	canvas.DrawText("Right Mouse - Move active unit.",60,120)
 	canvas.DrawText("R - Build Road",60,140)
 	canvas.DrawText("B - Build City",60,160)
-	canvas.DrawText("Enter - Next Turn",60,180)
+	canvas.DrawText("Enter or mmb - Next Turn",60,180)
 	canvas.DrawText("Space - Unit Skip Turn.",60,200)
-	canvas.DrawText("Left Mouse on City - Open city screen",60,220)
+	canvas.DrawText("F - Fortify",60,220)
+	canvas.DrawText("Left Mouse on City - Open city screen",60,240)
 	
 End Function
 
