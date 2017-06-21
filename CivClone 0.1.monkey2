@@ -460,7 +460,7 @@ Class tile
 	Method New()
 		Self.tw = myworld.tw
 		Self.th = myworld.th
-	End Method
+	End Method	
 
 	Method drawmountain(x:Float,y:Float,canvas:Canvas)		
 		SeedRnd(1)
@@ -493,8 +493,18 @@ Class tile
 
 	Method drawtree(x:Float,y:Float,canvas:Canvas)		
 		SeedRnd(1)
-		canvas.Color = New Color(0,0.3,0)
-		canvas.DrawRect(x,y,tw,th)
+		canvas.Color = New Color(0,0.5,0)
+		canvas.DrawRect(x,y,tw,th)		
+		For Local i1:=0 Until 5
+		Local x1:Float=x+Rnd(tw)
+		Local y1:Float=y+Rnd(th)
+		For Local i2:=0 Until 5
+			Local x2:float=x1+Rnd(-5,5)
+			Local y2:float=y1+Rnd(-5,5)
+			canvas.Color = New Color(0,Rnd(0,0.5),0)
+			canvas.DrawCircle(x2,y2,5)
+		Next
+		Next
 		For Local y2:Int=y Until y+th
 		For Local x2:Int=x Until x+tw
 			If Rnd(2)<.2
@@ -690,6 +700,57 @@ Class world
 		Next
 		Next		
 	End Method
+	Method drawwateredge(canvas:Canvas)
+		For Local my:=0 Until mh
+		For Local mx:=0 until mw
+			Local lefttopx:Int=mx*tw
+			Local lefttopy:Int=my*th
+			Local righttopx:Int=mx*tw+tw
+			Local righttopy:Int=my*th
+			Local rightbottomx:Int=mx*tw+tw
+			Local rightbottomy:Int=my*th+th
+			Local leftbottomx:Int=mx*tw
+			Local leftbottomy:Int=my*th+th
+			If map[mx,my] <= 5 'if water tile
+			If mx-1>=0 And map[mx-1,my] > 5 'if left is land
+				drawwaterline(canvas,lefttopx,lefttopy,leftbottomx,leftbottomy)
+			End If
+			If my-1>=0 And map[mx,my-1] > 5 'if top is land
+				drawwaterline(canvas,lefttopx,lefttopy,righttopx,righttopy)
+			End If
+			If mx+1<mw And map[mx+1,my]>5 'if right is land
+				drawwaterline(canvas,righttopx,righttopy,rightbottomx,rightbottomy)
+			End If
+			If my+1<mh And map[mx,my+1]>5 'if bottom is land
+				drawwaterline(canvas,leftbottomx,leftbottomy,rightbottomx,rightbottomy)
+			End If
+			End If
+		Next
+		Next
+	End Method
+	Method drawwaterline(canvas:Canvas,x1:float,y1:Float,x2:float,y2:float)		
+		SeedRnd(0)
+		Local oldx:Float=x1,oldy:Float=y1
+		Local x3:Float=x1,y3:Float=y1
+		Repeat
+			If x3<x2 Then x3+=Rnd(1)
+			If y3<y2 Then y3+=Rnd(1)
+			If x3>x2 Then x3-=Rnd(1)
+			If y3>y2 Then y3-=Rnd(1)
+			canvas.Color = New Color(0,Rnd(0.1,.2),Rnd(0.7,1))
+			canvas.DrawRect(x3+Rnd(-2,2),y3+Rnd(-2,2),Rnd(2,4),Rnd(2,4))
+			If Rnd(1)<.5
+			canvas.Color = New Color(1,1,1)
+			canvas.DrawPoint(x3,y3)
+			End if
+			If rectsoverlap(x3,y3,2,2,x2,y2,2,2) Then Return
+		Forever
+	End Method	
+	Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+	    Return True
+	End	 Function	
 End Class
 
 Global mycontrols:controls
@@ -735,7 +796,7 @@ Class MyWindow Extends Window
 			mycityscreen.draw(canvas)
 		End If
 		If cityscreenopen = False
-			updatemaingame(canvas,Width,Height)
+			updatemapingame(canvas,Width,Height)
 		End If
 		
 		' if key escape then quit
@@ -746,9 +807,10 @@ Class MyWindow Extends Window
 	
 End	Class
 
-Function updatemaingame(canvas:Canvas,Width:Int,Height:int)
+Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 		'Draw world
 		myworld.draw(canvas)
+		myworld.drawwateredge(canvas)
 		'Draw roads
 		myworld.drawroads(canvas)
 
