@@ -76,35 +76,43 @@ Class unituserinterface
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x,y,Width/10,Height/10)
 				'Print "Up"+Millisecs()
 				myunitmethod.moveactiveunitto(dx,dy-1)
+				redrawgame()
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x,y+100,Width/10,Height/10)
 				'Print "Down"+Millisecs()
 				myunitmethod.moveactiveunitto(dx,dy+1)
+				redrawgame()
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-50,y+50,Width/10,Height/10)
 				'Print "Left"+Millisecs()
 				myunitmethod.moveactiveunitto(dx-1,dy)
+				redrawgame()
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+50,y+50,Width/10,Height/10)
 				'Print "Right"+Millisecs()
 				myunitmethod.moveactiveunitto(dx+1,dy)
+				redrawgame()
 			End If
 
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-45,y,Width/10,Height/10)
 				'Print "LeftUp"+Millisecs()
 				myunitmethod.moveactiveunitto(dx-1,dy-1)
+				redrawgame()
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-45,y+100,Width/10,Height/10)
 				'Print "LeftDown"+Millisecs()
 				myunitmethod.moveactiveunitto(dx-1,dy+1)
+				redrawgame()
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+45,y,Width/10,Height/10)
 				'Print "RightUp"+Millisecs()
 				myunitmethod.moveactiveunitto(dx+1,dy-1)
+				redrawgame()
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+45,y+100,Width/10,Height/10)
 				'Print "RightDown"+Millisecs()
 				myunitmethod.moveactiveunitto(dx+1,dy+1)
+				redrawgame()
 			End If			
 		End If 'end if rectsoverlap
 		End If 'docked = false
