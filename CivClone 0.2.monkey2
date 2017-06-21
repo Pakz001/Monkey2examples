@@ -878,17 +878,26 @@ Class world
 		Next
 		canvas.Flush()		
 	End Method
-	Method drawroadline(canvas:Canvas,x1:float,y1:Float,x2:Float,y2:Float)
+	Method drawroadline(canvas:Canvas,x1:Float,y1:Float,x2:Float,y2:Float)
 		SeedRnd(0)
 		Local x3:Float=x1
 		Local y3:Float=y1
+		Local s:Float=tw*th/600
+		If s<1 Then s=1
+		'Print tw*th/200
+		
 		Repeat
 			If x3<x2 Then x3+=Rnd(2)
 			If y3<y2 Then y3+=Rnd(2)
 			If x3>x2 Then x3-=Rnd(2)
 			If y3>y2 Then y3-=Rnd(2)
-			canvas.Color = New Color(Rnd(0.4,.7),Rnd(0.0,.3),0)
-			canvas.DrawCircle(x3,y3,Rnd(1,3))
+			For Local z:=0 Until 9
+				canvas.Color = New Color(Rnd(0.4,.7),Rnd(0.0,.3),0)			
+				canvas.DrawCircle(x3+Rnd(-1,1),y3+Rnd(-1,1),Rnd(0,s))
+				canvas.Color = New Color(Rnd(0.2,.4),Rnd(0.0,.2),0)			
+				canvas.DrawPoint(x3+Rnd(-3,3),y3+Rnd(-3,3))
+			Next
+			
 			If rectsoverlap(x3,y3,2,2,x2,y2,2,2) Then Exit
 		Forever
 	End Method
