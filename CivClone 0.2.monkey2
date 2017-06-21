@@ -152,7 +152,8 @@ Class unituserinterface
 				'drawunitbutton(canvas,x-16,y+34,"E")
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y,32,32)
 					'Print "Build Road"
-					myunitmethod.buildroadatactiveunitpos()					
+					myunitmethod.buildroadatactiveunitpos()
+					myunitmethod.activateamovableunit()					
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y+32,32,32)
 					'Print "Build City"
