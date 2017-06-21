@@ -272,7 +272,7 @@ Class unituserinterface
 			Case "Right"
 				rotation=-Pi
 		End Select				
-		canvas.Color = Color.Grey
+		canvas.Color = Color.White
 		canvas.DrawCircle(x,y,Width/20)
 		canvas.DrawImage(arrowimage,x,y,rotation)
 	end Method
