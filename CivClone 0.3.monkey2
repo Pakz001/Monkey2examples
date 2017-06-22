@@ -319,7 +319,8 @@ Class unituserinterface
 							Exit
 						End If
 					Next					
-					mycity.Add(New city(x,y))					
+					mycity.Add(New city(x,y))
+					myworld.updatedrawroads(myworld.roadcanvas)					
 					myunitmethod.activateamovableunit()
 					mousedelay = 0
 				End If
@@ -943,7 +944,8 @@ Class controls
 					Exit
 				End If
 			Next			
-			mycity.Add(New city(x,y))			
+			mycity.Add(New city(x,y))
+			myworld.updatedrawroads(myworld.roadcanvas)			
 			myunitmethod.activateamovableunit()
 		End If
 	End Method
