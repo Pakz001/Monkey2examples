@@ -564,7 +564,7 @@ Class citycontrols
 							mycityscreen.myproduction.Push(New cityscreen.production(myseltname))						
 							For Local i:=Eachin mycity
 								If i.x = currentcityx And i.y = currentcityy
-									i.myproduction.Push(New city.production(myseltname))
+									i.myproduction.Push(New city.production(myseltname))									
 								End If
 							Next
 							mycityscreen.unitprodscreen = False
@@ -716,8 +716,7 @@ Class cityscreen
 		canvas.Color = Color.White
 		canvas.DrawText("Press Space to Exit",Width/2,Height-20,.5,.5)
 	End Method
-	Method updateproduction()
-		Print "we"
+	Method updateproduction()		
 		myproduction = New Stack<production>
 		For Local i:=Eachin mycity
 			If i.x = currentcityx And i.y = currentcityy
@@ -965,7 +964,7 @@ Class controls
 	End Method
 	' add a unit to the map (cheat)
 	Method addunitat(x:Int,y:int)		
-		If myworld.map[Mouse.X/myworld.tw,Mouse.Y/myworld.th] > 5
+		If myworld.map[x,y] > 5
 			myunit.Add(New unit(x,y))
 			myunitmethod.removefog(x,y)
 			If x > myworld.mw/2 Then 
@@ -1071,10 +1070,11 @@ Class city
 		mycitymethod.drawcity(canvas,mx,my,tw,th,size,name)
 	End Method
 	Method turnend()
+		'see if we can create anything
 		If myproduction.Length=0 Then Return
 		myproduction.Top.turns-=1
 		If myproduction.Top.turns=0
-			mycontrols.addunitat(x,y)			
+			mycontrols.addunitat(x,y)	
 			myproduction.Pop()
 		End If
 	End Method
@@ -1313,7 +1313,9 @@ Class unitmethod
 	Method activateamovableunit()
 		'return if there is already a active unit
 		For Local i:=Eachin myunit
-			If i.active = True Then Return
+			If i.active = True Then 
+				Return
+			End If
 		Next
 		' find and activate a unit
 		For Local i:=Eachin myunit
@@ -1488,7 +1490,7 @@ Class unit
 		ontop = True
 		removeallactivestatus()
 		resetblink()
-		active = True
+		active = True		
 	End Method
 	' remove ontop status of all units at position x,y
 	Method removeontop(mx:Int,my:Int)
