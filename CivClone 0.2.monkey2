@@ -14,6 +14,10 @@ Global turn:Int=1
 Global activeunitmovesleft:Float=1
 Global gamehasmovesleft:Bool=True
 Global cityscreenopen:Bool=False
+Global currentcityx:Int
+Global currentcityy:Int
+Global currentcitysize:Int
+Global currentcityname:String
 'This variable is increased in the main loop
 'if a key is pressed and this value is >  0 then this 
 'variable is set to 0 again.
@@ -390,13 +394,68 @@ End Class
 
 Class cityscreen
 	Field Width:Int,Height:Int
+	'the variables for the map of the city
+	Field tw:Float
+	Field th:Float
+	Field citymapx:Int,citymapy:Int
+	Field citymapw:Int,citymaph:Int
 	Method New(Width:Int,Height:Int)
 		Self.Width = Width
 		Self.Height = Height
+		tw = myworld.tw
+		th = myworld.th
+		' create the city map variables
+		citymapw = tw*5
+		citymaph = th*5
+		citymapx = Width/2-citymapw/2
+		citymapy = Height/2-citymaph/2
 	End Method
 	Method draw(canvas:Canvas)
+		
 		canvas.Color = Color.Black
-		canvas.DrawRect(50,50,Width-100,Height-100)	
+		canvas.DrawRect(0,0,Width,Height)
+		canvas.Color = Color.White
+		drawcitymap(canvas)
+		canvas.Color = Color.White
+		canvas.DrawText("Press Space to Exit",Width/2,Height-20,.5,.5)
+	End Method
+	'Here we use the buffer image of the map
+	'we draw it so the city we selected is in the center.
+	Method drawcitymap(canvas:Canvas)
+		'
+
+		' Draw a border around the city map
+		Local rec:Recti<Int>
+		rec.X = citymapx-2
+		rec.Y = citymapy-2
+		rec.Size = New Vec2i(citymapw+4,citymaph+4)
+		canvas.Scissor = rec
+		canvas.Clear(Color.White)
+		
+		' Draw the city map
+		rec = New Recti<Int>
+		rec.X = citymapx
+		rec.Y = citymapy
+		rec.Size = New Vec2i(citymapw,citymaph)
+		canvas.Scissor = rec
+		
+		' Get the location to draw the buffer map image with.
+		Local offsetx:Int=(((myworld.mw*myworld.tw)/2)-(currentcityx*myworld.tw))-myworld.tw/2
+		Local offsety:Int=(((myworld.mh*myworld.th)/2)-(currentcityy*myworld.th))-myworld.th/2
+
+		'Print sx
+		canvas.Color = Color.White
+		canvas.DrawImage(myworld.image,offsetx,offsety)
+		' Draw the city.
+		mycitymethod.drawcity(canvas,citymapx+2*myworld.tw,citymapy+2*myworld.th,myworld.tw,myworld.th,currentcitysize,currentcityname)
+		
+		'Restore scissor area
+		rec = New Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)
+		canvas.Scissor = rec
+
 	End Method
 End Class
 
@@ -415,10 +474,14 @@ Class controls
 		If Keyboard.KeyDown(Key.LeftShift) = False
 		If Mouse.ButtonReleased(MouseButton.Left)
 		If mycitymethod.hascityatmousepos()
+			currentcityx = Mouse.X / myworld.tw
+			currentcityy = Mouse.Y / myworld.th
+			currentcityname = mycitymethod.getcitynameat(currentcityx,currentcityy)
+			currentcitysize = mycitymethod.getcitysizeat(currentcityx,currentcityy)
 			cityscreenopen = True
 		End If
 		End If
-		End if
+		End If
 		
 	End Method
 	'unit skip turn (space)
@@ -586,26 +649,32 @@ Class city
 		Local my:Int=y*myworld.th
 		Local tw:Int=myworld.tw
 		Local th:Int=myworld.th
-					Local rec:Recti<Int>
-					rec.X = mx
-					rec.Y = my
-					rec.Size = New Vec2i(tw,th)
-					canvas.Scissor = rec
-		canvas.Color = New Color(1,0,0)
-		canvas.DrawRect(mx,my,tw,th)
-		canvas.Color = New Color(1,1,1)
-		canvas.DrawRect(mx+4,my+4,tw-8,th-8)
-		canvas.Color = New Color(0,0,0)
-		canvas.DrawText(size,mx+tw/2,my+th/2,.5,.5)		
-		canvas.Color = New Color(0,0,0)
-		canvas.DrawText(name,(mx+tw/2),(my),0.5,.8)
-		canvas.Color = New Color(1,1,1)
-		canvas.DrawText(name,(mx+tw/2)+1,(my)+1.2,0.5,.8)
-End Method
+'					Local rec:Recti<Int>
+'					rec.X = mx-40
+'					rec.Y = my-40
+'					rec.Size = New Vec2i(tw+80,th+80)
+'					canvas.Scissor = rec
+		mycitymethod.drawcity(canvas,mx,my,tw,th,size,name)
+
+	End Method
 End Class
 
 'city methods
 Class citymethod
+	Method getcitynameat:String(x:int,y:Int)
+		For Local i:=Eachin mycity
+			If i.x = x and i.y = y Then Return i.name
+		Next
+		Return ""
+	End Method
+	Method getcitysizeat:int(x:Int,y:Int)
+		For Local i:=Eachin mycity
+			If i.x = x and i.y = y Then Return i.size
+		Next
+		Return 0
+	End Method
+
+
 	Method hascityatmousepos:Bool()
 		Local x:Int=Mouse.X / myworld.tw
 		Local y:Int=Mouse.Y / myworld.th
@@ -616,7 +685,19 @@ Class citymethod
 		Next
 		Return False
 	End Method
-End class
+	Method drawcity(canvas:Canvas,mx:Int,my:Int,tw:int,th:int,size:int,name:string)
+		canvas.Color = New Color(1,0,0)
+		canvas.DrawRect(mx,my,tw,th)
+		canvas.Color = New Color(1,1,1)
+		canvas.DrawRect(mx+4,my+4,tw-8,th-8)
+		canvas.Color = New Color(0,0,0)
+		canvas.DrawText(size,mx+tw/2,my+th/2,.5,.5)		
+		canvas.Color = New Color(0,0,0)
+		canvas.DrawText(name,(mx+tw/2),(my),0.5,.8)
+		canvas.Color = New Color(1,1,1)
+		canvas.DrawText(name,(mx+tw/2)+1,(my)+1.2,0.5,.8)		
+	End Method	
+End Class
 
 ' Methods to modify units
 Class unitmethod
@@ -1489,6 +1570,13 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 		For Local i:=Eachin myunit
 			i.draw(canvas)
 		Next
+
+		'restore the scissor to the entire screen
+		rec = new Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(myworld.sw,myworld.sh)
+		canvas.Scissor = rec
 		
 		' Draw cities
 		For Local i:=Eachin mycity
