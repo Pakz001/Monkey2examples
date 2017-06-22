@@ -657,6 +657,7 @@ Class cityscreen
 				canvas.DrawText(a,garx,y)
 				
 				y+=20
+				If y>garh Then Exit
 			Next
 		End If
 	End Method
@@ -1190,6 +1191,11 @@ Class unitmethod
 	End Method
 	' this function finds a unit that has not moved yet.
 	Method activateamovableunit()
+		'return if there is already a active unit
+		For Local i:=Eachin myunit
+			If i.active = True Then Return
+		Next
+		' find and activate a unit
 		For Local i:=Eachin myunit
 			If i.deleteme = False			
 			If i.movesleft > .3	And i.fortify = False							
@@ -1888,7 +1894,7 @@ Class MyWindow Extends Window
 		'
 		If cityscreenopen = False
 		If Keyboard.KeyDown(Key.Key1) = False
-		If mousedelay > 40			
+		If mousedelay > 12 And keydelay>12			
 		mycontrols.addunit(canvas,Width,Height)
 		mycontrols.moveunit(canvas,Width,Height)
 		mycontrols.buildcity()		
