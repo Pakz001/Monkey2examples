@@ -6,8 +6,8 @@ Using mojo..
 
 ' Here is how many tiles there are drawn on the screen.
 ' Currently tested from 16x16 up to 32x32
-Global mystartmapwidth:Int=16
-Global mystartmapheight:Int=16
+Global mystartmapwidth:Int=20
+Global mystartmapheight:Int=20
 
 Global blinkspeed:Int=5 ' lower is faster
 Global turn:Int=1
@@ -146,7 +146,7 @@ Class greybackground
 			Local colr:Float=mapr[x,y]
 			Local colg:Float=mapg[x,y]
 			Local colb:Float=mapb[x,y]
-			canvas.Color = New Color(255/colr,255/colg,255/colb)
+			canvas.Color = New Color(colr/255,colg/255,colb/255)
 			canvas.DrawRect(x*tilewidth,y*tileheight,tilewidth+1,tileheight+1)
         Next
         Next    
@@ -531,52 +531,73 @@ End Class
 Class citycontrols
 		'Here we update the production window
 		Method productionupdate()
-			If Mouse.ButtonReleased(MouseButton.Left) = False Then Return
-
-			If mycityscreen.unitprodscreen = False
-				Local x1:Int=mycityscreen.prodx
-				Local y1:Int=mycityscreen.prody
-				Local w1:Int=mycityscreen.prodw
-				Local h1:Int=mycityscreen.prodh
-				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x1,y1,w1,h1)
-					'if pressed on unit production info box
-					mycityscreen.unitprodscreen = True
+			' if opressed left mouse in production box
+			If Mouse.ButtonReleased(MouseButton.Left) = True
+				If mycityscreen.unitprodscreen = False
+					Local x1:Int=mycityscreen.prodx
+					Local y1:Int=mycityscreen.prody
+					Local w1:Int=mycityscreen.prodw
+					Local h1:Int=mycityscreen.prodh
+					If rectsoverlap(Mouse.X,Mouse.Y,1,1,x1,y1,w1,h1)
+						'if pressed on unit production info box
+						mycityscreen.unitprodscreen = True
+					End If
 				End If
 			End If
-
-			If mycityscreen.unitprodscreen = True 'if unitprodscreen = true		draw unit production screen		
-			Local x1:Int=mycityscreen.prodsx
-			Local y1:Int=mycityscreen.prodsy
-			Local w1:Int=mycityscreen.prodsw
-			Local h1:Int=mycityscreen.prodsh
-				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x1,y1,w1,h1)
-					'If pressed inside new production list
-					If mycityscreen.mybuildlist.Length
-						Local myselt:Bool=False
-						Local myseltname:String=""
-						Local y:Int=20
-						For Local i:=Eachin mycityscreen.mybuildlist
-							If rectsoverlap(Mouse.X,Mouse.Y,1,1,x1,y1+y,w1,20)
-								'Print i.name - here we have selected a production
-								myselt = True
-								myseltname = i.name
+			'if right mouse on production box then erase production
+			If Mouse.ButtonReleased(MouseButton.Right) = True
+				If mycityscreen.unitprodscreen = False
+					Local x1:Int=mycityscreen.prodx
+					Local y1:Int=mycityscreen.prody
+					Local w1:Int=mycityscreen.prodw
+					Local h1:Int=mycityscreen.prodh
+					If rectsoverlap(Mouse.X,Mouse.Y,1,1,x1,y1,w1,h1)
+						'erase city production list
+						For Local i:=Eachin mycity
+							If i.x = currentcityx And i.y=currentcityy
+								i.myproduction = New Stack<city.production>
+								mycityscreen.updateproduction()
 							End If
-							y+=20
 						Next
-						If myselt = True 'if we have selected a unit to be build
-							mycityscreen.myproduction.Push(New cityscreen.production(myseltname,4))						
-							For Local i:=Eachin mycity
-								If i.x = currentcityx And i.y = currentcityy
-									i.myproduction.Push(New city.production(myseltname))									
+					End If
+				End If				
+			End If
+			
+			If Mouse.ButtonReleased(MouseButton.Left) = True
+				If mycityscreen.unitprodscreen = True 'if unitprodscreen = true		draw unit production screen		
+				Local x1:Int=mycityscreen.prodsx
+				Local y1:Int=mycityscreen.prodsy
+				Local w1:Int=mycityscreen.prodsw
+				Local h1:Int=mycityscreen.prodsh
+					If rectsoverlap(Mouse.X,Mouse.Y,1,1,x1,y1,w1,h1)
+						'If pressed inside new production list
+						If mycityscreen.mybuildlist.Length
+							Local myselt:Bool=False
+							Local myseltname:String=""
+							Local y:Int=20
+							For Local i:=Eachin mycityscreen.mybuildlist
+								If rectsoverlap(Mouse.X,Mouse.Y,1,1,x1,y1+y,w1,20)
+									'Print i.name - here we have selected a production
+									myselt = True
+									myseltname = i.name
 								End If
+								y+=20
 							Next
-							mycityscreen.unitprodscreen = False
+							If myselt = True 'if we have selected a unit to be build
+								mycityscreen.myproduction.Push(New cityscreen.production(myseltname,4))						
+								For Local i:=Eachin mycity
+									If i.x = currentcityx And i.y = currentcityy
+										i.myproduction.Push(New city.production(myseltname))									
+									End If
+								Next
+								mycityscreen.unitprodscreen = False
+							End If
+							
 						End If
 						
-					End If
-					
-				End If								
-			End If			
+					End If								
+				End If
+			End if
 		End Method
 		'Here we select a unit from the garrison
 		Method garrisonupdate()			
@@ -587,7 +608,7 @@ Class citycontrols
 			Local garh:Int=mycityscreen.garh
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,garx,gary,garw,garh)
 				If mycityscreen.mygarrison
-				Local y:Int=0
+				Local y:Int=20
 				For Local i:=Eachin mycityscreen.mygarrison
 					If rectsoverlap(Mouse.X,Mouse.Y,1,1,garx,gary+y,garw,20)
 						'Here we have selected a unit from the garrison
@@ -712,7 +733,9 @@ Class cityscreen
 		canvas.Color = Color.Black
 		canvas.DrawRect(0,0,Width,Height)
 		canvas.Color = Color.White
-		mygreybackground.draw(canvas)	
+		canvas.Color = New Color(.7,.7,1)
+		canvas.DrawImage(mygreybackground.greyimage,0,0)
+		canvas.Color = Color.White
 		drawcitymap(canvas)		
 		drawproduction(canvas)
 		drawgarrison(canvas)
@@ -740,13 +763,36 @@ Class cityscreen
 		Next
 	End Method
 	Method drawgarrison(canvas:Canvas)
+		Local rec := New Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)
+		canvas.Scissor = rec
+
 		canvas.Color = Color.White
 		canvas.DrawRect(garx-2,gary-2,garw+4,garh+4)
-		canvas.Color = Color.Black
-		canvas.DrawRect(garx,gary,garw,garh)
+
+		rec = New Recti<Int>
+		rec.X = garx
+		rec.Y = gary
+		rec.Size = New Vec2i(garw,garh)
+		canvas.Scissor = rec
+		canvas.Color = New Color(.5,.5,.5)
+		canvas.DrawImage(mygreybackground.greyimage,0,0)
+		rec = New Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)
+		canvas.Scissor = rec
+
+
+		canvas.Color = Color.White
+		canvas.DrawText("Garrison",garx,gary)
+'		canvas.Color = Color.Black
+'		canvas.DrawRect(garx,gary,garw,garh)
 		If mygarrison.Length>0
-			canvas.Color = Color.White
-			Local y:Int=gary
+			canvas.Color = Color.Black
+			Local y:Int=gary+20
 			For Local i:=Eachin mygarrison
 				Local a:String=""
 				If i.fortify Then 
@@ -761,26 +807,58 @@ Class cityscreen
 		End If
 	End Method
 	Method drawproduction(canvas:Canvas)
+		'white outline
 		canvas.Color = Color.White
 		canvas.DrawRect(prodx-2,prody-2,prodw+4,prodh+4)		
+		' textured inside
+		Local rec := New Recti<Int>
+		rec.X = prodx
+		rec.Y = prody
+		rec.Size = New Vec2i(prodw,prodh)
+		canvas.Scissor = rec
+		canvas.Color = New Color(.5,.5,.5)
+		canvas.DrawImage(mygreybackground.greyimage,0,0)
+		' the production text
+		rec = New Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)
+		canvas.Scissor = rec
+'		canvas.Color = Color.Black
+'		canvas.DrawRect(prodx,prody,prodw,prodh)
 		canvas.Color = Color.Black
-		canvas.DrawRect(prodx,prody,prodw,prodh)
-		canvas.Color = Color.White
 		If myproduction.Length > 0
 		canvas.DrawText("Current Production :",prodx+10,prody+10)
 		canvas.DrawText(myproduction.Top.name,prodx+10,prody+30)
 		canvas.DrawText(myproduction.Top.turns+" Turns Left",prodx+10,prody+50)
-		End if
-		canvas.DrawText("Click to Produce new Unit",prodx+10,prody+70)
+		End If
+		canvas.DrawText("Click to add",prodx+10,prody+70)
+		
+		'
+		' The production screen...
 		If unitprodscreen = True
-			canvas.Color = Color.White
-			canvas.DrawRect(prodsx-2,prodsy-2,prodsw+4,prodsh+4)		
 			canvas.Color = Color.Black
-			canvas.DrawRect(prodsx,prodsy,prodsw,prodsh)
+			canvas.DrawRect(prodsx-2,prodsy-2,prodsw+4,prodsh+4)		
+'			canvas.Color = Color.Black
+'			canvas.DrawRect(prodsx,prodsy,prodsw,prodsh)
+			Local rec := New Recti<Int>
+			rec.X = prodsx
+			rec.Y = prodsy
+			rec.Size = New Vec2i(prodsw,prodsh)
+			canvas.Scissor = rec
+			canvas.Color = New Color(.5,.5,.5)
+			canvas.DrawImage(mygreybackground.greyimage,0,0)
+			rec = New Recti<Int>
+			rec.X = prodsx
+			rec.Y = prodsy
+			rec.Size = New Vec2i(prodsw,prodsh)
+			canvas.Scissor = rec
+
 			canvas.Color = Color.White
 			If mybuildlist.Length
 				Local y:Int=0
 				canvas.DrawText("Select production",prodsx+10,prodsy+y)
+				canvas.Color = Color.Black
 				y+=20
 				For Local i:=Eachin mybuildlist
 					canvas.DrawText(i.name,prodsx+10,prodsy+y)
@@ -2225,7 +2303,7 @@ Function redrawgame()
 
 End Function
 
-Function startnewgame(Width:Int,Height:int,seed:Double)
+Function startnewgame(Width:Int,Height:int,seed:Double)	
 	SeedRnd(seed)	
 	myunit = New List<unit>		
 	mycity = New List<city>	
