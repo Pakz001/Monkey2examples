@@ -526,6 +526,55 @@ Class unituserinterface
 End Class
 
 Class citycontrols
+		'Here we update the production window
+		Method productionupdate()
+			If Mouse.ButtonReleased(MouseButton.Left) = False Then Return
+
+			If mycityscreen.unitprodscreen = False
+				Local x1:Int=mycityscreen.prodx
+				Local y1:Int=mycityscreen.prody
+				Local w1:Int=mycityscreen.prodw
+				Local h1:Int=mycityscreen.prodh
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x1,y1,w1,h1)
+					'if pressed on unit production info box
+					mycityscreen.unitprodscreen = True
+				End If
+			End If
+
+			If mycityscreen.unitprodscreen = True 'if unitprodscreen = true		draw unit production screen		
+			Local x1:Int=mycityscreen.prodsx
+			Local y1:Int=mycityscreen.prodsy
+			Local w1:Int=mycityscreen.prodsw
+			Local h1:Int=mycityscreen.prodsh
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x1,y1,w1,h1)
+					'If pressed inside new production list
+					If mycityscreen.mybuildlist.Length
+						Local myselt:Bool=False
+						Local myseltname:String=""
+						Local y:Int=20
+						For Local i:=Eachin mycityscreen.mybuildlist
+							If rectsoverlap(Mouse.X,Mouse.Y,1,1,x1,y1+y,w1,20)
+								'Print i.name - here we have selected a production
+								myselt = True
+								myseltname = i.name
+							End If
+							y+=20
+						Next
+						If myselt = True 'if we have selected a unit to be build
+							mycityscreen.myproduction.Push(New cityscreen.production(myseltname))						
+							For Local i:=Eachin mycity
+								If i.x = currentcityx And i.y = currentcityy
+									i.myproduction.Push(New city.production(myseltname))
+								End If
+							Next
+							mycityscreen.unitprodscreen = False
+						End If
+						
+					End If
+					
+				End If								
+			End If			
+		End Method
 		'Here we select a unit from the garrison
 		Method garrisonupdate()			
 			If Mouse.ButtonReleased(MouseButton.Left)			
@@ -557,8 +606,12 @@ Class citycontrols
 		End Method
 		'Here we exit the city screen
 		Method controls()
-			garrisonupdate()
+			productionupdate()
+			If mycityscreen.unitprodscreen = False Then				
+				garrisonupdate()
+			End If
 			If Keyboard.KeyReleased(Key.Escape) Or Keyboard.KeyReleased(Key.Space)
+				mycityscreen.unitprodscreen = false
 				cityscreenopen = False
 				keydelay = 0
 				mousedelay = 0
@@ -587,6 +640,25 @@ Class cityscreen
 		End Method
 	End Class	
 	Field mygarrison:Stack<garrison>
+	' What is the city building
+	Class production
+		Field name:String="Settler"
+		Field turns:Int=4		
+		Method New(name:string)
+			Self.name=name
+			turns = 4
+		End Method
+	End Class
+	Field myproduction:Stack<production>
+	'What can the city produce
+	Class buildlist
+		Field name:String
+		Method New(name:String)
+			Self.name = name
+		End Method
+	End Class
+	Field mybuildlist:Stack<buildlist>
+
 	Field Width:Int,Height:Int
 	'the variables for the map of the city
 	Field tw:Float
@@ -598,6 +670,8 @@ Class cityscreen
 	Field prody:Int
 	Field prodw:Int
 	Field prodh:Int
+	Field unitprodscreen:Bool=False
+	Field prodsx:Int,prodsy:Int,prodsw:int,prodsh:Int
 	'variables for the units garrision
 	Field garx:Int,gary:Int,garw:Int,garh:Int
 	Method New(Width:Int,Height:Int)
@@ -615,11 +689,21 @@ Class cityscreen
 		prody = Height/1.5
 		prodw = Width/3.3
 		prodh = Height/3.3
+		prodsw = 150
+		prodsh = 200
+		prodsx = Width/2-prodsw/2
+		prodsy = Height/2-prodsh/2
+		mybuildlist = New Stack<buildlist>
+		mybuildlist.Push(New buildlist("Settlers"))
+		mybuildlist.Push(New buildlist("Militia"))
+		mybuildlist.Push(New buildlist("Legion"))
+		myproduction = New Stack<production>		
 		'fill the city garrison info variables
 		garx = 10
 		gary = 10
 		garw = 100
 		garh = 100
+		
 	End Method
 	Method draw(canvas:Canvas)				
 		canvas.Color = Color.Black
@@ -627,10 +711,23 @@ Class cityscreen
 		canvas.Color = Color.White
 		mygreybackground.draw(canvas)	
 		drawcitymap(canvas)		
-		drawproductioninfo(canvas)
+		drawproduction(canvas)
 		drawgarrison(canvas)
 		canvas.Color = Color.White
 		canvas.DrawText("Press Space to Exit",Width/2,Height-20,.5,.5)
+	End Method
+	Method updateproduction()
+		Print "we"
+		myproduction = New Stack<production>
+		For Local i:=Eachin mycity
+			If i.x = currentcityx And i.y = currentcityy
+				If i.myproduction.Length
+					For Local i2:= Eachin i.myproduction
+						myproduction.Push(New production(i2.name))						
+					Next
+				End If
+			End If
+		Next		
 	End Method
 	Method updategarrison()
 		mygarrison = New Stack<garrison>
@@ -661,15 +758,34 @@ Class cityscreen
 			Next
 		End If
 	End Method
-	Method drawproductioninfo(canvas:Canvas)
+	Method drawproduction(canvas:Canvas)
 		canvas.Color = Color.White
 		canvas.DrawRect(prodx-2,prody-2,prodw+4,prodh+4)		
 		canvas.Color = Color.Black
 		canvas.DrawRect(prodx,prody,prodw,prodh)
 		canvas.Color = Color.White
+		If myproduction.Length > 0
 		canvas.DrawText("Current Production :",prodx+10,prody+10)
-		canvas.DrawText(currentcityproduction,prodx+10,prody+30)
-		canvas.DrawText(currentcityproductiontime+" Turns Left",prodx+10,prody+50)
+		canvas.DrawText(myproduction.Top.name,prodx+10,prody+30)
+		canvas.DrawText(myproduction.Top.turns+" Turns Left",prodx+10,prody+50)
+		End if
+		canvas.DrawText("Click to Produce new Unit",prodx+10,prody+70)
+		If unitprodscreen = True
+			canvas.Color = Color.White
+			canvas.DrawRect(prodsx-2,prodsy-2,prodsw+4,prodsh+4)		
+			canvas.Color = Color.Black
+			canvas.DrawRect(prodsx,prodsy,prodsw,prodsh)
+			canvas.Color = Color.White
+			If mybuildlist.Length
+				Local y:Int=0
+				canvas.DrawText("Select production",prodsx+10,prodsy+y)
+				y+=20
+				For Local i:=Eachin mybuildlist
+					canvas.DrawText(i.name,prodsx+10,prodsy+y)
+					y+=20
+				Next
+			End If
+		End If
 	End Method
 	'Here we use the buffer image of the map
 	'we draw it so the city we selected is in the center.
@@ -741,6 +857,7 @@ Class controls
 			currentcityproduction = mycitymethod.getproductionat(currentcityx,currentcityy)
 			currentcityproductiontime = mycitymethod.getproductiontimeat(currentcityx,currentcityy)
 			mycityscreen.updategarrison()
+			mycityscreen.updateproduction()
 			cityscreenopen = True
 			mousedelay = 0
 			keydelay = 0			
@@ -875,19 +992,22 @@ End Class
 Class city
 	Class production
 		Field name:String="Settler"
-		Field turns:Int=4		
+		Field turns:Int=4
+		Method New(name:String="Settlers")
+			Self.name=name
+		End Method		
 	End Class
 	Field x:Int
 	Field y:Int
 	Field size:Int=1
 	Field deleteme:Bool=False
 	Field name:String
-	Field buildlist:Stack<production>
+	Field myproduction:Stack<production>
 	Method New(x:Int,y:Int)
 		If cityatpos(x,y) = True Then deleteme = True ; Return
-		buildlist = new Stack<production>
-		buildlist.Add(new production())
-		buildlist.Add(new production())
+		myproduction = new Stack<production>
+		myproduction.Add(new production())
+		myproduction.Add(new production())
 		Self.x = x
 		Self.y = y
 		name = randomcityname()
@@ -951,11 +1071,11 @@ Class city
 		mycitymethod.drawcity(canvas,mx,my,tw,th,size,name)
 	End Method
 	Method turnend()
-		If buildlist.Length=0 Then Return
-		buildlist.Top.turns-=1
-		If buildlist.Top.turns=0
+		If myproduction.Length=0 Then Return
+		myproduction.Top.turns-=1
+		If myproduction.Top.turns=0
 			mycontrols.addunitat(x,y)			
-			buildlist.Pop()
+			myproduction.Pop()
 		End If
 	End Method
 End Class
@@ -965,8 +1085,8 @@ Class citymethod
 	Method getproductionat:String(x:int,y:Int)
 		For Local i:=Eachin mycity
 			If i.x = x And i.y = y
-				If i.buildlist.Length>0
-					Return i.buildlist.Top.name
+				If i.myproduction.Length>0
+					Return i.myproduction.Top.name
 				End If
 			End If
 		Next
@@ -975,8 +1095,8 @@ Class citymethod
 	Method getproductiontimeat:int(x:int,y:int)
 		For Local i:=Eachin mycity
 			If i.x = x And i.y = y
-				If i.buildlist.Length>0
-					return i.buildlist.Top.turns
+				If i.myproduction.Length>0
+					return i.myproduction.Top.turns
 				End If
 			End If
 		Next
