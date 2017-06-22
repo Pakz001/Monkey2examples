@@ -40,16 +40,16 @@ Class greybackground
     Field mapr:Int[,]
     Field mapg:Int[,]
     Field mapb:Int[,]
-    Method New(Width:float,Height:float,mapwidth:Float,mapheight:Float)
+    Method New(Width:float,Height:float,mapwidth:Float,mapheight:Float)	    
 		greyimage = New Image(Width,Height)		
-		greycanvas = New Canvas(greyimage)	    
+		greycanvas = New Canvas(greyimage)	    		
         Self.mapwidth = mapwidth
         Self.mapheight = mapheight
         tilewidth = Width/Float(mapwidth)
         tileheight = Height/Float(mapheight)
         mapr = New Int[mapwidth,mapheight]
         mapg = New Int[mapwidth,mapheight]
-        mapb = New Int[mapwidth,mapheight]
+        mapb = New Int[mapwidth,mapheight]        
         'mapr = New Int[mapwidth][]
         'mapg = New Int[mapwidth][]
         'mapb = New Int[mapwidth][]                
@@ -58,10 +58,11 @@ Class greybackground
 	'		mapg[i] = New Int[mapheight]            
 	'		mapb[i] = New Int[mapheight]
      '   Next 
+     
         addrectslayer()
         brusheffect2()
         smooth()
-        createimage(greycanvas)
+        createimage(greycanvas)        
     End Method
     Method brusheffect2()
     	For Local i:=0 Until (mapwidth*mapheight)
@@ -1877,6 +1878,7 @@ Class world
 		Forever
 	End Method
 	Method updatedrawfogedge(canvas:Canvas)
+		
 		For Local my:=0 Until mh-1
 		For Local mx:=0 Until mw
 			Local lefttopx:Int=mx*tw
@@ -1886,30 +1888,39 @@ Class world
 			Local rightbottomx:Int=mx*tw+tw
 			Local rightbottomy:Int=my*th+th
 			Local leftbottomx:Int=mx*tw
-			Local leftbottomy:Int=my*th+th
+			Local leftbottomy:Int=my*th+th			
+			
 			If fogmap[mx,my] = true 'if fog tile
+			
 			If mx-1>=0 And fogmap[mx-1,my] = False 'if left is visible
 				drawfogline(canvas,lefttopx,lefttopy,leftbottomx,leftbottomy)
-			End If
+			End If	
+					
 			If my-1>=0 And fogmap[mx,my-1] = False 'if top is visible
 				drawfogline(canvas,lefttopx,lefttopy,righttopx,righttopy)
 			End If
+			
 			If mx+1<mw And fogmap[mx+1,my] = False 'if right is visible
 				drawfogline(canvas,righttopx,righttopy,rightbottomx,rightbottomy)
 			End If
-			If my+1<mh And fogmap[mx,my+1] = false 'if bottom is visible
-				drawfogline(canvas,leftbottomx,leftbottomy,rightbottomx,rightbottomy)
+			
+			If my+1<mh And fogmap[mx,my+1] = false 'if bottom is visible			
+				drawfogline(canvas,leftbottomx,leftbottomy,rightbottomx,rightbottomy)			
 			End If
+			
 			End If
 		Next
 		Next
+		
 		canvas.Flush()
 	End Method	
-	Method drawfogline(canvas:Canvas,x1:Float,y1:Float,x2:float,y2:float)		
+	Method drawfogline(canvas:Canvas,x1:Float,y1:Float,x2:Float,y2:float)		
 		SeedRnd(x1*y1)
-		Local oldx:Float=x1,oldy:Float=y1
-		Local x3:Float=x1,y3:Float=y1
+		'Local oldx:double=x1,oldy:Double=y1
+		Local x3:Double=x1,y3:double=y1
+		
 		Repeat
+			
 			If x3<x2 Then x3+=Rnd(1)
 			If y3<y2 Then y3+=Rnd(1)
 			If x3>x2 Then x3-=Rnd(1)
@@ -1923,8 +1934,12 @@ Class world
 			'canvas.Color = New Color(1,1,1)
 			'canvas.DrawPoint(x3,y3)
 			'End If
-			If rectsoverlap(x3,y3,2,2,x2,y2,2,2) Then Return
+			
+			If rectsoverlap(x3,y3,2,2,x2,y2,2,2) = True Then 		
+				Return
+			End If
 		Forever
+		
 	End Method	
 
 	Method updatedrawwateredge(canvas:Canvas)
@@ -1998,7 +2013,9 @@ Global mygreybackground:greybackground
 Class MyWindow Extends Window
 	Method New()
 		Title="CivClone"
+		
 		startnewgame(Width,Height,0)
+		
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -2170,10 +2187,14 @@ End Function
 
 Function redrawgame()
 	myworld.updatedraw(myworld.icanvas)
+	
 	myworld.updatedrawwateredge(myworld.icanvas)
+	
 	myworld.updatedrawroads(myworld.icanvas)	
 	myworld.updatedrawfog(myworld.icanvas)
+
 	myworld.updatedrawfogedge(myworld.icanvas)
+
 End Function
 
 Function startnewgame(Width:Int,Height:int,seed:Double)
@@ -2181,16 +2202,19 @@ Function startnewgame(Width:Int,Height:int,seed:Double)
 	myunit = New List<unit>		
 	mycity = New List<city>	
 	myworld = New world(Width,Height,mystartmapwidth,mystartmapheight)
-	mytile = New tile()
+	mytile = New tile()	
 	'myunit.Add(New unit(5,5))
 	myunitmethod = New unitmethod()
 	mycityscreen = New cityscreen(Width,Height)
 	mycitymethod = New citymethod()
 	mycitycontrols = New citycontrols()
+	
 	myunituserinterface = New unituserinterface(Width,Height)
 	mygreybackground = New greybackground(Width,Height,100,100)
 	findunitstartingposition()
+	
 	redrawgame()
+	
 End Function
 
 Function findunitstartingposition()
