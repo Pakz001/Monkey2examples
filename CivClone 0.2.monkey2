@@ -18,6 +18,8 @@ Global currentcityx:Int
 Global currentcityy:Int
 Global currentcitysize:Int
 Global currentcityname:String
+Global currentcityproduction:String
+Global currentcityproductiontime:Int
 'This variable is increased in the main loop
 'if a key is pressed and this value is >  0 then this 
 'variable is set to 0 again.
@@ -540,25 +542,46 @@ Class cityscreen
 	Field th:Float
 	Field citymapx:Int,citymapy:Int
 	Field citymapw:Int,citymaph:Int
+	'variables for the production info
+	Field prodx:Int
+	Field prody:Int
+	Field prodw:Int
+	Field prodh:Int
 	Method New(Width:Int,Height:Int)
 		Self.Width = Width
 		Self.Height = Height
 		tw = myworld.tw
 		th = myworld.th
-		' create the city map variables
+		' fill the city map variables
 		citymapw = tw*5
 		citymaph = th*5
 		citymapx = Width/2-citymapw/2
 		citymapy = Height/2-citymaph/2
+		' fill the city production info variables
+		prodx = Width/1.5
+		prody = Height/1.5
+		prodw = Width/3.3
+		prodh = Height/3.3
 	End Method
 	Method draw(canvas:Canvas)				
 		canvas.Color = Color.Black
 		canvas.DrawRect(0,0,Width,Height)
 		canvas.Color = Color.White
 		mygreybackground.draw(canvas)	
-		drawcitymap(canvas)
+		drawcitymap(canvas)		
+		drawproductioninfo(canvas)
 		canvas.Color = Color.White
 		canvas.DrawText("Press Space to Exit",Width/2,Height-20,.5,.5)
+	End Method
+	Method drawproductioninfo(canvas:Canvas)
+		canvas.Color = Color.White
+		canvas.DrawRect(prodx-2,prody-2,prodw+4,prodh+4)		
+		canvas.Color = Color.Black
+		canvas.DrawRect(prodx,prody,prodw,prodh)
+		canvas.Color = Color.White
+		canvas.DrawText("Current Production :",prodx+10,prody+10)
+		canvas.DrawText(currentcityproduction,prodx+10,prody+30)
+		canvas.DrawText(currentcityproductiontime+" Turns Left",prodx+10,prody+50)
 	End Method
 	'Here we use the buffer image of the map
 	'we draw it so the city we selected is in the center.
@@ -627,6 +650,8 @@ Class controls
 			currentcityy = Mouse.Y / myworld.th
 			currentcityname = mycitymethod.getcitynameat(currentcityx,currentcityy)
 			currentcitysize = mycitymethod.getcitysizeat(currentcityx,currentcityy)
+			currentcityproduction = mycitymethod.getproductionat(currentcityx,currentcityy)
+			currentcityproductiontime = mycitymethod.getproductiontimeat(currentcityx,currentcityy)
 			cityscreenopen = True
 		End If
 		End If
@@ -846,6 +871,27 @@ End Class
 
 'city methods
 Class citymethod
+	Method getproductionat:String(x:int,y:Int)
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y
+				If i.buildlist.Length>0
+					Return i.buildlist.Top.name
+				End If
+			End If
+		Next
+		Return "No Production"
+	End Method
+	Method getproductiontimeat:int(x:int,y:int)
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y
+				If i.buildlist.Length>0
+					return i.buildlist.Top.turns
+				End If
+			End If
+		Next
+		Return -1
+	End Method
+
 	Method getcitynameat:String(x:Int,y:Int)
 		For Local i:=Eachin mycity
 			If i.x = x and i.y = y Then Return i.name
