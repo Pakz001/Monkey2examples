@@ -6,8 +6,8 @@ Using mojo..
 
 ' Here is how many tiles there are drawn on the screen.
 ' Currently tested from 16x16 up to 32x32
-Global mystartmapwidth:Int=20
-Global mystartmapheight:Int=20
+Global mystartmapwidth:Int=16
+Global mystartmapheight:Int=16
 
 Global blinkspeed:Int=5 ' lower is faster
 Global turn:Int=1
@@ -301,6 +301,7 @@ Class unituserinterface
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y,32,32)
 					'Print "Build Road"
 					myunitmethod.buildroadatactiveunitpos()
+					myworld.updatedrawroads(myworld.roadcanvas)	
 					myunitmethod.activateamovableunit()					
 					mousedelay = 0
 				End If
@@ -562,7 +563,7 @@ Class citycontrols
 							y+=20
 						Next
 						If myselt = True 'if we have selected a unit to be build
-							mycityscreen.myproduction.Push(New cityscreen.production(myseltname))						
+							mycityscreen.myproduction.Push(New cityscreen.production(myseltname,4))						
 							For Local i:=Eachin mycity
 								If i.x = currentcityx And i.y = currentcityy
 									i.myproduction.Push(New city.production(myseltname))									
@@ -645,9 +646,9 @@ Class cityscreen
 	Class production
 		Field name:String="Settler"
 		Field turns:Int=4		
-		Method New(name:string)
+		Method New(name:String,turns:Int)
 			Self.name=name
-			turns = 4
+			Self.turns = turns
 		End Method
 	End Class
 	Field myproduction:Stack<production>
@@ -723,7 +724,7 @@ Class cityscreen
 			If i.x = currentcityx And i.y = currentcityy
 				If i.myproduction.Length
 					For Local i2:= Eachin i.myproduction
-						myproduction.Push(New production(i2.name))						
+						myproduction.Push(New production(i2.name,i2.turns))						
 					Next
 				End If
 			End If
@@ -822,6 +823,8 @@ Class cityscreen
 		'Print sx
 		canvas.Color = Color.White
 		canvas.DrawImage(myworld.image,offsetx,offsety)
+		canvas.DrawImage(myworld.roadimage,offsetx,offsety)
+		canvas.DrawImage(myworld.fogimage,offsetx,offsety)
 		' Draw the city.
 		mycitymethod.drawcity(canvas,citymapx+2*myworld.tw,citymapy+2*myworld.th,myworld.tw,myworld.th,currentcitysize,currentcityname)
 		
@@ -877,6 +880,7 @@ Class controls
 	Method buildroad()
 		If Keyboard.KeyReleased(Key.R)
 			myunitmethod.buildroadatactiveunitpos()	
+			myworld.updatedrawroads(myworld.roadcanvas)	
 			'find next movable unit
 			myunitmethod.activateamovableunit()						
 		End If
@@ -1018,7 +1022,9 @@ Class city
 		Local newname:String
 		Local firstname:String[] = New String[]( 	"New",
 													"Old",
-													"First")													
+													"First",
+													"Second",
+													"Last")
 													
 		local secondname:String[] = New String[]( 	"Berlin",
 												"Brussel",
@@ -1680,13 +1686,17 @@ End Class
 
 Class world
 	Field image:Image
-	Field icanvas:Canvas	
+	Field icanvas:Canvas
+	Field roadimage:Image	
+	Field roadcanvas:Canvas
+	Field fogimage:Image
+	Field fogcanvas:Canvas
 	Class roadconnection
 		Field hasroad:Bool = False
 		Field n:Bool=False,ne:Bool=False
 		Field e:Bool=False,se:Bool=False
 		Field s:Bool=False,sw:Bool=False
-		Field w:Bool=False,nw:Bool=false
+		Field w:Bool=False,nw:Bool=False
 		Method New()
 			'n=True
 			'e=True
@@ -1696,7 +1706,7 @@ Class world
 			'se=True
 			'sw=True
 			'nw=True
-			'hasroad=true
+			'hasroad=True
 		End Method	
 	End Class
 	Field roadmap:roadconnection[,] = New roadconnection[1,1]
@@ -1709,6 +1719,13 @@ Class world
 		image=New Image( sw,sh)
 		image.Handle=New Vec2f( 0,0 )
 		icanvas=New Canvas( image )
+		roadimage = New Image(sw,sh)
+		roadimage.Handle=New Vec2f( 0,0 )
+		roadcanvas = New Canvas(roadimage)
+		fogimage = New Image(sw,sh)
+		fogimage.Handle=New Vec2f( 0,0 )
+		fogcanvas = New Canvas(fogimage)
+
 		Self.mw = mw
 		Self.mh = mh
 		Self.sw = sw
@@ -1753,7 +1770,9 @@ Class world
 		Next
 	End Method
 	Method draw(canvas:Canvas)
-		canvas.DrawImage(image,0,0)		
+		canvas.DrawImage(image,0,0)
+		canvas.DrawImage(roadimage,0,0)
+		canvas.DrawImage(fogimage,0,0)
 	End Method
 '	Method drawroads(canvas:Canvas)
 '		canvas.DrawImage(image
@@ -1802,6 +1821,7 @@ Class world
 		canvas.Flush()
 	End Method
 	Method updatedrawfog(canvas:Canvas)
+		canvas.Clear(New Color(0,0,0,0))		
 		canvas.Color = Color.Black
 		For Local y:Float=0 Until mh-1 Step 1
 		For Local x:Float=0 Until mw Step 1			
@@ -1815,6 +1835,7 @@ Class world
 		canvas.Flush()
 	End Method
 	Method updatedrawroads(canvas:Canvas)	
+		canvas.Clear(New Color(0,0,0,0))
 		canvas.Color = New Color(.7,.3,0)
 		For Local y:Float=0 Until mh-1 Step 1
 		For Local x:Float=0 Until mw Step 1			
@@ -1822,7 +1843,7 @@ Class world
 			Local y2:Float=y*th
 			Local cx:Float=x2+tw/2
 			Local cy:Float=y2+th/2
-			If roadmap[x,y].hasroad = True
+			If roadmap[x,y].hasroad = True 'And fogmap[x,y] = false
 				canvas.DrawRect(x2+tw/2,y2+th/2,4,4)			
 				If roadmap[x,y].n = True Then
 					drawroadline(canvas,cx,cy,cx,cy-th/2)				
@@ -1878,6 +1899,7 @@ Class world
 		Forever
 	End Method
 	Method updatedrawfogedge(canvas:Canvas)				
+		'canvas.Clear(New Color(0,0,0,0))
 		For Local my:=0 Until mh-1
 		For Local mx:=0 Until mw
 			Local lefttopx:Int=mx*tw
@@ -1913,7 +1935,7 @@ Class world
 		
 		canvas.Flush()
 	End Method	
-	Function drawfogline(canvas:Canvas,x1:Double,y1:double,x2:double,y2:double)		
+	Function drawfogline(canvas:Canvas,x1:Double,y1:double,x2:Double,y2:double)		
 		SeedRnd(x1*y1)
 		'Local oldx:double=x1,oldy:Double=y1
 		Local x3:Double=x1,y3:double=y1
@@ -1925,10 +1947,11 @@ Class world
 			If x3>x2 Then x3-=Rnd(1)
 			If y3>y2 Then y3-=Rnd(1)	
 			Local c:Float=0
-			If Rnd(1)<.5
+			'If Rnd(1)<.9
 				canvas.Color = New Color(c,c,c)
-				canvas.DrawRect(x3+Rnd(-4,4),y3+Rnd(-4,4),Rnd(2,4),Rnd(2,4))				
-  			End If
+				Local ts:Float=myworld.tw/7
+				canvas.DrawRect(x3+Rnd(-ts,ts),y3+Rnd(-ts,ts),Rnd(1,4),Rnd(1,4))				
+  			'End If
 						'If Rnd(1)<.5
 						'canvas.Color = New Color(1,1,1)
 						'canvas.DrawPoint(x3,y3)
@@ -1939,7 +1962,7 @@ Class world
 			End If
 		Until exitloop=True
 		
-	End function
+	End Function
 
 	Method updatedrawwateredge(canvas:Canvas)
 		For Local my:=0 Until mh-1
@@ -1984,7 +2007,7 @@ Class world
 			If Rnd(1)<.5
 			canvas.Color = New Color(1,1,1)
 			canvas.DrawPoint(x3,y3)
-			End if
+			End If
 			If rectsoverlap(x3,y3,2,2,x2,y2,2,2) Then Return
 		Forever
 	End Method	
@@ -2136,6 +2159,9 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 		rec.Y = 0
 		rec.Size = New Vec2i(Width,Height)
 		canvas.Scissor = rec
+
+		canvas.Color = New Color(0,0,0)
+		canvas.DrawRect(0,Height-myworld.th,Width,20)
 		
 		canvas.Color = New Color(0,0,0)
 		canvas.DrawRect(0,Height-20,70,20)
@@ -2189,11 +2215,11 @@ Function redrawgame()
 	myworld.updatedraw(myworld.icanvas)
 	
 	myworld.updatedrawwateredge(myworld.icanvas)
-	
-	myworld.updatedrawroads(myworld.icanvas)	
-	myworld.updatedrawfog(myworld.icanvas)
+	'myworld.updatedrawroads(myworld.roadcanvas)	
 
-	myworld.updatedrawfogedge(myworld.icanvas)
+	myworld.updatedrawfog(myworld.fogcanvas)
+
+	myworld.updatedrawfogedge(myworld.fogcanvas)
 
 End Function
 
@@ -2212,10 +2238,11 @@ Function startnewgame(Width:Int,Height:int,seed:Double)
 	
 	myunituserinterface = New unituserinterface(Width,Height)
 	mygreybackground = New greybackground(Width,Height,100,100)
+		
 	findunitstartingposition()
 	
 	redrawgame()
-	
+	myworld.updatedrawroads(myworld.roadcanvas)
 End Function
 
 Function findunitstartingposition()
