@@ -24,6 +24,137 @@ Global currentcityname:String
 Global keydelay:Int=0
 Global mousedelay:Int=0
 
+Class greybackground
+	Field greyimage:Image
+	Field greycanvas:Canvas
+    Field mapwidth:Int
+    Field mapheight:Int
+    Field tilewidth:Float
+    Field tileheight:Float
+    Field mapdepth:Int
+    'Field mapr:Int[][]
+    'Field mapg:Int[][]
+    'Field mapb:Int[][]    
+    Field mapr:Int[,]
+    Field mapg:Int[,]
+    Field mapb:Int[,]
+    Method New(Width:float,Height:float,mapwidth:Float,mapheight:Float)
+		greyimage = New Image(Width,Height)		
+		greycanvas = New Canvas(greyimage)	    
+        Self.mapwidth = mapwidth
+        Self.mapheight = mapheight
+        tilewidth = Width/Float(mapwidth)
+        tileheight = Height/Float(mapheight)
+        mapr = New Int[mapwidth,mapheight]
+        mapg = New Int[mapwidth,mapheight]
+        mapb = New Int[mapwidth,mapheight]
+        'mapr = New Int[mapwidth][]
+        'mapg = New Int[mapwidth][]
+        'mapb = New Int[mapwidth][]                
+        'For Local i:= 0 Until mapwidth
+        '    mapr[i] = New Int[mapheight]
+	'		mapg[i] = New Int[mapheight]            
+	'		mapb[i] = New Int[mapheight]
+     '   Next 
+        addrectslayer()
+        brusheffect2()
+        smooth()
+        createimage(greycanvas)
+    End Method
+    Method brusheffect2()
+    	For Local i:=0 Until (mapwidth*mapheight)
+    		Local x1:Float=Rnd(0,mapwidth)
+    		Local y1:Float=Rnd(0,mapheight)
+    		Local angle:Int=Rnd(-180,180)
+    		Local dist:Int=Rnd(3,5)
+    		For Local iii:=0 Until 20
+    		For Local ii:=0 Until dist
+    			Local x4:Float=x1+Rnd(-5,5)
+    			Local y4:Float=y1+Rnd(-5,5)
+    			Local x2:Float=x4+Cos(angle)*1
+    			Local y2:Float=y4+Sin(angle)*1
+    			Local x3:Float=x4+Cos(angle)*2
+    			Local y3:Float=y4+Sin(angle)*2
+    			If x2>-1 And y2>-1 And x2<mapwidth And y2<mapheight
+    			If x3>-1 And y3>-1 And x3<mapwidth And y3<mapheight
+    				mapr[x3,y3] = mapr[x2,y2]
+    				mapg[x3,y3] = mapg[x2,y2]
+    				mapb[x3,y3] = mapb[x2,y2]
+    			End If
+    			End If    			
+			Next
+			Next
+    	Next
+    End Method
+    Method smooth()
+    	For Local i:=0 Until (mapwidth*mapheight)
+    		Local x:Int=Rnd(0,mapwidth-1)
+    		Local y:Int=Rnd(0,mapheight-1)
+    		Local col1r:Int=mapr[x+1,y]
+    		Local col1g:Int=mapg[x+1,y]
+    		Local col1b:Int=mapb[x+1,y]    		    		
+    		
+    		Local col2r:Int=mapr[x+1,y+1]
+	   		Local col2g:Int=mapg[x+1,y+1]    		
+    		Local col2b:Int=mapb[x+1,y+1]
+    		
+    		Local col3r:Int=mapr[x,y+1]    		    		
+    		Local col3g:Int=mapg[x,y+1]    		    		
+    		Local col3b:Int=mapb[x,y+1]    		    		
+
+    		Local col4r:Int=(col1r+col2r+col3r)/3
+    		Local col4g:Int=(col1g+col2g+col3g)/3
+    		Local col4b:Int=(col1b+col2b+col3b)/3    		    		
+    		mapr[x,y] = col4r
+    		mapg[x,y] = col4g
+    		mapb[x,y] = col4b
+    	Next
+    End Method
+    Method addrectslayer()
+    	For Local i:=0 Until (mapwidth*mapheight)
+    		Local w:Int=Rnd(3,15)
+    		Local h:Int=Rnd(3,15)
+    		Local x:Int=Rnd(-3,mapwidth)
+    		Local y:Int=Rnd(-3,mapheight)
+    		Local colm:Int=Rnd(50)
+    		Local colr:Int=205+colm
+    		Local colg:Int=205+colm
+    		Local colb:Int=205+colm
+    		mapdrawrect(x,y,w,h,colr,colg,colb)
+    	Next
+    End Method
+    Method mapdrawrect(x:Int,y:Int,w:Int,h:Int,colr:Int,colg:Int,colb:Int)
+    	For Local y1:=y Until y+h
+    	For Local x1:=x Until x+w
+    		If x1>-1 And y1>-1 And x1<mapwidth And y1<mapheight
+    			mapr[x1,y1] = colr
+    			mapg[x1,y1] = colg
+    			mapb[x1,y1] = colb
+    		End If
+    	Next
+    	Next
+    End Method
+    Method draw(canvas:Canvas,x:Int=0,y:Int=0)
+		canvas.DrawImage(greyimage,0,0)
+	End Method
+    Method createimage(canvas:Canvas)
+        For Local y:=0 Until mapheight
+        For Local x:=0 Until mapwidth
+			Local colr:Float=mapr[x,y]
+			Local colg:Float=mapg[x,y]
+			Local colb:Float=mapb[x,y]
+			canvas.Color = New Color(255/colr,255/colg,255/colb)
+			canvas.DrawRect(x*tilewidth,y*tileheight,tilewidth+1,tileheight+1)
+        Next
+        Next    
+        canvas.Flush()
+    End Method
+    Method distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
+        Return Abs(x2-x1)+Abs(y2-y1)
+    End Method    
+End Class
+
+
 Class unituserinterface
 	Field Width:Int,Height:Int
 	Field arrowimage:Image
@@ -172,7 +303,7 @@ Class unituserinterface
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y+32,32,32)
 					'Print "Build City"
-					If myunitmethod.iscityatactiveunitpos() = true Then Return
+					If myunitmethod.iscityatactiveunitpos() = True Then Return
 					myunitmethod.buildroadatactiveunitpos(False)
 					Local x:Int,y:Int
 					'get the active unit x and y coordinates
@@ -202,13 +333,23 @@ Class unituserinterface
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-16,y+34,32,32)
 					'Print "End Turn"
+
+					'Update the buildlist of each city
+					For Local i:=Eachin mycity
+						i.turnend()
+					Next
+					'restore the moves of each unit					
 					For Local i:=Eachin myunit
 						i.movesleft = i.originalmoves
 						i.active = False				
 					Next
+					' set the game movement tip 
 					gamehasmovesleft = True
+					'increase turn
 					turn+=1
+					' find a moveable unit
 					myunitmethod.activateamovableunit()					
+					' set mouse delay so as not to double feaure click
 					mousedelay = 0
 				End If
 			End If
@@ -410,11 +551,11 @@ Class cityscreen
 		citymapx = Width/2-citymapw/2
 		citymapy = Height/2-citymaph/2
 	End Method
-	Method draw(canvas:Canvas)
-		
+	Method draw(canvas:Canvas)				
 		canvas.Color = Color.Black
 		canvas.DrawRect(0,0,Width,Height)
 		canvas.Color = Color.White
+		mygreybackground.draw(canvas)	
 		drawcitymap(canvas)
 		canvas.Color = Color.White
 		canvas.DrawText("Press Space to Exit",Width/2,Height-20,.5,.5)
@@ -431,6 +572,14 @@ Class cityscreen
 		rec.Size = New Vec2i(citymapw+4,citymaph+4)
 		canvas.Scissor = rec
 		canvas.Clear(Color.White)
+		' Draw the inside of the city map
+		rec = New Recti<Int>
+		rec.X = citymapx
+		rec.Y = citymapy
+		rec.Size = New Vec2i(citymapw,citymaph)
+		canvas.Scissor = rec
+		canvas.Clear(Color.Black)
+
 		
 		' Draw the city map
 		rec = New Recti<Int>
@@ -503,12 +652,20 @@ Class controls
 	' End of turn
 	Method myendofturn()
 		If Keyboard.KeyReleased(Key.Enter) Or Mouse.ButtonReleased(MouseButton.Middle)
+			'Update the buildlist of each city
+			For Local i:=Eachin mycity
+				i.turnend()
+			Next
+			'restore the moves
 			For Local i:=Eachin myunit
 				i.movesleft = i.originalmoves
 				i.active = False				
 			Next
+			'rest moves
 			gamehasmovesleft = true
+			'increase turn
 			turn+=1
+			' activate a moveable unit
 			myunitmethod.activateamovableunit()
 			
 		End If
@@ -554,7 +711,7 @@ Class controls
 		End If
 	End Method
 	' add a unit to the map (cheat)
-	Method addunit(canvas:Canvas,Width:int,Height:Int)
+	Method addunit(canvas:Canvas,Width:Int,Height:Int)
 		If Keyboard.KeyDown(Key.LeftShift)
 		If Mouse.Y / myworld.th < myworld.mh-1
 		If Mouse.ButtonReleased(MouseButton.Left)
@@ -568,12 +725,25 @@ Class controls
 			End If
 			redrawgame()
 			
-		End if
-		End if
+		End If
+		End If
 		End If
 		End If
 	End Method
-	Method moveunit(canvas:Canvas,Width:int,Height:Int)
+	' add a unit to the map (cheat)
+	Method addunitat(x:Int,y:int)		
+		If myworld.map[Mouse.X/myworld.tw,Mouse.Y/myworld.th] > 5
+			myunit.Add(New unit(x,y))
+			myunitmethod.removefog(x,y)
+			If x > myworld.mw/2 Then 
+				myunituserinterface.dockside("Left")
+				Else
+				myunituserinterface.dockside("Right")
+			End If
+			redrawgame()
+		End If
+	End Method
+	Method moveunit(canvas:Canvas,Width:Int,Height:Int)
 		If Mouse.ButtonReleased(MouseButton.Right)
 		If Mouse.Y / myworld.th < myworld.mh-1
 			Local x:Int=Mouse.X / myworld.tw
@@ -587,20 +757,28 @@ Class controls
 End Class
 
 Class city
+	Class production
+		Field name:String="Settler"
+		Field turns:Int=4		
+	End Class
 	Field x:Int
 	Field y:Int
 	Field size:Int=1
 	Field deleteme:Bool=False
 	Field name:String
-	Method New(x:Int,y:int)
+	Field buildlist:Stack<production>
+	Method New(x:Int,y:Int)
 		If cityatpos(x,y) = True Then deleteme = True ; Return
+		buildlist = new Stack<production>
+		buildlist.Add(new production())
+		buildlist.Add(new production())
 		Self.x = x
 		Self.y = y
-		name = newrandomcityname()
+		name = randomcityname()
 		myunitmethod.removeactiveunit()
 	End Method
 	'Give the city a random name
-	Method newrandomcityname:String()
+	Method randomcityname:String()
 		Local newname:String
 		Local firstname:String[] = New String[]( 	"New",
 													"Old",
@@ -655,13 +833,20 @@ Class city
 '					rec.Size = New Vec2i(tw+80,th+80)
 '					canvas.Scissor = rec
 		mycitymethod.drawcity(canvas,mx,my,tw,th,size,name)
-
+	End Method
+	Method turnend()
+		If buildlist.Length=0 Then Return
+		buildlist.Top.turns-=1
+		If buildlist.Top.turns=0
+			mycontrols.addunitat(x,y)			
+			buildlist.Pop()
+		End If
 	End Method
 End Class
 
 'city methods
 Class citymethod
-	Method getcitynameat:String(x:int,y:Int)
+	Method getcitynameat:String(x:Int,y:Int)
 		For Local i:=Eachin mycity
 			If i.x = x and i.y = y Then Return i.name
 		Next
@@ -1490,6 +1675,9 @@ Global mycitymethod:citymethod
 Global mycitycontrols:citycontrols
 Global myunituserinterface:unituserinterface
 
+'textures
+Global mygreybackground:greybackground
+
 Class MyWindow Extends Window
 	Method New()
 		Title="CivClone"
@@ -1540,11 +1728,14 @@ Class MyWindow Extends Window
 			If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 		End If
 		If Keyboard.KeyReleased(Key.F2)
+			'free images from memory
+			mygreybackground.greyimage.Discard()
+			myworld.image.Discard()	
+			'start new game 
 			startnewgame(Width,Height,Millisecs())
 		End If
 		
 		If cityscreenopen = False
-'			myunituserinterface.update()
 			myunituserinterface.draw(canvas)
 		End If
 
@@ -1638,7 +1829,7 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 
 		canvas.DrawText(App.FPS,0,0)
 
-		If Keyboard.KeyDown(Key.Key1) Then drawhelpscreen(canvas,Width,Height)
+		If Keyboard.KeyDown(Key.Key1) Then drawhelpscreen(canvas,Width,Height)				
 		
 End Function
 
@@ -1680,6 +1871,7 @@ Function startnewgame(Width:Int,Height:int,seed:Double)
 	mycitymethod = New citymethod()
 	mycitycontrols = New citycontrols()
 	myunituserinterface = New unituserinterface(Width,Height)
+	mygreybackground = New greybackground(Width,Height,100,100)
 	findunitstartingposition()
 	redrawgame()
 End Function
