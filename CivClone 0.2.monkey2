@@ -58,6 +58,7 @@ Class unituserinterface
 			
 			If rectsoverlap(mx,my,1,1,dockx,docky,dockw,dockh)
 				docked = True
+				mousedelay = 0
 				Return
 			End If
 			End If
@@ -76,6 +77,7 @@ Class unituserinterface
 				
 			If rectsoverlap(mx,my,1,1,undockx,undocky,undockw,undockh)
 				docked = False
+				mousedelay = 0
 				Return
 			End If
 			End If
@@ -99,42 +101,50 @@ Class unituserinterface
 				'Print "Up"+Millisecs()
 				myunitmethod.moveactiveunitto(dx,dy-1)
 				redrawgame()
+				mousedelay = 0
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x,y+100,Width/10,Height/10)
 				'Print "Down"+Millisecs()
 				myunitmethod.moveactiveunitto(dx,dy+1)
 				redrawgame()
+				mousedelay = 0
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-50,y+50,Width/10,Height/10)
 				'Print "Left"+Millisecs()
 				myunitmethod.moveactiveunitto(dx-1,dy)
 				redrawgame()
+				mousedelay = 0
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+50,y+50,Width/10,Height/10)
 				'Print "Right"+Millisecs()
 				myunitmethod.moveactiveunitto(dx+1,dy)
 				redrawgame()
+				mousedelay = 0
 			End If
 
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-45,y,Width/10,Height/10)
 				'Print "LeftUp"+Millisecs()
 				myunitmethod.moveactiveunitto(dx-1,dy-1)
 				redrawgame()
+				mousedelay = 0
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-45,y+100,Width/10,Height/10)
 				'Print "LeftDown"+Millisecs()
 				myunitmethod.moveactiveunitto(dx-1,dy+1)
 				redrawgame()
+				mousedelay = 0
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+45,y,Width/10,Height/10)
 				'Print "RightUp"+Millisecs()
 				myunitmethod.moveactiveunitto(dx+1,dy-1)
 				redrawgame()
+				mousedelay = 0
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+45,y+100,Width/10,Height/10)
 				'Print "RightDown"+Millisecs()
 				myunitmethod.moveactiveunitto(dx+1,dy+1)
 				redrawgame()
+				mousedelay = 0
 			End If			
 		End If 'end if rectsoverlap
 		End If 'docked = false
@@ -154,6 +164,7 @@ Class unituserinterface
 					'Print "Build Road"
 					myunitmethod.buildroadatactiveunitpos()
 					myunitmethod.activateamovableunit()					
+					mousedelay = 0
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y+32,32,32)
 					'Print "Build City"
@@ -171,16 +182,19 @@ Class unituserinterface
 					Next					
 					mycity.Add(New city(x,y))					
 					myunitmethod.activateamovableunit()
+					mousedelay = 0
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y+64,32,32)
 					'Print "Fortify"
 					myunitmethod.unitactivefortify()
 					myunitmethod.activateamovableunit()					
+					mousedelay = 0
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y+96,32,32)
 					'Print "Skip turn"
 					myunitmethod.activeunitskipturn()
 					myunitmethod.activateamovableunit()
+					mousedelay = 0
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-16,y+34,32,32)
 					'Print "End Turn"
@@ -191,6 +205,7 @@ Class unituserinterface
 					gamehasmovesleft = True
 					turn+=1
 					myunitmethod.activateamovableunit()					
+					mousedelay = 0
 				End If
 			End If
 		End If 'end if docked is false
@@ -443,6 +458,17 @@ Class controls
 		If myunitmethod.ismovableunitatpos(x,y) = False Then return
 		myunitmethod.unitsactivedisable()
 		myunitmethod.activatemovableunitatpos(x,y)
+			If x > myworld.mw/2 Then 
+				myunituserinterface.dockside("Left")
+				Else
+				myunituserinterface.dockside("Right")
+			End If
+		
+		'If Mouse.X > myworld.mw/2 Then 
+		'	myunituserinterface.dockside("Left")
+		'	Else
+		'	myunituserinterface.dockside("Right")
+		'End If		
 	End Method
 	' if pressed b then build city at active unit
 	Method buildcity()
@@ -1391,10 +1417,20 @@ Class MyWindow Extends Window
 	
 	Method OnRender( canvas:Canvas ) Override
 		keydelay+=1
+		mousedelay+=1
+		If mousedelay>2000 Then mousedelay = 1000
+		If keydelay>2000 Then keydelay = 1000
 		App.RequestRender() ' Activate this method 
 		'
+		'the arrows to move the player with
 		If cityscreenopen = False
-		If Keyboard.KeyDown(Key.F1) = False
+			myunituserinterface.update()
+'			myunituserinterface.draw(canvas)
+		End If
+		'
+		If cityscreenopen = False
+		If Keyboard.KeyDown(Key.Key1) = False
+		If mousedelay > 40			
 		mycontrols.addunit(canvas,Width,Height)
 		mycontrols.moveunit(canvas,Width,Height)
 		mycontrols.buildcity()
@@ -1406,6 +1442,10 @@ Class MyWindow Extends Window
 		mycontrols.fortifyunit()
 		End If
 		End If
+		End If
+
+
+
 		If cityscreenopen = True
 			mycitycontrols.controls()
 			mycityscreen.draw(canvas)
@@ -1422,28 +1462,29 @@ Class MyWindow Extends Window
 			startnewgame(Width,Height,Millisecs())
 		End If
 		
-		'the arrows to move the player with
 		If cityscreenopen = False
-			myunituserinterface.update()
+'			myunituserinterface.update()
 			myunituserinterface.draw(canvas)
-		End if
+		End If
+
 		
 	End Method	
 	
 End	Class
 
 Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
+		Local rec:Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)
+		canvas.Scissor = rec
+
 		'Draw world
 		myworld.draw(canvas)
 		'myworld.drawwateredge(canvas)
 		'Draw roads
 		'myworld.drawroads(canvas)
 
-		Local rec:Recti<Int>
-		rec.X = 0
-		rec.Y = 0
-		rec.Size = New Vec2i(Width,Height)
-		canvas.Scissor = rec
 		'Draw units
 		For Local i:=Eachin myunit
 			i.draw(canvas)
