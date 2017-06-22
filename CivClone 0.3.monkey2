@@ -759,7 +759,7 @@ Class cityscreen
 	End Method
 	Method updatecitybuildlist()
 		mybuildlist = New Stack<buildlist>
-		mybuildlist.Push(New buildlist("Settlers"))
+		If currentcitysize > 1 Then mybuildlist.Push(New buildlist("Settlers"))
 		If currentcitywalls = False Then mybuildlist.Push(New buildlist("City Walls"))
 		If currentcitymines < 22 Then mybuildlist.Push(New buildlist("Mine"))
 		If currentcityfarms < 22 Then mybuildlist.Push(New buildlist("Farm"))
@@ -836,6 +836,8 @@ Class cityscreen
 		Local foo:Int
 		foo = currentcityfarms-currentcitysize
 		Local min:Int = currentcitymines - currentcitysize
+		If currentcitybarracks =True Then min-=1
+		If currentcitywalls=True Then min-=1
 		canvas.DrawText(currentcitysize,cityix+100,cityiy+20*1)
 		canvas.DrawText(currentcityfarms,cityix+100,cityiy+20*2)
 		canvas.DrawText(currentcityfood,cityix+100,cityiy+20*3)
@@ -849,10 +851,10 @@ Class cityscreen
 		' The numbers behind the food and resources info labels
 		If foo>= 0 Then 
 		canvas.Color=Color.Green 
-		canvas.DrawText("+"+min,cityix+130,cityiy+20*3)
+		canvas.DrawText("+"+foo,cityix+130,cityiy+20*3)
 		Else 
 		canvas.Color = Color.Red
-		canvas.DrawText(min,cityix+130,cityiy+20*3)
+		canvas.DrawText(foo,cityix+130,cityiy+20*3)
 		End If
 		If min>= 0 Then 
 		canvas.Color=Color.Green 
@@ -1190,9 +1192,8 @@ Class city
 	End Class
 	Field x:Int
 	Field y:Int
-	Field size:Int=1
-	Field growth:Float=1
-	Field farms:Int=3
+	Field size:Int=1	
+	Field farms:Int=2
 	Field mines:Int=2
 	Field walls:Bool=False
 	Field barracks:Bool=False
@@ -1220,7 +1221,7 @@ Class city
 													"Second",
 													"Last")
 													
-		local secondname:String[] = New String[]( 	"Berlin",
+		Local secondname:String[] = New String[]( 	"Berlin",
 												"Brussel",
 												"Madrid",
 												"Paris",
@@ -1278,7 +1279,8 @@ Class city
 			If myproduction.Top.turns=0
 				Select myproduction.Top.name
 					Case "Settlers"
-						mycontrols.addunitat(x,y)	
+						mycontrols.addunitat(x,y)
+						size-=1
 					Case "City Walls"
 						'Print "Walls Created"
 						walls = True
@@ -1295,20 +1297,31 @@ Class city
 						size+=1					
 				End Select			
 				myproduction.Pop()
-			End if
+			End If
 		End If		
 		' increase food
 		food += farms
 		' increase resources
 		resources += mines
 		' population cost
-		food -= size
-		
+		food -= size		
 		resources -= size
 		
+		'improvement costs
+		If walls = True Then resources-=1
+		If barracks = True Then resources-=1
+		
+		' schrink city if shortages
 		If resources < 0 Then size -= 1 ; resources = 0
 		If food < 0 Then size -= 1 ; food = 0
 		If size<1 Then size = 1
+		
+		'grow city in time of plenty
+		If food > 10 And resources > 10 Then 
+			food -= 4
+			resources -= 4
+			size+=1
+		End If
 		
 		'decrease population size if shortages
 	End Method
