@@ -4,6 +4,8 @@
 Using std..
 Using mojo..
 
+'Texture quality
+Global texturequality:String="Medium" 'High , Medium and Low
 ' Here is how many tiles there are drawn on the screen.
 ' Currently tested from 16x16 up to 32x32
 Global mystartmapwidth:Int=20
@@ -531,6 +533,7 @@ End Class
 Class citycontrols
 		'Here we update the production window
 		Method productionupdate()
+			If mousedelay < 20 Then Return
 			' if opressed left mouse in production box
 			If Mouse.ButtonReleased(MouseButton.Left) = True
 				If mycityscreen.unitprodscreen = False
@@ -541,8 +544,9 @@ Class citycontrols
 					If rectsoverlap(Mouse.X,Mouse.Y,1,1,x1,y1,w1,h1)
 						'if pressed on unit production info box
 						mycityscreen.unitprodscreen = True
+						mousedelay=0
 					End If
-				End If
+				End If				
 			End If
 			'if right mouse on production box then erase production
 			If Mouse.ButtonReleased(MouseButton.Right) = True
@@ -557,10 +561,11 @@ Class citycontrols
 							If i.x = currentcityx And i.y=currentcityy
 								i.myproduction = New Stack<city.production>
 								mycityscreen.updateproduction()
+								mousedelay=0
 							End If
 						Next
 					End If
-				End If				
+				End If								
 			End If
 			
 			If Mouse.ButtonReleased(MouseButton.Left) = True
@@ -584,6 +589,7 @@ Class citycontrols
 								y+=20
 							Next
 							If myselt = True 'if we have selected a unit to be build
+								mousedelay=0
 								mycityscreen.myproduction.Push(New cityscreen.production(myseltname,4))						
 								For Local i:=Eachin mycity
 									If i.x = currentcityx And i.y = currentcityy
@@ -596,12 +602,13 @@ Class citycontrols
 						End If
 						
 					End If								
-				End If
-			End if
+				End If				
+			End If
 		End Method
 		'Here we select a unit from the garrison
 		Method garrisonupdate()			
-			If Mouse.ButtonReleased(MouseButton.Left)			
+			If mousedelay<20 Then Return			
+			If Mouse.ButtonReleased(MouseButton.Left)													
 			Local garx:Int=mycityscreen.garx
 			Local gary:Int=mycityscreen.gary
 			Local garw:Int=mycityscreen.garw
@@ -619,6 +626,7 @@ Class citycontrols
 							keydelay = 0
 							mousedelay = 0
 							myunitmethod.activateamovableunit()
+							mousedelay=0
 							Return				
 						End If
 					End If
@@ -2167,6 +2175,8 @@ Class MyWindow Extends Window
 			'free images from memory
 			mygreybackground.greyimage.Discard()
 			myworld.image.Discard()	
+			myworld.fogimage.Discard()
+			myworld.roadimage.Discard()
 			'start new game 
 			startnewgame(Width,Height,Millisecs())
 		End If
@@ -2317,7 +2327,13 @@ Function startnewgame(Width:Int,Height:int,seed:Double)
 	mycitycontrols = New citycontrols()
 	
 	myunituserinterface = New unituserinterface(Width,Height)
-	mygreybackground = New greybackground(Width,Height,100,100)
+	If texturequality = "Low"
+		mygreybackground = New greybackground(Width,Height,100,100)
+	Elseif texturequality = "Medium"
+		mygreybackground = New greybackground(Width,Height,320,240)
+	Else
+		mygreybackground = New greybackground(Width,Height,640,480)
+	End If
 		
 	findunitstartingposition()
 	
