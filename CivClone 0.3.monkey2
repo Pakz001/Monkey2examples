@@ -1877,8 +1877,7 @@ Class world
 			If rectsoverlap(x3,y3,2,2,x2,y2,2,2) Then Exit
 		Forever
 	End Method
-	Method updatedrawfogedge(canvas:Canvas)
-		
+	Method updatedrawfogedge(canvas:Canvas)				
 		For Local my:=0 Until mh-1
 		For Local mx:=0 Until mw
 			Local lefttopx:Int=mx*tw
@@ -1914,33 +1913,33 @@ Class world
 		
 		canvas.Flush()
 	End Method	
-	Method drawfogline(canvas:Canvas,x1:Float,y1:Float,x2:Float,y2:float)		
+	Function drawfogline(canvas:Canvas,x1:Double,y1:double,x2:double,y2:double)		
 		SeedRnd(x1*y1)
 		'Local oldx:double=x1,oldy:Double=y1
 		Local x3:Double=x1,y3:double=y1
-		
+		Local exitloop:Bool = False
 		Repeat
 			
 			If x3<x2 Then x3+=Rnd(1)
 			If y3<y2 Then y3+=Rnd(1)
 			If x3>x2 Then x3-=Rnd(1)
-			If y3>y2 Then y3-=Rnd(1)
+			If y3>y2 Then y3-=Rnd(1)	
 			Local c:Float=0
 			If Rnd(1)<.5
-			canvas.Color = New Color(c,c,c)
-			canvas.DrawRect(x3+Rnd(-4,4),y3+Rnd(-4,4),Rnd(2,4),Rnd(2,4))
-			End If
-			'If Rnd(1)<.5
-			'canvas.Color = New Color(1,1,1)
-			'canvas.DrawPoint(x3,y3)
-			'End If
+				canvas.Color = New Color(c,c,c)
+				canvas.DrawRect(x3+Rnd(-4,4),y3+Rnd(-4,4),Rnd(2,4),Rnd(2,4))				
+  			End If
+						'If Rnd(1)<.5
+						'canvas.Color = New Color(1,1,1)
+						'canvas.DrawPoint(x3,y3)
+						'End If
 			
-			If rectsoverlap(x3,y3,2,2,x2,y2,2,2) = True Then 		
+			If rectsoverlap(x3,y3,2,2,x2,y2,2,2) = True Then 						
 				Return
 			End If
-		Forever
+		Until exitloop=True
 		
-	End Method	
+	End function
 
 	Method updatedrawwateredge(canvas:Canvas)
 		For Local my:=0 Until mh-1
@@ -1997,8 +1996,8 @@ Class world
 End Class
 
 Global mycontrols:controls
-Global myworld:world
 Global mytile:tile
+Global myworld:world
 Global myunit:List<unit> = New List<unit>
 Global myunitmethod:unitmethod
 Global mycity:List<city> = New List<city>
@@ -2163,6 +2162,7 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 
 		canvas.DrawText(App.FPS,0,0)
 
+
 		If Keyboard.KeyDown(Key.Key1) Then drawhelpscreen(canvas,Width,Height)				
 		
 End Function
@@ -2201,6 +2201,7 @@ Function startnewgame(Width:Int,Height:int,seed:Double)
 	SeedRnd(seed)	
 	myunit = New List<unit>		
 	mycity = New List<city>	
+	
 	myworld = New world(Width,Height,mystartmapwidth,mystartmapheight)
 	mytile = New tile()	
 	'myunit.Add(New unit(5,5))
