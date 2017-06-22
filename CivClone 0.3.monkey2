@@ -5,7 +5,7 @@ Using std..
 Using mojo..
 
 'Texture quality
-Global texturequality:String="Medium" 'High , Medium and Low
+Global texturequality:String="Low" 'High , Medium and Low
 ' Here is how many tiles there are drawn on the screen.
 ' Currently tested from 16x16 up to 32x32
 Global mystartmapwidth:Int=20
@@ -18,8 +18,14 @@ Global gamehasmovesleft:Bool=True
 Global cityscreenopen:Bool=False
 Global currentcityx:Int
 Global currentcityy:Int
+Global currentcityfarms:Int
+Global currentcitymines:Int
+Global currentcitybarracks:Bool
+Global currentcitywalls:Bool
 Global currentcitysize:Int
 Global currentcityname:String
+Global currentcityfood:Int
+Global currentcityresources:Int
 Global currentcityproduction:String
 Global currentcityproductiontime:Int
 'This variable is increased in the main loop
@@ -642,8 +648,18 @@ Class citycontrols
 			If mycityscreen.unitprodscreen = False Then				
 				garrisonupdate()
 			End If
+			'if press on bottom screen in cityscreen window then exit back to game
+			If Mouse.ButtonReleased(MouseButton.Left)
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,150,mycityscreen.Height-32,mycityscreen.Width-300,32)
+				mycityscreen.unitprodscreen = False
+				cityscreenopen = False
+				keydelay = 0
+				mousedelay = 0
+			End If
+			End If
+			' if press esacpe or space then exit city screen
 			If Keyboard.KeyReleased(Key.Escape) Or Keyboard.KeyReleased(Key.Space)
-				mycityscreen.unitprodscreen = false
+				mycityscreen.unitprodscreen = False
 				cityscreenopen = False
 				keydelay = 0
 				mousedelay = 0
@@ -659,6 +675,7 @@ Class citycontrols
 End Class
 
 Class cityscreen
+	
 	Class garrison
 		Field name:String
 		Field fortify:Bool
@@ -706,6 +723,8 @@ Class cityscreen
 	Field prodsx:Int,prodsy:Int,prodsw:int,prodsh:Int
 	'variables for the units garrision
 	Field garx:Int,gary:Int,garw:Int,garh:Int
+	'variables for the city info
+	Field cityix:Int,cityiy:int,cityiw:int,cityih:Int
 	Method New(Width:Int,Height:Int)
 		Self.Width = Width
 		Self.Height = Height
@@ -725,17 +744,27 @@ Class cityscreen
 		prodsh = 200
 		prodsx = Width/2-prodsw/2
 		prodsy = Height/2-prodsh/2
-		mybuildlist = New Stack<buildlist>
-		mybuildlist.Push(New buildlist("Settlers"))
-		mybuildlist.Push(New buildlist("Militia"))
-		mybuildlist.Push(New buildlist("Legion"))
+		updatecitybuildlist()		
 		myproduction = New Stack<production>		
 		'fill the city garrison info variables
 		garx = 10
 		gary = 10
 		garw = 100
 		garh = 100
-		
+		' fill the city info variables
+		cityix = 10
+		cityiy = Height/2
+		cityiw = 220
+		cityih = 200
+	End Method
+	Method updatecitybuildlist()
+		mybuildlist = New Stack<buildlist>
+		mybuildlist.Push(New buildlist("Settlers"))
+		If currentcitywalls = False Then mybuildlist.Push(New buildlist("City Walls"))
+		If currentcitymines < 22 Then mybuildlist.Push(New buildlist("Mine"))
+		If currentcityfarms < 22 Then mybuildlist.Push(New buildlist("Farm"))
+		If currentcitybarracks = False Then mybuildlist.Push(New buildlist("Barracks"))
+		If currentcitysize < 22 Then mybuildlist.Push(New buildlist("Expand City"))		
 	End Method
 	Method draw(canvas:Canvas)				
 		canvas.Color = Color.Black
@@ -747,6 +776,7 @@ Class cityscreen
 		drawcitymap(canvas)		
 		drawproduction(canvas)
 		drawgarrison(canvas)
+		drawcityinfo(canvas)
 		canvas.Color = Color.White
 		canvas.DrawText("Press Space to Exit",Width/2,Height-20,.5,.5)
 	End Method
@@ -769,6 +799,68 @@ Class cityscreen
 				mygarrison.Push(New garrison(i.id,i.name))
 			End If
 		Next
+	End Method
+	Method drawcityinfo(canvas:Canvas)
+		' Draw the textured window
+		Local rec := New Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)
+		canvas.Scissor = rec
+		canvas.Color = Color.White
+		canvas.DrawRect(cityix-2,cityiy-2,cityiw+4,cityih+4)
+		rec = New Recti<Int>
+		rec.X = cityix
+		rec.Y = cityiy
+		rec.Size = New Vec2i(cityiw,cityih)
+		canvas.Scissor = rec
+		canvas.Color = New Color(.5,.5,.5)
+		canvas.DrawImage(mygreybackground.greyimage,0,0)
+		rec = New Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)
+		canvas.Scissor = rec
+		' fill with text
+		canvas.Color = Color.White
+		' Table with text
+		canvas.DrawText("Size:",cityix+10,cityiy+20*1)
+		canvas.DrawText("Farms:",cityix+10,cityiy+20*2)
+		canvas.DrawText("Food:",cityix+10,cityiy+20*3)
+		canvas.DrawText("Mines:",cityix+10,cityiy+20*4)
+		canvas.DrawText("Resources:",cityix+10,cityiy+20*5)
+		canvas.DrawText("Barracks:",cityix+10,cityiy+20*6)
+		canvas.DrawText("Walls:",cityix+10,cityiy+20*7)
+
+		' Table with numbers
+		Local foo:Int
+		foo = currentcityfarms-currentcitysize
+		Local min:Int = currentcitymines - currentcitysize
+		canvas.DrawText(currentcitysize,cityix+100,cityiy+20*1)
+		canvas.DrawText(currentcityfarms,cityix+100,cityiy+20*2)
+		canvas.DrawText(currentcityfood,cityix+100,cityiy+20*3)
+		canvas.DrawText(currentcitymines,cityix+100,cityiy+20*4)
+		canvas.DrawText(currentcityresources,cityix+100,cityiy+20*5)
+		Local s:String
+		If currentcitybarracks = True Then s = "Yes" else s="No"
+		canvas.DrawText(s,cityix+100,cityiy+20*6)
+		If currentcitywalls = True Then s = "Yes" else s="No"
+		canvas.DrawText(s,cityix+100,cityiy+20*7)
+		' The numbers behind the food and resources info labels
+		If foo>= 0 Then 
+		canvas.Color=Color.Green 
+		canvas.DrawText("+"+min,cityix+130,cityiy+20*3)
+		Else 
+		canvas.Color = Color.Red
+		canvas.DrawText(min,cityix+130,cityiy+20*3)
+		End If
+		If min>= 0 Then 
+		canvas.Color=Color.Green 
+		canvas.DrawText("+"+min,cityix+130,cityiy+20*5)
+		Else 
+		canvas.Color = Color.Red
+		canvas.DrawText(min,cityix+130,cityiy+20*5)
+		End If
 	End Method
 	Method drawgarrison(canvas:Canvas)
 		Local rec := New Recti<Int>
@@ -946,6 +1038,13 @@ Class controls
 			currentcitysize = mycitymethod.getcitysizeat(currentcityx,currentcityy)
 			currentcityproduction = mycitymethod.getproductionat(currentcityx,currentcityy)
 			currentcityproductiontime = mycitymethod.getproductiontimeat(currentcityx,currentcityy)
+			currentcitybarracks = mycitymethod.getcitybarracksat(currentcityx,currentcityy)
+			currentcitymines = mycitymethod.getcityminesat(currentcityx,currentcityy)
+			currentcityfarms = mycitymethod.getcityfarmsat(currentcityx,currentcityy)
+			currentcitywalls = mycitymethod.getcitywallsat(currentcityx,currentcityy)			
+			currentcityfood = mycitymethod.getcityfoodat(currentcityx,currentcityy)
+			currentcityresources = mycitymethod.getcityresourcesat(currentcityx,currentcityy)
+			mycityscreen.updatecitybuildlist()
 			mycityscreen.updategarrison()
 			mycityscreen.updateproduction()
 			cityscreenopen = True
@@ -1083,7 +1182,7 @@ End Class
 
 Class city
 	Class production
-		Field name:String="Settler"
+		Field name:String="Settlers"
 		Field turns:Int=4
 		Method New(name:String="Settlers")
 			Self.name=name
@@ -1092,18 +1191,25 @@ Class city
 	Field x:Int
 	Field y:Int
 	Field size:Int=1
+	Field growth:Float=1
+	Field farms:Int=3
+	Field mines:Int=2
+	Field walls:Bool=False
+	Field barracks:Bool=False
+	Field resources:Int=3
+	Field food:Int=5 'the amount of food in the city	
 	Field deleteme:Bool=False
 	Field name:String
 	Field myproduction:Stack<production>
 	Method New(x:Int,y:Int)
 		If cityatpos(x,y) = True Then deleteme = True ; Return
-		myproduction = new Stack<production>
-		myproduction.Add(new production())
-		myproduction.Add(new production())
+		myproduction = New Stack<production>
+		'myproduction.Add(new production())
+		'myproduction.Add(new production())
 		Self.x = x
 		Self.y = y
 		name = randomcityname()
-		myunitmethod.removeactiveunit()
+		myunitmethod.removeactiveunit()		
 	End Method
 	'Give the city a random name
 	Method randomcityname:String()
@@ -1165,18 +1271,107 @@ Class city
 		mycitymethod.drawcity(canvas,mx,my,tw,th,size,name)
 	End Method
 	Method turnend()
+		
 		'see if we can create anything
-		If myproduction.Length=0 Then Return
-		myproduction.Top.turns-=1
-		If myproduction.Top.turns=0
-			mycontrols.addunitat(x,y)	
-			myproduction.Pop()
-		End If
+		If myproduction.Length
+			myproduction.Top.turns-=1
+			If myproduction.Top.turns=0
+				Select myproduction.Top.name
+					Case "Settlers"
+						mycontrols.addunitat(x,y)	
+					Case "City Walls"
+						'Print "Walls Created"
+						walls = True
+					Case "Barracks"
+						'Print "Barracks Created"
+						barracks = True
+					Case "Mine"
+						'Print "Mine created"
+						mines+=1
+					Case "Farm"
+						'Print "Farm Created"
+						farms+=1
+					Case "Expand City"
+						size+=1					
+				End Select			
+				myproduction.Pop()
+			End if
+		End If		
+		' increase food
+		food += farms
+		' increase resources
+		resources += mines
+		' population cost
+		food -= size
+		
+		resources -= size
+		
+		If resources < 0 Then size -= 1 ; resources = 0
+		If food < 0 Then size -= 1 ; food = 0
+		If size<1 Then size = 1
+		
+		'decrease population size if shortages
 	End Method
 End Class
 
 'city methods
 Class citymethod
+	' get the amount of food in the city
+	Method getcityfoodat:Int(x:int,y:Int)
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y
+				Return i.food
+			End If
+		Next
+		Return -1		
+	End Method
+	'get the amount of resources in the city
+	Method getcityresourcesat:int(x:int,y:Int)
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y
+				Return i.resources
+			End If
+		Next
+		Return -1
+	End Method
+
+
+	' return bool if city at x,y has barracks
+	Method getcitybarracksat:bool(x:Int,y:Int)
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y
+				Return i.barracks
+			End If
+		Next
+		Return False
+	End Method
+	' return int if city at x,y has mines
+	Method getcityminesat:Int(x:Int,y:Int)
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y
+				Return i.mines
+			End If
+		Next
+		Return -1
+	End Method	
+	'return int with number of farms in city at x,y	
+	Method getcityfarmsat:Int(x:Int,y:Int)
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y
+				Return i.farms			
+			End If
+		Next		
+		Return -1
+	End Method
+	' return bool if city at x,y has walls
+	Method getcitywallsat:Bool(x:Int,y:Int)			
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y
+				Return i.walls
+			End If
+		Next		
+		Return False
+	End Method
 	Method getproductionat:String(x:int,y:Int)
 		For Local i:=Eachin mycity
 			If i.x = x And i.y = y
