@@ -526,26 +526,64 @@ Class unituserinterface
 End Class
 
 Class citycontrols
-	Method controls()
-		If Keyboard.KeyReleased(Key.Escape) Or Keyboard.KeyReleased(Key.Space)
-			cityscreenopen = False
-			keydelay = 0
-			mousedelay = 0
-		End If
+		'Here we select a unit from the garrison
+		Method garrisonupdate()			
+			If Mouse.ButtonReleased(MouseButton.Left)			
+			Local garx:Int=mycityscreen.garx
+			Local gary:Int=mycityscreen.gary
+			Local garw:Int=mycityscreen.garw
+			Local garh:Int=mycityscreen.garh
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,garx,gary,garw,garh)
+				If mycityscreen.mygarrison
+				Local y:Int=0
+				For Local i:=Eachin mycityscreen.mygarrison
+					If rectsoverlap(Mouse.X,Mouse.Y,1,1,garx,gary+y,garw,20)
+						'Here we have selected a unit from the garrison
+						i.fortify = False
+						myunitmethod.unitfortify(i.id,False)
+						If i.movesleft > 0.3							
+							cityscreenopen = False
+							keydelay = 0
+							mousedelay = 0
+							myunitmethod.activateamovableunit()
+							Return				
+						End If
+					End If
+					y+=20
+				Next
+				End If
+			End If
+			End If
+		End Method
+		'Here we exit the city screen
+		Method controls()
+			garrisonupdate()
+			If Keyboard.KeyReleased(Key.Escape) Or Keyboard.KeyReleased(Key.Space)
+				cityscreenopen = False
+				keydelay = 0
+				mousedelay = 0
+			End If
 	End Method
 	
+	Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+	    Return True
+	End	 Function
+		
 End Class
 
 Class cityscreen
 	Class garrison
 		Field name:String
-		Field fortified:Bool
+		Field fortify:Bool
+		Field movesleft:Float
 		Field id:Int
 		Method New(id:Int,name:String)
-			Self.id = id
-			
+			Self.id = id			
 			Self.name = name
-			fortified = myunitmethod.unitisfortified(id)
+			movesleft = myunitmethod.unitmovesleft(id)
+			fortify = myunitmethod.unitisfortified(id)
 		End Method
 	End Class	
 	Field mygarrison:Stack<garrison>
@@ -612,7 +650,7 @@ Class cityscreen
 			Local y:Int=gary
 			For Local i:=Eachin mygarrison
 				Local a:String=""
-				If i.fortified Then 
+				If i.fortify Then 
 					a+="F-"
 				End If
 				a+=i.name
@@ -703,6 +741,8 @@ Class controls
 			currentcityproductiontime = mycitymethod.getproductiontimeat(currentcityx,currentcityy)
 			mycityscreen.updategarrison()
 			cityscreenopen = True
+			mousedelay = 0
+			keydelay = 0			
 		End If
 		End If
 		End If
@@ -746,8 +786,8 @@ Class controls
 		End If
 	End Method
 	' if mouse on unit then activate unit
-	Method activateunit()
-		If Mouse.ButtonReleased(MouseButton.Left) = False Then Return		
+	Method activateunit()		
+		If Mouse.ButtonReleased(MouseButton.Left) = False Then Return				
 		Local x:Int=Mouse.X / myworld.tw
 		Local y:Int=Mouse.Y / myworld.th
 		If myunitmethod.ismovableunitatpos(x,y) = False Then return
@@ -982,6 +1022,25 @@ End Class
 
 ' Methods to modify units
 Class unitmethod
+	Method unitmovesleft:Float(id:Int)
+		Local retval:Float=-1
+		For Local i:=Eachin myunit
+			If i.id = id Then Return i.movesleft
+		Next
+		Print "Error - myunitmethod.unitmovesleft unit not found id"
+		Return retval
+	End Method
+	' Set the fortify flag of a unit (id)
+	Method unitfortify(id:Int,val:Bool)		
+		For Local i:=Eachin myunit
+			If i.id = id
+				i.fortify = val
+				Return
+			End If
+		Next
+		Print "Error in myunitmethod.unitfortify.."
+	End Method
+	' Returns true or false if a unit is fortified
 	Method unitisfortified:Bool(id:Int)		
 		For Local i:=Eachin myunit
 			If i.id = id Then Return i.fortify
@@ -1133,7 +1192,7 @@ Class unitmethod
 	Method activateamovableunit()
 		For Local i:=Eachin myunit
 			If i.deleteme = False			
-			If i.movesleft > .3	And i.fortify = False			
+			If i.movesleft > .3	And i.fortify = False							
 				myunitmethod.disableunitontopat(i.x,i.y)
 				i.active = True
 				i.ontop = True
@@ -1152,7 +1211,7 @@ Class unitmethod
 		gamehasmovesleft=False
 	End Method
 	'activate unit at position	
-	Method activatemovableunitatpos(x:int,y:int)
+	Method activatemovableunitatpos(x:int,y:int)		
 		For Local i:=Eachin myunit
 			If i.x = x And i.y = y
 			If i.movesleft > .3
@@ -1181,9 +1240,19 @@ Class unitmethod
 		For Local i:=Eachin myunit
 			If i.x = x And i.y = y
 				If i.movesleft > 0
-					Return True
+					'is there not a city here?
+					If iscityatpos(x,y) = False
+						Return True
+					End If
 				End If
 			End If
+		Next
+		Return False
+	End Method
+	'is there a city at position x,y
+	Method iscityatpos:Bool(x:Int,y:Int)
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y Then Return True
 		Next
 		Return False
 	End Method
@@ -1822,7 +1891,7 @@ Class MyWindow Extends Window
 		If mousedelay > 40			
 		mycontrols.addunit(canvas,Width,Height)
 		mycontrols.moveunit(canvas,Width,Height)
-		mycontrols.buildcity()
+		mycontrols.buildcity()		
 		mycontrols.activateunit()
 		mycontrols.myendofturn()
 		mycontrols.buildroad()
