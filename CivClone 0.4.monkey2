@@ -36,6 +36,189 @@ Global currentcitycoastal:Bool=False
 Global keydelay:Int=0
 Global mousedelay:Int=0
 
+Class unitview
+	'This is the list of units at x,y	
+	Class unitlist
+		Field movesleft:Float
+		Field name:String
+		Field seaunit:Bool
+		Field landunit:Bool
+		Field fortify:Bool
+		Method New()
+		End Method
+	End Class
+	Field myunitlist:Stack<unitlist>
+	' Is the unit view active
+	Field active:Bool=False
+	' Width and Height of the screen
+	Field Width:Int,Height:Int
+	' at which position are we currently
+	' displaying units	
+	Field positionx:Int,positiony:Int
+	' some local variables
+	' tile width/height and map width 
+	' and height
+	Field tw:Float,th:Float
+	Field mw:Float,mh:Float
+	'unit view window x,y,w,h
+	Field uvx:Int,uvy:Int
+	Field uvw:Int,uvh:Int
+	' Collumns
+	Field c1x:Int,c1y:Int
+	Field c2x:Int,c2y:Int
+	Field c3x:Int,c3y:Int
+	Field c4x:Int,c4y:Int
+	' activate all units button
+	Field activateallx:Int,activateally:Int
+	Field activateallw:Int,activateallh:Int
+	' fortify all units button
+	Field fortifyallx:Int,fortifyally:Int
+	Field fortifyallw:Int,fortifyallh:Int
+	' exit button
+	Field eruitx:Int,eruity:Int
+	Field eruitw:Int,eruith:Int
+	Field eruits:String
+	
+	'initiate the unitview class
+	Method New(Width:Int,Height:Int)
+		' local screen width and height
+		Self.Width = Width
+		Self.Height = Height
+		' local tile and map width and height
+		tw = myworld.tw
+		th = myworld.th
+		mw = myworld.mw
+		mh = myworld.mh
+		' inititate list of units
+		myunitlist = New Stack<unitlist>
+		' set variable for unitviewwindow 
+		uvw = 340
+		uvh = 300
+		uvx = Width / 2 - uvw / 2
+		uvy = 100
+		' Set varaibles for the collumns
+		c1x = uvx 'the name collumn
+		c2x = uvx+120 'the moves collumn
+		c3x = uvx+170 'the fortify collumn
+		c4x = uvx+240 'the type collumn
+		
+		' temp populate the list
+'		myunitlist.Push(New unitlist())
+'		myunitlist.Top.name="Settlers"
+'		myunitlist.Top.movesleft = 1.5
+'		myunitlist.Top.landunit = True
+'		myunitlist.Top.fortify = False
+		
+		' set up the variables for the exit knop
+		eruitx = uvx +5
+		eruity = uvy+uvh - 32
+		eruitw = 100
+		eruith = 20
+		eruits = "Exit"
+	End Method
+	' Call this to read all units at x,y
+	Method initiateat(x:Int,y:Int)
+		myunitview.active = True
+		myunitlist = New Stack<unitlist>
+	End Method
+	' Update the unitview (mouse and keys (interacts))
+	Method update()
+		' if not active then return
+		If active = False Then Return
+		If mousedelay < 20 Then Return
+		' Mouse in window
+		If Mouse.ButtonReleased(MouseButton.Left)
+		'if pressed in the list
+		If rectsoverlap(Mouse.X,Mouse.Y,1,1,uvx,uvy,uvw,uvh-32)
+			If myunitlist.Length
+				Local y1:Int=20
+				For Local i:=Eachin myunitlist
+					If rectsoverlap(Mouse.X,Mouse.Y,1,1,c1x,uvy+y1,100,20)
+						Print i.name
+					End If
+					If rectsoverlap(Mouse.X,Mouse.Y,1,1,c3x,uvy+y1,50,20)
+						If i.fortify = True Then i.fortify = False Else i.fortify = true
+					End If
+					y1+=20	
+				Next
+			End If			
+			mousedelay = 0			
+		End If
+		' If pressed on the exit button
+		If rectsoverlap(Mouse.X,Mouse.Y,1,1,eruitx,eruity,eruitw,eruith)
+			active = False
+			mousedelay = 0
+		End If
+		End If
+		
+	End Method
+	' Draw the unitview to the canvas
+	Method draw(canvas:Canvas)
+		'if not active then return
+		If active = False Then Return
+		' Draw the window
+		' border
+		Local rec := New Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)
+		canvas.Scissor = rec
+		canvas.Color = Color.White
+		canvas.DrawRect(uvx-2,uvy-2,uvw+4,uvh+4)
+		' inside
+		rec = New Recti<Int>
+		rec.X = uvx
+		rec.Y = uvy
+		rec.Size = New Vec2i(uvw,uvh)
+		canvas.Scissor = rec
+		canvas.Clear(Color.Black)
+		' Draw the units
+		' window title
+		canvas.Color = Color.White
+		canvas.DrawText("Unit",c1x,uvy)
+		canvas.DrawText("Moves",c2x,uvy)
+		canvas.DrawText("Fortified",c3x,uvy)
+		canvas.DrawText("Type",c4x,uvy)
+		' Draw the units list
+		If myunitlist.Length
+			Local y1:Int=0
+			For Local i:=Eachin myunitlist
+				Local s:String
+				Local y2:Int=uvy+20
+				Local flag:String=""
+				canvas.DrawText(i.name,c1x,y2+y1) 'name
+				flag = i.movesleft
+				flag = flag.Mid(0,3)
+				canvas.DrawText(flag,c2x,y2+y1) 'movesleft				
+				If i.fortify = True Then flag="Yes" Else flag="No"
+				canvas.DrawText(flag,c3x,y2+y1)
+				If i.landunit Then flag = "Land" Else flag="Sea"
+				canvas.DrawText(flag,c4x,y2+y1)				
+				y1+=20
+			Next
+		End If
+		' Draw the exit button
+		canvas.Color = Color.White
+		canvas.DrawRect(eruitx-2,eruity-2,eruitw+4,eruith+4)
+		canvas.Color = Color.Black
+		canvas.DrawRect(eruitx,eruity,eruitw,eruith)
+		canvas.Color = Color.White
+		canvas.DrawText(eruits,eruitx+eruitw/2,eruity+eruith/2,.5,.5)
+		' restore canvas scissor		
+		rec = New Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)		
+		canvas.Scissor = rec
+	End Method
+	Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+	    Return True
+	End	 Function
+
+End Class
+
 Class gamemessage	
 	'This class contains the messages
 	Class message
@@ -236,7 +419,7 @@ Class unituserinterface
 	Field dockx:Int,docky:Int
 	Field dockw:Int,dockh:Int
 
-	Field docked:Bool=false	
+	Field docked:Bool=False	
 	Method New(Width:Int,Height:Int)
 		Self.Width = Width
 		Self.Height = Height
@@ -458,7 +641,13 @@ Class unituserinterface
 		End Select
 	End Method
 	Method draw(canvas:Canvas)
-
+		'draw in entire screen
+		Local rec := New Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)
+		canvas.Scissor = rec
+		
 		If docked = False Then				
 			Local x:Int=ix
 			Local y:Int=iy
@@ -1162,10 +1351,17 @@ Class controls
 		End If
 	End Method
 	' if mouse on unit then activate unit
-	Method activateunit()		
+	Method activateunit()				
 		If Mouse.ButtonReleased(MouseButton.Left) = False Then Return				
 		Local x:Int=Mouse.X / myworld.tw
 		Local y:Int=Mouse.Y / myworld.th
+		If Keyboard.KeyDown(Key.LeftShift) = False
+		If myunitmethod.moreunitsatpos(x,y) = True
+			myunitview.initiateat(x,y)
+			mousedelay = 0
+			Return
+		End if
+		End If		
 		If myunitmethod.ismovableunitatpos(x,y) = False Then Return
 		myunitmethod.unitsactivedisable()
 		myunitmethod.activatemovableunitatpos(x,y)
@@ -1175,11 +1371,6 @@ Class controls
 				myunituserinterface.dockside("Right")
 			End If
 		
-		'If Mouse.X > myworld.mw/2 Then 
-		'	myunituserinterface.dockside("Left")
-		'	Else
-		'	myunituserinterface.dockside("Right")
-		'End If		
 	End Method
 	' if pressed b then build city at active unit
 	Method buildcity()
@@ -1205,6 +1396,7 @@ Class controls
 	End Method
 	' add a unit to the map (cheat)
 	Method addunit(canvas:Canvas,Width:Int,Height:Int)
+		If mousedelay < 20 Then Return
 		If Keyboard.KeyDown(Key.LeftShift)
 		If Mouse.Y / myworld.th < myworld.mh-1
 		If Mouse.ButtonReleased(MouseButton.Left)
@@ -1217,7 +1409,7 @@ Class controls
 				myunituserinterface.dockside("Right")
 			End If
 			redrawgame()
-			
+			mousedelay = 0
 		End If
 		End If
 		End If
@@ -1582,6 +1774,15 @@ End Class
 
 ' Methods to modify units
 Class unitmethod
+	'returs true if more then one unit is at that position	
+	Method moreunitsatpos:Bool(x:int,y:int)
+		Local cnt:int=0
+		For Local i:=Eachin myunit
+			If i.x = x And i.y = y Then cnt+=1
+			If cnt>1 Then Return true
+		Next
+		Return False
+	End Method
 	' Returns if the active unit is a settler
 	Method activeunitissetler:bool()
 		For Local i:=Eachin myunit
@@ -2496,6 +2697,7 @@ Global mycitymethod:citymethod
 Global mycitycontrols:citycontrols
 Global myunituserinterface:unituserinterface
 Global mygamemessage:gamemessage
+Global myunitview:unitview
 
 'textures
 Global mygreybackground:greybackground
@@ -2520,15 +2722,11 @@ Class MyWindow Extends Window
 		If keydelay>2000 Then keydelay = 1000
 		App.RequestRender() ' Activate this method 
 		'
-		'the arrows to move the player with
-		If cityscreenopen = False
-			myunituserinterface.update()
-'			myunituserinterface.draw(canvas)
-		End If
-		'
+		
+		' main map - The user controls (mouse and keys)
 		If cityscreenopen = False
 		If Keyboard.KeyDown(Key.Key1) = False
-		If mousedelay > 12 And keydelay>12			
+		If mousedelay > 12 And keydelay>12					
 		mycontrols.addunit(canvas,Width,Height)
 		mycontrols.moveunit(canvas,Width,Height)
 		mycontrols.buildcity()		
@@ -2543,11 +2741,12 @@ Class MyWindow Extends Window
 		End If
 
 
-
+		' city screen controls and draw
 		If cityscreenopen = True
 			mycitycontrols.controls()
 			mycityscreen.draw(canvas)
 		End If
+		' draw the game screen
 		If cityscreenopen = False
 			updatemapingame(canvas,Width,Height)
 		End If
@@ -2556,6 +2755,8 @@ Class MyWindow Extends Window
 		If keydelay>10 And cityscreenopen = False
 			If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 		End If
+		
+		' Generate new map
 		If Keyboard.KeyReleased(Key.F2)
 			'free images from memory
 			mygreybackground.greyimage.Discard()
@@ -2566,9 +2767,6 @@ Class MyWindow Extends Window
 			startnewgame(Width,Height,Millisecs())
 		End If
 		
-		If cityscreenopen = False
-			myunituserinterface.draw(canvas)
-		End If
 
 		
 	End Method	
@@ -2612,6 +2810,18 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 				i.draw(canvas)
 			End If
 		Next
+		
+		' Update unitscreen
+		myunitview.update()
+		myunitview.draw(canvas)		
+
+		
+		'' Draw the user interface
+		'If cityscreenopen = False
+	'		myunituserinterface.draw(canvas)
+	'	End If
+		
+		
 		' Refresh unit list
 		For Local i:=Eachin myunit
 			' blink update
@@ -2628,7 +2838,19 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 		For Local i:=Eachin mycity
 			If i.deleteme = True Then mycity.Remove(i)
 		Next	
-		'
+
+
+		'the arrows to move the player with
+		If cityscreenopen = False
+		If myunitview.active = False			
+			myunituserinterface.update()
+			myunituserinterface.draw(canvas)			
+'			myunituserinterface.draw(canvas)
+		End If
+		End If
+
+
+		' Lower screen info
 		rec = New Recti<Int>
 		rec.X = 0
 		rec.Y = 0
@@ -2662,6 +2884,7 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 		canvas.DrawText("Hold 1 for help.",500,Height-15)
 
 		canvas.DrawText(App.FPS,0,0)
+		
 		'game messaging system
 		mygamemessage.update()
 		mygamemessage.drawmessage(canvas)
@@ -2712,6 +2935,7 @@ Function startnewgame(Width:Int,Height:int,seed:Double)
 	mycityscreen = New cityscreen(Width,Height)
 	mycitymethod = New citymethod()
 	mycitycontrols = New citycontrols()
+	myunitview = New unitview(Width,Height)
 	
 	myunituserinterface = New unituserinterface(Width,Height)
 	If texturequality = "Low"
