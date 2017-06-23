@@ -31,6 +31,12 @@ Global currentcityproduction:String
 Global currentcityproductiontime:Int
 Global currentcityharbor:Bool=False
 Global currentcitycoastal:Bool=False
+
+' This variable is used to give a weight to 
+' the wait feature. This way we can cycle though
+' the list of waiting units.
+Global mywaitweight:Int=0
+
 'This variable is increased in the main loop
 'if a key is pressed and this value is >  0 then this 
 'variable is set to 0 again.
@@ -458,9 +464,37 @@ Class unituserinterface
 	Field dockw:Int,dockh:Int
 
 	Field docked:Bool=False	
+	' buttons for the interface	
+	Field brx:Int,bry:Int 'button R (road)
+	Field bbx:Int,bby:Int 'button B (build city)
+	Field bfx:Int,bfy:Int 'button F (fortify)
+	Field bsx:Int,bsy:Int 'button S (Skip turn)
+	Field bex:Int,bey:Int 'button E (End turn)
+	Field bwx:Int,bwy:Int 'button W (Wait)
 	Method New(Width:Int,Height:Int)
+		'locally store width and height of the screen
 		Self.Width = Width
 		Self.Height = Height
+		'
+		'button R (button build road x and y)
+		brx = 100
+		bry = 0
+		'button B (button build city x and y)
+		bbx = 100
+		bby = 32
+		'button F (fortify unit button x and y)
+		bfx = 100
+		bfy = 64
+		'button S (button skip turn x and y)
+		bsx = 100
+		bsy = 96
+		'button E (button end turn x and y)
+		bex = -16
+		bey = 34
+		'button W (button wait x and y)
+		bwx = 132
+		bwy = 96
+		
 		dockside("Left")
 		arrowimage = New Image(Width/10,Height/10)
 		arrowcanvas = New Canvas(arrowimage)
@@ -576,18 +610,13 @@ Class unituserinterface
 		End If 'end if rectsoverlap
 		End If 'docked = false
 
-		If docked = False
+		If docked = False 'if the interface is visible
 			' The unit commands. Taken directly from the controls class
 			' update there means update here (lazy)
 			If Mouse.ButtonReleased(MouseButton.Left)
 				Local x:Int=ix
 				Local y:Int=iy
-				'drawunitbutton(canvas,x+100,y,"R")
-				'drawunitbutton(canvas,x+100,y+32,"B")
-				'drawunitbutton(canvas,x+100,y+64,"F")
-				'drawunitbutton(canvas,x+100,y+96,"S")
-				'drawunitbutton(canvas,x-16,y+34,"E")
-				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y,32,32)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+brx,y+bry,32,32)
 					'Print "Build Road"
 					If myunitmethod.activeunitissetler() = False Then Return
 					myunitmethod.buildroadatactiveunitpos()
@@ -595,7 +624,7 @@ Class unituserinterface
 					myunitmethod.activateamovableunit()					
 					mousedelay = 0
 				End If
-				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y+32,32,32)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bbx,y+bby,32,32)
 					'Print "Build City"
 					If myunitmethod.activeunitissetler() = False Then Return
 					If myunitmethod.iscityatactiveunitpos() = True Then Return
@@ -615,19 +644,19 @@ Class unituserinterface
 					myunitmethod.activateamovableunit()
 					mousedelay = 0
 				End If
-				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y+64,32,32)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bfx,y+bfy,32,32)
 					'Print "Fortify"
 					myunitmethod.unitactivefortify()
 					myunitmethod.activateamovableunit()					
 					mousedelay = 0
 				End If
-				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y+96,32,32)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bsx,y+bsy,32,32)
 					'Print "Skip turn"
 					myunitmethod.activeunitskipturn()
 					myunitmethod.activateamovableunit()
 					mousedelay = 0
 				End If
-				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-16,y+34,32,32)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bex,y+bey,32,32)
 					'Print "End Turn"
 
 					'Update the buildlist of each city
@@ -648,6 +677,13 @@ Class unituserinterface
 					' set mouse delay so as not to double feaure click
 					mousedelay = 0
 				End If
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bwx,y+bwy,32,32)
+					'Print "unit wait"
+					myunitmethod.unitactivewait()
+					myunitmethod.activateamovableunit()
+					mousedelay = 0
+				End If
+				
 			End If
 		End If 'end if docked is false
 	End Method
@@ -686,17 +722,16 @@ Class unituserinterface
 		rec.Size = New Vec2i(Width,Height)
 		canvas.Scissor = rec
 		
-		If docked = False Then				
+		If docked = False Then	'if it is visible			
 			Local x:Int=ix
 			Local y:Int=iy
 			
-			'draw the unit commands buttons.
-			drawunitbutton(canvas,x+100,y,"R")
-			drawunitbutton(canvas,x+100,y+32,"B")
-			drawunitbutton(canvas,x+100,y+64,"F")
-			drawunitbutton(canvas,x+100,y+96,"S")
-			drawunitbutton(canvas,x-16,y+34,"E")
-			
+			drawunitbutton(canvas,x+brx,y+bry,"R")
+			drawunitbutton(canvas,x+bbx,y+bby,"B")
+			drawunitbutton(canvas,x+bfx,y+bfy,"F")
+			drawunitbutton(canvas,x+bsx,y+bsy,"S")
+			drawunitbutton(canvas,x+bex,y+bey,"E")			
+			drawunitbutton(canvas,x+bwx,y+bwy,"W")			
 			'draw the arrows
 			
 			drawarrow(canvas,x,y,"Up")
@@ -1311,11 +1346,20 @@ End Class
 
 ' Controls like mouse pressed and keyboard
 Class controls
+	'Unit wait
+	Method waitunit()
+		If Keyboard.KeyReleased(Key.W)
+			myunitmethod.unitactivewait()
+			myunitmethod.activateamovableunit()
+			keydelay = 0
+		End If
+	End Method
 	'fortify unit (f key)
 	Method fortifyunit()
 		If Keyboard.KeyReleased(Key.F)
 			myunitmethod.unitactivefortify()
 			myunitmethod.activateamovableunit()
+			keydelay = 0
 		End If
 	End Method
 
@@ -1354,6 +1398,7 @@ Class controls
 		If Keyboard.KeyReleased(Key.Space)
 			myunitmethod.activeunitskipturn()
 			myunitmethod.activateamovableunit()
+			keydelay = 0
 		End If
 	End Method
 	' build a road
@@ -1364,12 +1409,15 @@ Class controls
 			myworld.updatedrawroads(myworld.roadcanvas)	
 			'find next movable unit
 			myunitmethod.activateamovableunit()						
+			keydelay = 0
 		End If
 	End Method
 	
 	' End of turn
 	Method myendofturn()
 		If Keyboard.KeyReleased(Key.Enter) Or Mouse.ButtonReleased(MouseButton.Middle)
+			'be sure we can cycle between waiting units.
+			mywaitweight = 0
 			'Update the buildlist of each city
 			For Local i:=Eachin mycity
 				i.turnend()
@@ -1378,6 +1426,7 @@ Class controls
 			For Local i:=Eachin myunit
 				i.movesleft = i.originalmoves
 				i.active = False				
+				i.wait = False
 			Next
 			'rest moves
 			gamehasmovesleft = True
@@ -1385,7 +1434,7 @@ Class controls
 			turn+=1
 			' activate a moveable unit
 			myunitmethod.activateamovableunit()
-			
+			keydelay = 0
 		End If
 	End Method
 	' if mouse on unit then activate unit
@@ -1398,7 +1447,7 @@ Class controls
 			myunitview.initiateat(x,y)
 			mousedelay = 0
 			Return
-		End if
+		End If
 		End If		
 		If myunitmethod.ismovableunitatpos(x,y) = False Then Return
 		myunitmethod.unitsactivedisable()
@@ -1593,6 +1642,7 @@ Class city
 		mycitymethod.drawcity(canvas,mx,my,tw,th,size,name)
 	End Method
 	Method turnend()
+		
 		
 		'see if we can create anything
 		If myproduction.Length
@@ -1813,6 +1863,20 @@ End Class
 
 ' Methods to modify units
 Class unitmethod
+	' let the current unit wait
+	Method unitactivewait()
+		For Local i:=Eachin myunit
+			If i.active = True
+				i.wait = True
+				i.waitweight = mywaitweight
+				mywaitweight += 1				
+				i.active = False
+				i.visible = True												
+				Return
+			End If
+		Next
+		
+	End Method
 	' move the unit onboard or offboard
 	Method boardunboard(newposx:int,newposy:int)	
 		
@@ -1854,8 +1918,7 @@ Class unitmethod
 							Print "found"
 							i2.removecargo(i.id)
 						End If
-					Next
-					'boo
+					Next					
 					unitvisibleandontopat(currentx,currenty)
 					unitsinvisibleandnotontop(newposx,newposy)
 					i.active = False
@@ -2156,10 +2219,10 @@ Class unitmethod
 				Return
 			End If
 		Next
-		' find and activate a unit
+		' find and activate a unit (Not waiting)
 		For Local i:=Eachin myunit
 			If i.deleteme = False			
-			If i.movesleft > .3	And i.fortify = False
+			If i.movesleft > .3	And i.fortify = False And i.wait = False
 				myunitmethod.disableunitontopat(i.x,i.y)
 				i.active = True
 				i.ontop = True
@@ -2175,6 +2238,42 @@ Class unitmethod
 			End If			
 			End If
 		Next
+
+
+		' Find a unit that was waiting and activate him
+		
+		'find one with lowest weight
+		Local lowest:Int=178296
+		Local myid:Int=-1
+		Local found:Bool=False
+		For Local i:=Eachin myunit
+			If i.wait
+				If i.waitweight<lowest
+					lowest = i.waitweight
+					myid = i.id
+					found = True
+				End If
+			End If
+		Next
+		If found = True			
+			For Local i:=Eachin myunit
+				If i.id = myid				
+					myunitmethod.disableunitontopat(i.x,i.y)
+					i.wait = False
+					i.active = True
+					i.ontop = True
+					i.visible = True
+					i.blinktimer = 0
+					activeunitmovesleft = i.movesleft
+					If i.x > myworld.mw/2
+						myunituserinterface.dockside("Left")
+						Else
+						myunituserinterface.dockside("Right")
+					End If
+					Return					
+				End If
+			Next
+		End If
 		gamehasmovesleft=False
 	End Method
 	'activate unit at position	
@@ -2347,6 +2446,8 @@ Class unit
 			Self.id = id			
 		End Method
 	End Class
+	Field wait:Bool=False
+	Field waitweight:Int=0
 	Field maxcargo:Int=3
 	Field onboard:Bool=False
 	Field onboardid:Int
@@ -2956,6 +3057,7 @@ Class MyWindow Extends Window
 		If cityscreenopen = False
 		If Keyboard.KeyDown(Key.Key1) = False
 		If mousedelay > 12 And keydelay>12					
+		mycontrols.waitunit()
 		mycontrols.addunit(canvas,Width,Height)
 		mycontrols.moveunit(canvas,Width,Height)
 		mycontrols.buildcity()		
