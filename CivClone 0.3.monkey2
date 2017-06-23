@@ -2506,6 +2506,7 @@ Class MyWindow Extends Window
 		
 		startnewgame(Width,Height,0)
 		
+		mygamemessage.pushmessage("Press F2 for new map")
 		mygamemessage.pushmessage("Press 1 for the help screen")
 		mygamemessage.pushmessage("Programmed by R.v.Etten in 2017")		
 		mygamemessage.pushmessage("Welcome to #CivClone")				
