@@ -39,6 +39,7 @@ Global mousedelay:Int=0
 Class unitview
 	'This is the list of units at x,y	
 	Class unitlist
+		Field id:Int
 		Field movesleft:Float
 		Field name:String
 		Field seaunit:Bool
@@ -72,8 +73,8 @@ Class unitview
 	Field activateallx:Int,activateally:Int
 	Field activateallw:Int,activateallh:Int
 	' fortify all units button
-	Field fortifyallx:Int,fortifyally:Int
-	Field fortifyallw:Int,fortifyallh:Int
+	Field unitfortifyallx:Int,unitfortifyally:Int
+	Field unitfortifyallw:Int,unitfortifyallh:Int
 	' exit button
 	Field eruitx:Int,eruity:Int
 	Field eruitw:Int,eruith:Int
@@ -120,6 +121,28 @@ Class unitview
 	Method initiateat(x:Int,y:Int)
 		myunitview.active = True
 		myunitlist = New Stack<unitlist>
+		myunitmethod.unitsactivedisable()
+		For Local i:=Eachin myunit
+			If i.x = x And i.y = y
+				myunitlist.Push(New unitlist())
+				myunitlist.Top.id = i.id
+				myunitlist.Top.fortify = i.fortify
+				myunitlist.Top.movesleft = i.movesleft
+				myunitlist.Top.landunit = i.landunit
+				myunitlist.Top.seaunit = i.seaunit
+				myunitlist.Top.name = i.name
+			End If
+		Next		
+	End Method
+	' write modifications to the units
+	Method updateunits()
+		For Local i:=Eachin myunitlist
+			for Local i2:=Eachin myunit
+				If i.id = i2.id
+					i2.fortify = i.fortify
+				End If
+			Next
+		Next		
 	End Method
 	' Update the unitview (mouse and keys (interacts))
 	Method update()
@@ -134,7 +157,14 @@ Class unitview
 				Local y1:Int=20
 				For Local i:=Eachin myunitlist
 					If rectsoverlap(Mouse.X,Mouse.Y,1,1,c1x,uvy+y1,100,20)
-						Print i.name
+						'Print i.name
+						If i.movesleft > .3
+							i.fortify = False
+							updateunits()
+							myunitmethod.activateamovableunitid(i.id)
+							active = False
+							mousedelay = 0						
+						End If
 					End If
 					If rectsoverlap(Mouse.X,Mouse.Y,1,1,c3x,uvy+y1,50,20)
 						If i.fortify = True Then i.fortify = False Else i.fortify = true
@@ -146,6 +176,8 @@ Class unitview
 		End If
 		' If pressed on the exit button
 		If rectsoverlap(Mouse.X,Mouse.Y,1,1,eruitx,eruity,eruitw,eruith)
+			updateunits()
+			myunitmethod.activateamovableunit()
 			active = False
 			mousedelay = 0
 		End If
@@ -171,10 +203,12 @@ Class unitview
 		rec.Y = uvy
 		rec.Size = New Vec2i(uvw,uvh)
 		canvas.Scissor = rec
-		canvas.Clear(Color.Black)
+		canvas.Color = New Color(.5,.5,.5)
+		canvas.DrawImage(mygreybackground.greyimage,0,0)
+		'canvas.Clear(Color.Black)
 		' Draw the units
 		' window title
-		canvas.Color = Color.White
+		canvas.Color = Color.Black
 		canvas.DrawText("Unit",c1x,uvy)
 		canvas.DrawText("Moves",c2x,uvy)
 		canvas.DrawText("Fortified",c3x,uvy)
@@ -1976,6 +2010,37 @@ Class unitmethod
 				Exit
 			End If
 		Next
+	End Method
+	'
+	Method activateamovableunitid(id:int)
+		' all units active disable
+		For Local i:=Eachin myunit
+			i.active = false 
+		Next
+		
+		' find and activate a unit with id
+		For Local i:=Eachin myunit
+			If i.deleteme = False			
+			If i.id = id
+			If i.movesleft > .3	And i.fortify = False							
+				myunitmethod.disableunitontopat(i.x,i.y)
+				i.active = True
+				i.ontop = True
+				i.visible = True
+				i.blinktimer = 0
+				activeunitmovesleft = i.movesleft
+				If i.x > myworld.mw/2
+					myunituserinterface.dockside("Left")
+					Else
+					myunituserinterface.dockside("Right")
+				End If
+				Return
+			End If		
+			End If	
+			End If
+		Next
+		gamehasmovesleft=False
+		
 	End Method
 	' this function finds a unit that has not moved yet.
 	Method activateamovableunit()
