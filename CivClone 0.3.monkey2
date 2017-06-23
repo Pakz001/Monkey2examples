@@ -28,6 +28,8 @@ Global currentcityfood:Int
 Global currentcityresources:Int
 Global currentcityproduction:String
 Global currentcityproductiontime:Int
+Global currentcityharbor:Bool=False
+Global currentcitycoastal:Bool=False
 'This variable is increased in the main loop
 'if a key is pressed and this value is >  0 then this 
 'variable is set to 0 again.
@@ -308,6 +310,7 @@ Class unituserinterface
 				'drawunitbutton(canvas,x-16,y+34,"E")
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y,32,32)
 					'Print "Build Road"
+					If myunitmethod.activeunitissetler() = False Then Return
 					myunitmethod.buildroadatactiveunitpos()
 					myworld.updatedrawroads(myworld.roadcanvas)	
 					myunitmethod.activateamovableunit()					
@@ -315,6 +318,7 @@ Class unituserinterface
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+100,y+32,32,32)
 					'Print "Build City"
+					If myunitmethod.activeunitissetler() = False Then Return
 					If myunitmethod.iscityatactiveunitpos() = True Then Return
 					myunitmethod.buildroadatactiveunitpos(False)
 					Local x:Int,y:Int
@@ -757,8 +761,9 @@ Class cityscreen
 		cityiw = 220
 		cityih = 200
 	End Method
-	Method updatecitybuildlist()
+	Method updatecitybuildlist()		
 		mybuildlist = New Stack<buildlist>
+		If currentcitycoastal And currentcitysize > 1 Then mybuildlist.Push(New buildlist("Sea Unit"))
 		If currentcitysize > 1 Then mybuildlist.Push(New buildlist("Settlers"))
 		If currentcitywalls = False Then mybuildlist.Push(New buildlist("City Walls"))
 		If currentcitymines < 22 Then mybuildlist.Push(New buildlist("Mine"))
@@ -1046,6 +1051,8 @@ Class controls
 			currentcitywalls = mycitymethod.getcitywallsat(currentcityx,currentcityy)			
 			currentcityfood = mycitymethod.getcityfoodat(currentcityx,currentcityy)
 			currentcityresources = mycitymethod.getcityresourcesat(currentcityx,currentcityy)
+			currentcityharbor = mycitymethod.getcityharborsat(currentcityx,currentcityy)
+			currentcitycoastal = mycitymethod.getcitycoastal(currentcityx,currentcityy)
 			mycityscreen.updatecitybuildlist()
 			mycityscreen.updategarrison()
 			mycityscreen.updateproduction()
@@ -1065,8 +1072,9 @@ Class controls
 		End If
 	End Method
 	' build a road
-	Method buildroad()
+	Method buildroad()		
 		If Keyboard.KeyReleased(Key.R)
+			If myunitmethod.activeunitissetler() = False Then Return
 			myunitmethod.buildroadatactiveunitpos()	
 			myworld.updatedrawroads(myworld.roadcanvas)	
 			'find next movable unit
@@ -1087,7 +1095,7 @@ Class controls
 				i.active = False				
 			Next
 			'rest moves
-			gamehasmovesleft = true
+			gamehasmovesleft = True
 			'increase turn
 			turn+=1
 			' activate a moveable unit
@@ -1100,7 +1108,7 @@ Class controls
 		If Mouse.ButtonReleased(MouseButton.Left) = False Then Return				
 		Local x:Int=Mouse.X / myworld.tw
 		Local y:Int=Mouse.Y / myworld.th
-		If myunitmethod.ismovableunitatpos(x,y) = False Then return
+		If myunitmethod.ismovableunitatpos(x,y) = False Then Return
 		myunitmethod.unitsactivedisable()
 		myunitmethod.activatemovableunitatpos(x,y)
 			If x > myworld.mw/2 Then 
@@ -1118,6 +1126,7 @@ Class controls
 	' if pressed b then build city at active unit
 	Method buildcity()
 		If Keyboard.KeyReleased(Key.B)
+			If myunitmethod.activeunitissetler() = False Then Return
 			If myunitmethod.iscityatactiveunitpos() = true Then Return
 			' build a road there
 			myunitmethod.buildroadatactiveunitpos(False)	
@@ -1142,7 +1151,7 @@ Class controls
 		If Mouse.Y / myworld.th < myworld.mh-1
 		If Mouse.ButtonReleased(MouseButton.Left)
 		If myworld.map[Mouse.X/myworld.tw,Mouse.Y/myworld.th] > 5
-			myunit.Add(New unit(Mouse.X/myworld.tw,Mouse.Y/myworld.th))
+			myunit.Add(New unit(Mouse.X/myworld.tw,Mouse.Y/myworld.th,"Settlers"))
 			myunitmethod.removefog(Mouse.X/myworld.tw,Mouse.Y/myworld.th)
 			If Mouse.X > Width/2 Then 
 				myunituserinterface.dockside("Left")
@@ -1156,10 +1165,24 @@ Class controls
 		End If
 		End If
 	End Method
+	' add a sea unit to the map (cheat)
+	Method addseaunitat(x:Int,y:int)		
+		If myworld.map[x,y] > 5
+			myunit.Add(New unit(x,y,"Sea Unit"))
+			myunitmethod.removefog(x,y)
+			If x > myworld.mw/2 Then 
+				myunituserinterface.dockside("Left")
+				Else
+				myunituserinterface.dockside("Right")
+			End If
+			redrawgame()
+		End If
+	End Method
+
 	' add a unit to the map (cheat)
 	Method addunitat(x:Int,y:int)		
 		If myworld.map[x,y] > 5
-			myunit.Add(New unit(x,y))
+			myunit.Add(New unit(x,y,"Settlers"))
 			myunitmethod.removefog(x,y)
 			If x > myworld.mw/2 Then 
 				myunituserinterface.dockside("Left")
@@ -1202,6 +1225,8 @@ Class city
 	Field deleteme:Bool=False
 	Field name:String
 	Field myproduction:Stack<production>
+	Field harbor:Bool=False
+	Field coastalcity:Bool
 	Method New(x:Int,y:Int)
 		If cityatpos(x,y) = True Then deleteme = True ; Return
 		myproduction = New Stack<production>
@@ -1209,8 +1234,14 @@ Class city
 		'myproduction.Add(new production())
 		Self.x = x
 		Self.y = y
+		' givbe the city a unique name
 		name = randomcityname()
-		myunitmethod.removeactiveunit()		
+		' set the flag coastalcity
+		coastalcity = mycitymethod.citynexttowater(x,y)		
+		' remove the unit that created the city
+		myunitmethod.removeactiveunit()
+		
+		
 	End Method
 	'Give the city a random name
 	Method randomcityname:String()
@@ -1278,6 +1309,9 @@ Class city
 			myproduction.Top.turns-=1
 			If myproduction.Top.turns=0
 				Select myproduction.Top.name
+					Case "Sea Unit"
+						mycontrols.addseaunitat(x,y)
+						size-=1
 					Case "Settlers"
 						mycontrols.addunitat(x,y)
 						size-=1
@@ -1329,6 +1363,39 @@ End Class
 
 'city methods
 Class citymethod
+	' Return if the city is coastal.
+	Method getcitycoastal:bool(x:Int,y:int)
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y
+				Return i.coastalcity
+			End If
+		Next
+		Return False
+	End Method
+	'return true or false if city at x,y is next to water
+	Method citynexttowater:bool(x:Int,y:int)
+		For Local y2:=-1 To 1
+		For Local x2:=-1 To 1
+			Local x3:Int=x+x2
+			Local y3:Int=y+y2
+			If x3>=0 And y3>=0 And x3<myworld.mw And y3<myworld.mh
+				If myworld.map[x3,y3] <= 5							
+					Return True
+				End If
+			End If
+		Next
+		Next
+		Return False
+	End Method
+	' return true or false if city has harbor
+	Method getcityharborsat:Bool(x:Int,y:int)
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y
+				Return i.harbor
+			End If
+		Next
+		Return False		
+	End Method
 	' get the amount of food in the city
 	Method getcityfoodat:Int(x:int,y:Int)
 		For Local i:=Eachin mycity
@@ -1446,6 +1513,34 @@ End Class
 
 ' Methods to modify units
 Class unitmethod
+	' Returns if the active unit is a settler
+	Method activeunitissetler:bool()
+		For Local i:=Eachin myunit
+			If i.active = True
+				If i.name = "Settlers" Then Return True
+			End If
+		Next
+		Return False
+	End Method
+	' return true if a land or sea unit moves into illegal terrain
+	Method activeunitillegalmove:Bool(x2:int,y2:int)
+		'is he moving into a harbor?
+		For Local i:=Eachin mycity
+			If i.x = x2 And i.y = y2
+				Return False 'can move here
+			End If
+		Next
+		' Is he moving into land or sea when impossible to do that?
+		For Local i:=Eachin myunit
+			If i.active = True
+				If i.seaunit And myworld.map[x2,y2] > 5 Then Return True
+				If i.landunit And myworld.map[x2,y2] <=5 Then Return True
+			End If
+		Next
+		'No problems found
+		Return False
+	End Method
+	' Does the unit with id have moves left
 	Method unitmovesleft:Float(id:Int)
 		Local retval:Float=-1
 		For Local i:=Eachin myunit
@@ -1712,7 +1807,8 @@ Class unitmethod
 		If newposx<0 Or newposx>=myworld.mw Then Return
 		If newposy<0 Or newposy>=myworld.mh Then return
 		' if destination is water then return
-		If myworld.map[newposx,newposy] <= 5 Then Return
+		' If myworld.map[newposx,newposy] <= 5 Then Return
+		If myunitmethod.activeunitillegalmove(newposx,newposy) Then Return
 		' find unit and move
 		For Local i:=Eachin myunit
 			If i.active = True And i.movesleft > .3				
@@ -1785,10 +1881,16 @@ Class unit
 	Field movesleft:Float=1
 	Field originalmoves:Float=1
 	Field fortify:Bool=False
-	Method New(mx:Int,my:Int)
+	Field seaunit:Bool=False
+	Field landunit:Bool=True
+	Method New(mx:Int,my:Int,name:String)
 		Self.id = myunitmethod.getuniqueid()		
 		Self.x = mx
 		Self.y = my
+		Self.name = name
+		If name="Sea Unit" Then landunit=False;seaunit=True;originalmoves=2
+		If name="Settlers" Then landunit=true;seaunit=False
+		movesleft = originalmoves
 		removeontop(mx,my)
 		ontop = True
 		removeallactivestatus()
@@ -2554,7 +2656,7 @@ Function findunitstartingposition()
 		Local x:Int=Rnd(myworld.mw)
 		Local y:Int=Rnd(myworld.mh-1)
 		If myworld.map[x,y] > 5
-			myunit.Add(New unit(x,y))
+			myunit.Add(New unit(x,y,"Settlers"))
 			myunitmethod.removefog(x,y)
 			If x>myworld.mw/2
 				myunituserinterface.dockside("Left")
