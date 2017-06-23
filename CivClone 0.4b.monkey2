@@ -471,6 +471,10 @@ Class unituserinterface
 	Field bsx:Int,bsy:Int 'button S (Skip turn)
 	Field bex:Int,bey:Int 'button E (End turn)
 	Field bwx:Int,bwy:Int 'button W (Wait)
+	'boo
+	' Width and height of the interface buttons
+	Field bw:Int = 32
+	Field bh:Int = 32
 	Method New(Width:Int,Height:Int)
 		'locally store width and height of the screen
 		Self.Width = Width
@@ -492,8 +496,8 @@ Class unituserinterface
 		bex = -16
 		bey = 34
 		'button W (button wait x and y)
-		bwx = 132
-		bwy = 96
+		bwx = 100
+		bwy = 128
 		
 		dockside("Left")
 		arrowimage = New Image(Width/10,Height/10)
@@ -616,15 +620,16 @@ Class unituserinterface
 			If Mouse.ButtonReleased(MouseButton.Left)
 				Local x:Int=ix
 				Local y:Int=iy
-				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+brx,y+bry,32,32)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+brx,y+bry,bw,bh)
+					mousedelay = 0
 					'Print "Build Road"
 					If myunitmethod.activeunitissetler() = False Then Return
 					myunitmethod.buildroadatactiveunitpos()
 					myworld.updatedrawroads(myworld.roadcanvas)	
 					myunitmethod.activateamovableunit()					
-					mousedelay = 0
 				End If
-				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bbx,y+bby,32,32)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bbx,y+bby,bw,bh)
+					mousedelay = 0
 					'Print "Build City"
 					If myunitmethod.activeunitissetler() = False Then Return
 					If myunitmethod.iscityatactiveunitpos() = True Then Return
@@ -641,22 +646,23 @@ Class unituserinterface
 					Next					
 					mycity.Add(New city(x,y))
 					myworld.updatedrawroads(myworld.roadcanvas)					
-					myunitmethod.activateamovableunit()
-					mousedelay = 0
+					myunitmethod.activateamovableunit()					
 				End If
-				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bfx,y+bfy,32,32)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bfx,y+bfy,bw,bh)
+					mousedelay = 0
 					'Print "Fortify"
 					myunitmethod.unitactivefortify()
 					myunitmethod.activateamovableunit()					
-					mousedelay = 0
+					
 				End If
-				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bsx,y+bsy,32,32)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bsx,y+bsy,bw,bh)
+					mousedelay = 0
 					'Print "Skip turn"
 					myunitmethod.activeunitskipturn()
-					myunitmethod.activateamovableunit()
-					mousedelay = 0
+					myunitmethod.activateamovableunit()					
 				End If
-				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bex,y+bey,32,32)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bex,y+bey,bw,bh)
+					mousedelay = 0
 					'Print "End Turn"
 
 					'Update the buildlist of each city
@@ -675,15 +681,15 @@ Class unituserinterface
 					' find a moveable unit
 					myunitmethod.activateamovableunit()					
 					' set mouse delay so as not to double feaure click
-					mousedelay = 0
+					
 				End If
-				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bwx,y+bwy,32,32)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bwx,y+bwy,bw,bh)					
+					mousedelay = 0
 					'Print "unit wait"
 					myunitmethod.unitactivewait()
 					myunitmethod.activateamovableunit()
-					mousedelay = 0
-				End If
-				
+					
+				End If				
 			End If
 		End If 'end if docked is false
 	End Method
@@ -774,9 +780,9 @@ Class unituserinterface
 	End Method
 	Method drawunitbutton(canvas:Canvas,x:Int,y:Int,t:String)
 		canvas.Color = Color.Red
-		canvas.DrawRect(x,y,32,32)
+		canvas.DrawRect(x,y,bw,bh)
 		canvas.Color = Color.Black
-		canvas.DrawRect(x+2,y+2,32-4,32-4)		
+		canvas.DrawRect(x+2,y+2,bw-4,bh-4)		
 		canvas.Color = Color.White
 		canvas.DrawText(t,x+16,y+16,.5,.5)
 		
@@ -1367,7 +1373,7 @@ Class controls
 	Method opencityscreen()
 		If Keyboard.KeyDown(Key.LeftShift) = False
 		If Mouse.ButtonReleased(MouseButton.Left)
-		If mycitymethod.hascityatmousepos()
+		If mycitymethod.hascityatmousepos()			
 			currentcityx = Mouse.X / myworld.tw
 			currentcityy = Mouse.Y / myworld.th
 			currentcityname = mycitymethod.getcitynameat(currentcityx,currentcityy)
@@ -1395,7 +1401,7 @@ Class controls
 	End Method
 	'unit skip turn (space)
 	Method activeunitskipturn()
-		If Keyboard.KeyReleased(Key.Space)
+		If Keyboard.KeyReleased(Key.Space) Or Keyboard.KeyReleased(Key.S)
 			myunitmethod.activeunitskipturn()
 			myunitmethod.activateamovableunit()
 			keydelay = 0
@@ -3047,16 +3053,18 @@ Class MyWindow Extends Window
 	
 	Method OnRender( canvas:Canvas ) Override
 		keydelay+=1
-		mousedelay+=1
+		mousedelay+=1		
 		If mousedelay>2000 Then mousedelay = 1000
 		If keydelay>2000 Then keydelay = 1000
 		App.RequestRender() ' Activate this method 
 		'
-		
+		If cityscreenopen = False
+			myunituserinterface.update()
+		End If
 		' main map - The user controls (mouse and keys)
 		If cityscreenopen = False
 		If Keyboard.KeyDown(Key.Key1) = False
-		If mousedelay > 12 And keydelay>12					
+		If mousedelay > 12 And keydelay>12							
 		mycontrols.waitunit()
 		mycontrols.addunit(canvas,Width,Height)
 		mycontrols.moveunit(canvas,Width,Height)
@@ -3095,7 +3103,7 @@ Class MyWindow Extends Window
 			myworld.fogimage.Discard()
 			myworld.roadimage.Discard()
 			'start new game 
-			startnewgame(Width,Height,Millisecs())
+			startnewgame(Width,Height,Microsecs())
 		End If
 		
 
@@ -3254,7 +3262,7 @@ Function redrawgame()
 
 End Function
 
-Function startnewgame(Width:Int,Height:int,seed:Double)	
+Function startnewgame(Width:Int,Height:int,seed:Double)		
 	SeedRnd(seed)	
 	myunit = New List<unit>		
 	mycity = New List<city>	
