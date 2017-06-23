@@ -45,6 +45,7 @@ Class unitview
 		Field seaunit:Bool
 		Field landunit:Bool
 		Field fortify:Bool
+		Field onboard:Bool		
 		Method New()
 		End Method
 	End Class
@@ -130,7 +131,7 @@ Class unitview
 				myunitlist.Top.movesleft = i.movesleft
 				myunitlist.Top.landunit = i.landunit
 				myunitlist.Top.seaunit = i.seaunit
-				myunitlist.Top.name = i.name
+				myunitlist.Top.name = i.name				
 			End If
 		Next		
 	End Method
@@ -1811,9 +1812,110 @@ End Class
 
 ' Methods to modify units
 Class unitmethod
+	' move the unit onboard or offboard
+	Method boardunboard(newposx:int,newposy:int)	
+		
+		Local currentx:Int,currenty:Int
+		Local landunit:Bool = False
+		Local seaunit:Bool=False
+		Local onboard:Bool=False
+		'get the current x and y position of the unit that
+		'is about to move
+		For Local i:=Eachin myunit
+			If i.active
+				landunit = i.landunit
+				seaunit = i.seaunit
+				currentx = i.x
+				currenty = i.y
+				onboard = i.onboard
+				Exit
+			End If
+		Next
+		'is h e land and moving into sea
+		'is he sea and moving into land		
+		If landunit And onboard = False And myworld.map[newposx,newposy] >5 Then Return		
+		If landunit And onboard And myworld.map[newposx,newposy] <=5 Then Return 		
+		'is he land and is there a unit there with cargo space?
+		
+		If landunit And onboard = False
+			'is there cargo space
+			If myunitmethod.istherecargospaceat(newposx,newposy) = False Then Return
+			myunitmethod.putactiveunitincargoat(newposx,newposy)
+		End If
+		'if he is on a ship then move him onland
+		If landunit And onboard
+			Print "move onland"
+			For Local i:=Eachin myunit
+				If i.active = True
+					i.onboard = False
+					For Local i2:=Eachin myunit
+						If i2.id = i.onboardid
+							Print "found"
+							i2.removecargo(i.id)
+						End If
+					Next
+					'boo
+					unitvisibleandontopat(currentx,currenty)
+					unitsinvisibleandnotontop(newposx,newposy)
+					i.active = False
+					i.x = newposx
+					i.y = newposy
+					i.movesleft = 0
+					i.visible = True
+					i.movesleft = 0
+					activateamovableunit()
+				End If
+			Next
+			
+		End If
+		
+		
+	End Method
+
+	' put the active unit inside the cargo at pos x,y
+	Method putactiveunitincargoat(x:Int,y:Int)
+		' get the active unit id
+		Local activeid:Int
+		For Local i:=Eachin myunit			
+			If i.active = True
+				activeid = i.id
+				Exit
+			End If
+		Next
+		' move him aboard
+		For Local i:=Eachin myunit			
+			If i.x = x And i.y = y
+				If i.mycargo.Count() < i.maxcargo
+					i.mycargo.Add(New unit.cargo(activeid))
+					For Local i2:=Eachin myunit
+						If i2.id = activeid
+							i2.ontop = False
+							i2.fortify = true
+							i2.active = False
+							i2.movesleft = 0
+							i2.onboard = True
+							i2.onboardid = i.id
+						End if
+					Next
+					updateunitcargo()
+					Return
+				End If
+			End If
+		Next
+	End Method
+	'find if there is free cargo space at pos x,y
+	Method istherecargospaceat:Bool(x:Int,y:Int)
+		For Local i:=Eachin myunit
+			If i.x = x And i.y = y
+				If i.mycargo.Count() < i.maxcargo Then Return True
+			End If
+		Next
+		Return false
+	End Method
+
 	'returs true if more then one unit is at that position	
 	Method moreunitsatpos:Bool(x:int,y:int)
-		Local cnt:int=0
+		Local cnt:Int=0
 		For Local i:=Eachin myunit
 			If i.x = x And i.y = y Then cnt+=1
 			If cnt>1 Then Return true
@@ -1860,7 +1962,7 @@ Class unitmethod
 	Method unitfortify(id:Int,val:Bool)		
 		For Local i:=Eachin myunit
 			If i.id = id
-				i.fortify = val
+				i.fortify = val								
 				Return
 			End If
 		Next
@@ -2025,7 +2127,7 @@ Class unitmethod
 		For Local i:=Eachin myunit
 			If i.deleteme = False			
 			If i.id = id
-			If i.movesleft > .3	And i.fortify = False							
+			If i.movesleft > .3	And i.fortify = False 
 				myunitmethod.disableunitontopat(i.x,i.y)
 				i.active = True
 				i.ontop = True
@@ -2056,7 +2158,7 @@ Class unitmethod
 		' find and activate a unit
 		For Local i:=Eachin myunit
 			If i.deleteme = False			
-			If i.movesleft > .3	And i.fortify = False							
+			If i.movesleft > .3	And i.fortify = False
 				myunitmethod.disableunitontopat(i.x,i.y)
 				i.active = True
 				i.ontop = True
@@ -2143,9 +2245,12 @@ Class unitmethod
 	' checks if reachable. 
 	Method moveactiveunitto(newposx:Int,newposy:Int)
 		If newposx<0 Or newposx>=myworld.mw Then Return
-		If newposy<0 Or newposy>=myworld.mh Then return
+		If newposy<0 Or newposy>=myworld.mh Then Return
 		' if destination is water then return
-		' If myworld.map[newposx,newposy] <= 5 Then Return
+		' If myworld.map[newposx,newposy] <= 5 Then Return				
+		' active unit going from or on board
+		myunitmethod.boardunboard(newposx,newposy)
+		'are we doing  a illegal move
 		If myunitmethod.activeunitillegalmove(newposx,newposy) Then Return
 		' find unit and move
 		For Local i:=Eachin myunit
@@ -2157,25 +2262,14 @@ Class unitmethod
 				If rectsoverlap(newposx,newposy,1,1,oldposx-1,oldposy-1,3,3)										
 					' at old position set one unit to visible
 					' and ontop
-					For Local i2:=Eachin myunit
-						If i<>i2
-						If i2.x = oldposx And i2.y = oldposy
-							i2.visible = True							 
-							i2.ontop = True							 
-							Exit
-						End If
-						End If
-					Next					
-					' at new pos set units to invible
+					unitvisibleandontopat(oldposx,oldposy)					
+					' at new pos set units to invisible
 					' and not ontop
-					For Local i2:=Eachin myunit
-						If i2.x = newposx And i2.y = newposy
-							i2.visible = False
-							i2.ontop = False
-						End If
-					Next					
+					unitsinvisibleandnotontop(newposx,newposy)
+					'set the new position
 					i.x = newposx
 					i.y = newposy
+					updateunitcargo()
 					myunitmethod.removefog(i.x,i.y)					
 					i.visible = True
 					i.ontop = True
@@ -2191,13 +2285,50 @@ Class unitmethod
 						i.visible = True
 						i.active = False
 						myunitmethod.activateamovableunit()
-						return
+						Return
 					End If
 				End If
 			End If
 		Next
 	End Method
-	
+	' at new pos set units to invible
+	' and not ontop
+	Method unitsinvisibleandnotontop(x:Int,y:Int)
+		For Local i:=Eachin myunit
+			If i.x = x And i.y = y
+				i.visible = False
+				i.ontop = False
+			End If
+		Next				
+	End Method
+
+	' at position set one unit to visible
+	' and ontop
+	Method	unitvisibleandontopat(x:int,y:Int)
+		For Local i:=Eachin myunit		
+			If i.x = x And i.y = y
+				i.visible = True							 
+				i.ontop = True							 
+				Return
+			End If
+		Next
+	End Method					
+
+	' make sure that all units have their cargo at their location
+	Method updateunitcargo()
+		For Local i:=Eachin myunit
+			If i.mycargo.Count()
+				For Local i2:=Eachin i.mycargo
+					For Local i3:=Eachin myunit
+						If i2.id = i3.id
+							i3.x = i.x
+							i3.y = i.y
+						End If
+					Next
+				Next
+			End If
+		Next
+	End Method	
 	
 	Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
 	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
@@ -2208,6 +2339,17 @@ Class unitmethod
 End Class
 
 Class unit
+	Class cargo
+		Field id:Int
+		Field deleteme:Bool=False
+		Method New(id:Int)
+			Self.id = id			
+		End Method
+	End Class
+	Field maxcargo:Int=3
+	Field onboard:Bool=False
+	Field onboardid:Int
+	Field mycargo:List<cargo>
 	Field id:Int
 	Field x:Int,y:Int
 	Field name:String="Settler"
@@ -2222,18 +2364,32 @@ Class unit
 	Field seaunit:Bool=False
 	Field landunit:Bool=True
 	Method New(mx:Int,my:Int,name:String)
+		mycargo = New List<cargo>
 		Self.id = myunitmethod.getuniqueid()		
 		Self.x = mx
 		Self.y = my
 		Self.name = name
 		If name="Sea Unit" Then landunit=False;seaunit=True;originalmoves=2
-		If name="Settlers" Then landunit=true;seaunit=False
+		If name="Settlers" Then landunit=True;seaunit=False
 		movesleft = originalmoves
 		removeontop(mx,my)
 		ontop = True
 		removeallactivestatus()
 		resetblink()
 		active = True		
+	End Method
+	'remove cargo from the list
+	Method removecargo(id:Int)		
+		If mycargo.Count()
+			for Local i:=Eachin mycargo
+				If i.id = id Then
+					i.deleteme = True
+				End If
+			Next
+			For Local i:=Eachin mycargo
+				If i.deleteme = True Then mycargo.Remove(i)
+			Next
+		End If
 	End Method
 	' remove ontop status of all units at position x,y
 	Method removeontop(mx:Int,my:Int)
@@ -2257,7 +2413,7 @@ Class unit
 			Next
 	End Method
 	Method draw(canvas:Canvas)
-		If ontop = True And visible = True			
+		If ontop = True And visible = True
 			Local mx:Float = x * myworld.tw
 			Local my:Float = y * myworld.th
 			Local rec:Recti<Int>
@@ -2266,7 +2422,11 @@ Class unit
 			rec.Size = New Vec2i(myworld.tw,myworld.th)
 			canvas.Scissor = rec
 			
+			If name="Settlers" Then 	
 			canvas.Color = New Color(1,1,1)
+			Else
+			canvas.Color = New Color(.5,.5,.5)
+			End If
 			canvas.DrawRect(mx,my,myworld.tw,myworld.th)
 			'
 			If movesleft <= .3 or fortify=true
