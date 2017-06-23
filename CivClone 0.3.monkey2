@@ -36,6 +36,64 @@ Global currentcitycoastal:Bool=False
 Global keydelay:Int=0
 Global mousedelay:Int=0
 
+Class gamemessage	
+	'This class contains the messages
+	Class message
+		Field tekst:String
+		Method New(tekst:String)
+			Self.tekst = tekst
+		End Method
+	End Class
+	'store the messages in a stack
+	Field mymessage:Stack<message>
+	Field Width:Int,Height:Int
+	Field time:Int 'count up to timeover means new message
+	Field timeover:Int=60'message dissapear time
+	Field currentmessage:String 'this contains the current message
+	Method New(Width:Int,Height:Int)
+		Self.Width = Width
+		Self.Height = Height
+		'create a message stack
+		mymessage = New Stack<message>
+	End Method
+	'Here we add a message to the system
+	Method pushmessage(tekst:String)
+		mymessage.Push(New message(tekst))
+'		time=timeover-5
+	End Method
+	'this method updates the messages
+	'removing old messages
+	Method update()
+		If mymessage.Length > 5 Then timeover = 20 Else timeover = 60
+		If mymessage.Length > 20 Then timeover = 5 
+		time+=1
+		If time > timeover
+			time = 0
+			currentmessage = ""
+			If mymessage.Length
+			currentmessage = mymessage.Top.tekst
+			mymessage.Pop()
+			End If
+		End If
+	End Method
+	'Draw the messages to the canvas
+	Method drawmessage(canvas:Canvas)
+		If currentmessage = "" Then Return		
+		Local mx:Float=Width/2-200
+		Local my:Float=10		
+		canvas.PushMatrix()
+		canvas.Scale(1.2,1.2)
+		canvas.Color = Color.White
+		canvas.DrawRect(mx/1.2-2,my/1.2-2,400+4,20+4)
+		canvas.Color = Color.Grey
+		canvas.DrawRect(mx/1.2,my/1.2,400,20)
+		canvas.Color = Color.White
+		canvas.DrawText(currentmessage,(Width/2)/1.2,my/1.2+2,.5,0)
+		canvas.PopMatrix()
+		
+	End Method
+End Class
+
 Class greybackground
 	Field greyimage:Image
 	Field greycanvas:Canvas
@@ -1228,6 +1286,7 @@ Class city
 	Field harbor:Bool=False
 	Field coastalcity:Bool
 	Method New(x:Int,y:Int)
+		mygamemessage.pushmessage("A New City Was Created")
 		If cityatpos(x,y) = True Then deleteme = True ; Return
 		myproduction = New Stack<production>
 		'myproduction.Add(new production())
@@ -1311,23 +1370,30 @@ Class city
 				Select myproduction.Top.name
 					Case "Sea Unit"
 						mycontrols.addseaunitat(x,y)
+						mygamemessage.pushmessage(name+" Sea Unit Build")
 						size-=1
 					Case "Settlers"
 						mycontrols.addunitat(x,y)
+						mygamemessage.pushmessage(name+" Settlers Build")
 						size-=1
 					Case "City Walls"
 						'Print "Walls Created"
 						walls = True
+						mygamemessage.pushmessage(name+" City Walls Build")
 					Case "Barracks"
 						'Print "Barracks Created"
+						mygamemessage.pushmessage(name+" Barracks Build")
 						barracks = True
 					Case "Mine"
 						'Print "Mine created"
+						mygamemessage.pushmessage(name+" Mine Build")
 						mines+=1
 					Case "Farm"
 						'Print "Farm Created"
+						mygamemessage.pushmessage(name+" Farm build")
 						farms+=1
 					Case "Expand City"
+						mygamemessage.pushmessage(name+" City Expanded")
 						size+=1					
 				End Select			
 				myproduction.Pop()
@@ -1346,12 +1412,15 @@ Class city
 		If barracks = True Then resources-=1
 		
 		' schrink city if shortages
-		If resources < 0 Then size -= 1 ; resources = 0
-		If food < 0 Then size -= 1 ; food = 0
+		If resources < 0 Or food < 0 Then 
+			size -= 1 		
+			mygamemessage.pushmessage(name+" Decreased In Size.")
+		End If			
 		If size<1 Then size = 1
 		
 		'grow city in time of plenty
 		If food > 10 And resources > 10 Then 
+			mygamemessage.pushmessage(name+" Grew In Size")
 			food -= 4
 			resources -= 4
 			size+=1
@@ -2426,6 +2495,7 @@ Global mycityscreen:cityscreen
 Global mycitymethod:citymethod
 Global mycitycontrols:citycontrols
 Global myunituserinterface:unituserinterface
+Global mygamemessage:gamemessage
 
 'textures
 Global mygreybackground:greybackground
@@ -2435,6 +2505,10 @@ Class MyWindow Extends Window
 		Title="CivClone"
 		
 		startnewgame(Width,Height,0)
+		
+		mygamemessage.pushmessage("Press 1 for the help screen")
+		mygamemessage.pushmessage("Programmed by R.v.Etten in 2017")		
+		mygamemessage.pushmessage("Welcome to #CivClone")				
 		
 	End Method
 	
@@ -2587,7 +2661,9 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 		canvas.DrawText("Hold 1 for help.",500,Height-15)
 
 		canvas.DrawText(App.FPS,0,0)
-
+		'game messaging system
+		mygamemessage.update()
+		mygamemessage.drawmessage(canvas)
 
 		If Keyboard.KeyDown(Key.Key1) Then drawhelpscreen(canvas,Width,Height)				
 		
@@ -2644,7 +2720,11 @@ Function startnewgame(Width:Int,Height:int,seed:Double)
 	Else
 		mygreybackground = New greybackground(Width,Height,640,480)
 	End If
-		
+	
+	' initialize/reset the game message system
+	mygamemessage = New gamemessage(Width,Height)
+	mygamemessage.pushmessage("New Map Generated")		
+	
 	findunitstartingposition()
 	
 	redrawgame()
