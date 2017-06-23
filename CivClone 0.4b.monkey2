@@ -4,6 +4,7 @@
 Using std..
 Using mojo..
 
+Global version:String="v0.4"
 'Texture quality
 Global texturequality:String="Low" 'High , Medium and Low
 ' Here is how many tiles there are drawn on the screen.
@@ -2939,8 +2940,8 @@ Class MyWindow Extends Window
 		mygamemessage.pushmessage("Press F2 for new map")
 		mygamemessage.pushmessage("Press 1 for the help screen")
 		mygamemessage.pushmessage("Programmed by R.v.Etten in 2017")		
-		mygamemessage.pushmessage("Welcome to #CivClone")				
-		
+		mygamemessage.pushmessage("Welcome to #CivClone "+version)
+
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
