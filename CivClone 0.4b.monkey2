@@ -506,6 +506,7 @@ Class unituserinterface
 		makearrow(arrowcanvas)
 	End Method
 	Method update()	
+		If mousedelay < 20 Then return
 		' the dock undock buttons controls
 		Local mx:Int,my:Int
 		
