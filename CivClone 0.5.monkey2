@@ -123,7 +123,25 @@ Class pathfinder
 		' 
 		tilewidth = 10
 		tileheight = 10
-		
+		'
+		path = New List<pathnode>
+	End Method
+
+	' turn water tiles into impassable tiles
+	Method mapforlandunits()
+		For Local y:=0 Until mapheight
+		For Local x:=0 Until mapwidth
+			If map[x,y] <= 5 Then map[x,y] = -1
+		Next
+		Next
+	End Method
+	'turn land tiles into impassable tiles
+	Method mapforseaunits()
+		For Local y:=0 Until mapheight
+		For Local x:=0 Until mapwidth
+			If map[x,y] > 5 Then map[x,y] = -1
+		Next
+		Next
 	End Method
 
 	' This is the a* pathfinder method.
@@ -189,7 +207,7 @@ Class pathfinder
 	                newx = tx+x
 	                newy = ty+y	                
 	                If newx>=0 And newy>=0 And newx<mapwidth And newy<mapheight
-		            If map[newx,newy] >= 0
+		            If map[newx,newy] >= 0 '-1 is illegal					
 	                If olmap[newx,newy] = 0
 	                If clmap[newx,newy] = 0
 	                    olmap[newx,newy] = 1
@@ -205,7 +223,7 @@ Class pathfinder
 	                End If
 	                End If
 	                End If
-	                End if
+	                End If
 	            Next
 	            Next
 	        End If
@@ -213,7 +231,7 @@ Class pathfinder
 	    Return False
 	End Method
 	
-	Method findpathback:Bool()
+	Method findpathback:Bool()		
 	    Local x:Int=ex
 	    Local y:Int=ey
 	    path.AddFirst(New pathnode(x,y))
@@ -221,7 +239,7 @@ Class pathfinder
 	        For Local i:=Eachin cl
 	            If i.x = x And i.y = y
 	                x = i.px
-	                y = i.py
+	                y = i.py						                
 	                path.AddFirst(New pathnode(x,y))
 	            End If
 	        Next
@@ -705,8 +723,7 @@ Class unituserinterface
 	Field bfx:Int,bfy:Int 'button F (fortify)
 	Field bsx:Int,bsy:Int 'button S (Skip turn)
 	Field bex:Int,bey:Int 'button E (End turn)
-	Field bwx:Int,bwy:Int 'button W (Wait)
-	'boo
+	Field bwx:Int,bwy:Int 'button W (Wait)	
 	' Width and height of the interface buttons
 	Field bw:Int = 32
 	Field bh:Int = 32
@@ -908,7 +925,8 @@ Class unituserinterface
 					'restore the moves of each unit					
 					For Local i:=Eachin myunit
 						i.movesleft = i.originalmoves
-						i.active = False				
+						i.active = False
+						i.pathmove()				
 					Next
 					' set the game movement tip 
 					gamehasmovesleft = True
@@ -1589,7 +1607,21 @@ End Class
 ' Controls like mouse pressed and keyboard
 Class controls
 	' Find path for unit and set him to go to path.
-	
+	Method gotounit()
+		'todo : sea unit and land unit system
+		If Keyboard.KeyReleased(Key.G)
+			Local x:Int=Mouse.X / myworld.tw
+			Local y:Int=Mouse.Y / myworld.th			
+			myunitmethod.unitactivefindpath(x,y)			
+			For Local i:=Eachin myunit
+				If i.active = True
+					i.pathmove()
+					redrawgame()					
+					Exit
+				End if
+			Next
+		End If
+	End Method
 	'Unit wait
 	Method waitunit()
 		If Keyboard.KeyReleased(Key.W)
@@ -1671,6 +1703,7 @@ Class controls
 				i.movesleft = i.originalmoves
 				i.active = False				
 				i.wait = False
+				i.pathmove()
 			Next
 			'rest moves
 			gamehasmovesleft = True
@@ -1678,6 +1711,7 @@ Class controls
 			turn+=1
 			' activate a moveable unit
 			myunitmethod.activateamovableunit()
+			redrawgame()
 			keydelay = 0
 		End If
 	End Method
@@ -1748,7 +1782,7 @@ Class controls
 		End If
 	End Method
 	' add a sea unit to the map (cheat)
-	Method addseaunitat(x:Int,y:int)		
+	Method addseaunitat(x:Int,y:Int)		
 		If myworld.map[x,y] > 5
 			myunit.Add(New unit(x,y,"Sea Unit"))
 			myunitmethod.removefog(x,y)
@@ -1886,8 +1920,7 @@ Class city
 		mycitymethod.drawcity(canvas,mx,my,tw,th,size,name)
 	End Method
 	Method turnend()
-		
-		
+				
 		'see if we can create anything
 		If myproduction.Length
 			myproduction.Top.turns-=1
@@ -2108,18 +2141,28 @@ End Class
 ' Methods to modify units
 Class unitmethod
 	' Find a path for the active unit towards the destination coords.
-	Method unitactivefindpath(destx:Int,desty:int)
+	Method unitactivefindpath(destx:Int,desty:int)		
 		For Local i:= Eachin myunit
 			If i.active = True
 				mypath = New pathfinder(myworld.map)
+				If i.landunit Then mypath.mapforlandunits() Else mypath.mapforseaunits()
 				If mypath.findpath(i.x,i.y,destx,desty) = False
-					Print "error finding path - unitmethod class in unitactivefindpath"
+					'Print "error finding path - unitmethod class in unitactivefindpath"
+					mygamemessage.pushmessage("Goto : Can not go there..")
 				Else 'path succesfully found
-					Print "path found and put inside unit path list"
+					Print "path found and put inside unit path list"					
+					'Local lst:=mypath.getpath()
+					'i.path = mypath.getpath()
+					'i.pathcurrentx = i.x
+					'i.pathcurrenty = i.y
+					'i.pathlength = i.path.Count()
+					'i.pathposition = 0
 					i.path = New List<unit.pathnode>
-					For Local i2:=Eachin mypath.path
-						i.path.AddFirst(New unit.pathnode(i2.x,i2.y))
-					Next
+					For Local i2:=Eachin mypath.path						
+						i.path.AddLast(New unit.pathnode(i2.x,i2.y))						
+					Next				
+					i.path.RemoveFirst()
+					i.path.RemoveFirst()
 					i.pathcurrentx = i.x
 					i.pathcurrenty = i.y
 					i.pathlength = i.path.Count()
@@ -2764,6 +2807,48 @@ Class unit
 		removeallactivestatus()
 		resetblink()
 		active = True		
+		path = New List<pathnode>
+	End Method
+	'
+	' This method moves the unit to the next position in path
+	' list. <todo warfare here ect...>
+	Method pathmove()
+		If path.Count() = 0 Then Return				
+		'		
+		Local oldposx:Int=x
+		Local oldposy:Int=y
+		Local newposx:Int=path.First.x
+		Local newposy:Int=path.First.y				
+		' at old position set one unit to visible
+		' and ontop
+		myunitmethod.unitvisibleandontopat(oldposx,oldposy)					
+		' at new pos set units to invisible
+		' and not ontop
+		myunitmethod.unitsinvisibleandnotontop(newposx,newposy)
+		'
+		'set the new position
+		x = newposx
+		y = newposy
+		myunitmethod.removefog(x,y)							
+		myunitmethod.updateunitcargo()		
+		visible = True
+		ontop = True
+		blinktimer = 0
+
+		' here we do the movement cost
+		If myworld.roadmap[newposx,newposy].hasroad = True
+			movesleft -=.33
+		Else
+			movesleft -= 1
+		End If
+		
+		If movesleft <.33
+			visible = True
+			active = False
+			myunitmethod.activateamovableunit()			
+		End If
+		'		
+		path.RemoveFirst()
 	End Method
 	'remove cargo from the list
 	Method removecargo(id:Int)		
@@ -3345,6 +3430,7 @@ Class MyWindow Extends Window
 		If cityscreenopen = False
 		If Keyboard.KeyDown(Key.Key1) = False
 		If mousedelay > 12 And keydelay>12							
+		mycontrols.gotounit()		
 		mycontrols.waitunit()
 		mycontrols.addunit(canvas,Width,Height)
 		mycontrols.moveunit(canvas,Width,Height)
