@@ -48,6 +48,7 @@ Class pathfinder
 	Field cl:List<closedlist>
 	Field path:List<pathnode>
 	Field ol:List<openlist>
+	' -1 is impassable
 	Field map:Int[,]
 	Field olmap:Int[,]
 	Field clmap:Int[,]
@@ -140,10 +141,11 @@ Class pathfinder
 	            clmap[tx,ty] = 1
 	            cl.AddLast(New closedlist(tx,ty,tpx,tpy))
 	            For Local y:=-1 To 1
-	            For Local x:=-1 To 1
+	            For Local x:=-1 To 1		            
 	                newx = tx+x
-	                newy = ty+y
+	                newy = ty+y	                
 	                If newx>=0 And newy>=0 And newx<mapwidth And newy<mapheight
+		            If map[newx,newy] >= 0
 	                If olmap[newx,newy] = 0
 	                If clmap[newx,newy] = 0
 	                    olmap[newx,newy] = 1
@@ -159,6 +161,7 @@ Class pathfinder
 	                End If
 	                End If
 	                End If
+	                End if
 	            Next
 	            Next
 	        End If
@@ -205,10 +208,11 @@ Class pathfinder
 			Return
 		End If
 	    For Local y:=0 Until mapheight
-	    For Local x:=0 Until mapwidth
-	        'SetColor 0,map[x,y]*10,0
-	       	canvas.Color = New Color(0,(Float(map[x,y])*10)/255,0)
-	        canvas.DrawRect(x*tilewidth,y*tileheight,tilewidth,tileheight)
+	    For Local x:=0 Until mapwidth	        
+	        If map[x,y]>=0
+	       		canvas.Color = New Color(0,(Float(map[x,y])*10)/255,0)
+	        	canvas.DrawRect(x*tilewidth,y*tileheight,tilewidth,tileheight)
+	        End If
 	    Next
 	    Next
 	End Method
@@ -233,11 +237,15 @@ Class MyWindow Extends Window
 	Method New()
 		' Here we create a map array
 		testmap = New Int[50,50]
-		testmap = makemap(50,50)	
-		' Here we insert the map into the pathfinder	
+		testmap = makemap(50,50)			
+		' Here we insert the map into the pathfinder
+		' at the moment it works like this.
+		' it goes in 8 direction.
+		' high values in the map are higher movement cost.
+		' 
 		mypath = New pathfinder(testmap)
 		' Here we find a path
-		mypath.findpath(0,0,20,20)
+		mypath.findpath(0,0,40,40)
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -277,6 +285,13 @@ Function makemap:Int[,](mapwidth:int,mapheight:Int)
         Next
         Next
     Wend
+    ' test . make an impassable area
+    For Local y:=mapwidth/2-4 To mapwidth/2+4
+	For Local x:=10 To mapheight-10
+		map[x,y] = -1
+	Next
+	Next
+    '
     Return map
 End Function
 
