@@ -4,17 +4,6 @@
 Using std..
 Using mojo..
 
-Const mapwidth:Int=40
-Const mapheight:Int=30
-Const tilewidth:Int=16
-Const tileheight:Int=16
-Global sx:Int 'path start x
-Global sy:Int 'path start y
-Global ex:Int 'path end x
-Global ey:Int 'path end y
-'Global map:Int[mapwidth][]
-'Global olmap:Int[mapwidth][]
-'Global clmap:Int[mapwidth][]
 
 Class pathfinder
 	Class openlist
@@ -66,11 +55,19 @@ Class pathfinder
 	Field mapheight:Int
 	' these are the start and end coordinates
 	Field sx:Int,sy:Int,ex:Int,ey:int
-	Method New(mapwidth:Int,mapheight:Int)
+	'for debugging
+	Field tilewidth:Float,tileheight:Float
+	
+
+	Method New(Width:Int,Height:Int,mapwidth:Int,mapheight:Int)
 		
 		Self.mapwidth = mapwidth
 		Self.mapheight = mapheight
 		
+		
+		' debugging / testing	
+		tilewidth = Float(Width)/Float(mapwidth)		
+		tileheight = Float(Height)/Float(mapheight)
 		ol = New List<openlist>
 		cl = New List<closedlist>
 		path = New List<pathnode>
@@ -88,6 +85,8 @@ Class pathfinder
 		findpath()
 		
 	End Method
+
+	
 
 	method findpath:Bool()
 	    If sx = ex And sy = ey Then Return False
@@ -155,7 +154,7 @@ Class pathfinder
 	        End If
 	    Wend
 	    Return False
-	End method
+	End Method
 
 	
 	Method findpathback:Bool()
@@ -173,7 +172,7 @@ Class pathfinder
 	        If x = sx And y = sy Then Return True	        
 	    Forever    
 	    Return False
-	End method
+	End Method
 	method removefromopenlist:Void(x1:Int,y1:Int)
 	    For Local i:=Eachin ol
 	        If i.x = x1 And i.y = y1
@@ -188,7 +187,8 @@ Class pathfinder
 	End Function	
 	
 	' Debug test function/methods
-	method drawmap:Void(canvas:Canvas)
+	' Draw the map to the screen
+	Method drawmap:Void(canvas:Canvas)
 	    For Local y:=0 Until mapheight
 	    For Local x:=0 Until mapwidth
 	        'SetColor 0,map[x,y]*10,0
@@ -197,21 +197,19 @@ Class pathfinder
 	    Next
 	    Next
 	End Method
-
+	' draw the path to the screen
 	Method drawpath:Void(canvas:Canvas)
 	    Local cnt:Int=1
 	    For Local i:=Eachin path
-	        'SetColor 255,255,0
 	        canvas.Color = Color.Yellow
 	        canvas.DrawOval(i.x*tilewidth,i.y*tileheight,4,4)
-	        'SetColor 255,255,255
 	        canvas.Color = Color.White
 	        canvas.DrawText(cnt,i.x*tilewidth,i.y*tileheight)
 	        cnt+=1
 	    Next
 	End Method
-
-	method makemap:Void()
+	' Make a random map (hill algorithm)
+	Method makemap:Void()
 	    For Local y:=0 Until mapheight
 	    For Local x:=0 Until mapwidth
 	        map[x,y] = 0
@@ -243,7 +241,7 @@ Global mypath:pathfinder
 Class MyWindow Extends Window
 
 	Method New()
-		mypath = New pathfinder(50,50)
+		mypath = New pathfinder(Width,Height,50,50)
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
