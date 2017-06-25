@@ -3619,6 +3619,8 @@ Function drawhelpscreen(canvas:Canvas,Width:int,Height:Int)
 	canvas.DrawText("F - Fortify",60,220)
 	canvas.DrawText("Left Mouse on City - Open city screen",60,240)
 	canvas.DrawText("F2 - Reset To New Map",60,260)
+	canvas.DrawText("W - Unit Wait",60,280)
+	canvas.DrawText("G - Active Unit Go To",60,300)
 	
 End Function
 
