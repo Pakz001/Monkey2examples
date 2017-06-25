@@ -1588,6 +1588,8 @@ End Class
 
 ' Controls like mouse pressed and keyboard
 Class controls
+	' Find path for unit and set him to go to path.
+	
 	'Unit wait
 	Method waitunit()
 		If Keyboard.KeyReleased(Key.W)
@@ -2105,6 +2107,28 @@ End Class
 
 ' Methods to modify units
 Class unitmethod
+	' Find a path for the active unit towards the destination coords.
+	Method unitactivefindpath(destx:Int,desty:int)
+		For Local i:= Eachin myunit
+			If i.active = True
+				mypath = New pathfinder(myworld.map)
+				If mypath.findpath(i.x,i.y,destx,desty) = False
+					Print "error finding path - unitmethod class in unitactivefindpath"
+				Else 'path succesfully found
+					Print "path found and put inside unit path list"
+					i.path = New List<unit.pathnode>
+					For Local i2:=Eachin mypath.path
+						i.path.AddFirst(New unit.pathnode(i2.x,i2.y))
+					Next
+					i.pathcurrentx = i.x
+					i.pathcurrenty = i.y
+					i.pathlength = i.path.Count()
+					i.pathposition = 0
+				End If
+			End If
+		Next
+	End Method
+	
 	' let the current unit wait
 	Method unitactivewait()
 		For Local i:=Eachin myunit
@@ -2696,6 +2720,7 @@ Class unit
 	Field pathposition:Int
 	Field pathcurrentx:Int
 	Field pathcurrenty:int
+	Field pathlength:Int
 	' 
 	' Is the unit carying a unit(s)
 	Class cargo
@@ -2725,6 +2750,7 @@ Class unit
 	Field seaunit:Bool=False
 	Field landunit:Bool=True
 	Method New(mx:Int,my:Int,name:String)
+		
 		mycargo = New List<cargo>
 		Self.id = myunitmethod.getuniqueid()		
 		Self.x = mx
@@ -3287,6 +3313,7 @@ Global mycitycontrols:citycontrols
 Global myunituserinterface:unituserinterface
 Global mygamemessage:gamemessage
 Global myunitview:unitview
+Global mypath:pathfinder
 
 'textures
 Global mygreybackground:greybackground
