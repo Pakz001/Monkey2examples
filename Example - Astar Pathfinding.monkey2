@@ -192,7 +192,7 @@ Class pathfinder
 	    For Local y:=0 Until mapheight
 	    For Local x:=0 Until mapwidth
 	        'SetColor 0,map[x,y]*10,0
-	       	canvas.Color = New Color(0,map[x,y]/255,0)
+	       	canvas.Color = New Color(0,(Float(map[x,y])*10)/255,0)
 	        canvas.DrawRect(x*tilewidth,y*tileheight,tilewidth,tileheight)
 	    Next
 	    Next
