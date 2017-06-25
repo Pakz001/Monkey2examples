@@ -4,7 +4,7 @@
 Using std..
 Using mojo..
 
-Global version:String="v0.4"
+Global version:String="v0.5"
 'Texture quality
 Global texturequality:String="Low" 'High , Medium and Low
 ' Here is how many tiles there are drawn on the screen.
@@ -928,6 +928,8 @@ Class unituserinterface
 						i.active = False
 						i.pathmove()				
 					Next
+					' Update the fogmap
+					redrawgame()
 					' set the game movement tip 
 					gamehasmovesleft = True
 					'increase turn
@@ -1618,7 +1620,7 @@ Class controls
 					i.pathmove()
 					redrawgame()					
 					Exit
-				End if
+				End If
 			Next
 		End If
 	End Method
@@ -1727,14 +1729,15 @@ Class controls
 			Return
 		End If
 		End If		
+		myunitmethod.disablepathingunitat(x,y)
 		If myunitmethod.ismovableunitatpos(x,y) = False Then Return
 		myunitmethod.unitsactivedisable()
-		myunitmethod.activatemovableunitatpos(x,y)
-			If x > myworld.mw/2 Then 
-				myunituserinterface.dockside("Left")
-				Else
-				myunituserinterface.dockside("Right")
-			End If
+		myunitmethod.activatemovableunitatpos(x,y)		
+		If x > myworld.mw/2 Then 
+			myunituserinterface.dockside("Left")
+			Else
+			myunituserinterface.dockside("Right")
+		End If
 		
 	End Method
 	' if pressed b then build city at active unit
@@ -2140,6 +2143,17 @@ End Class
 
 ' Methods to modify units
 Class unitmethod
+	'boo
+	Method disablepathingunitat(x:Int,y:int)
+				
+		For Local i:=Eachin myunit
+			If i.x = x And i.y = y
+				If i.path.Count() > 0
+					i.path.Clear()
+				End If
+			End If
+		Next
+	End Method
 	' Find a path for the active unit towards the destination coords.
 	Method unitactivefindpath(destx:Int,desty:int)		
 		For Local i:= Eachin myunit
