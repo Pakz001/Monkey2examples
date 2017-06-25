@@ -2815,40 +2815,46 @@ Class unit
 	Method pathmove()
 		If path.Count() = 0 Then Return				
 		'		
-		Local oldposx:Int=x
-		Local oldposy:Int=y
-		Local newposx:Int=path.First.x
-		Local newposy:Int=path.First.y				
-		' at old position set one unit to visible
-		' and ontop
-		myunitmethod.unitvisibleandontopat(oldposx,oldposy)					
-		' at new pos set units to invisible
-		' and not ontop
-		myunitmethod.unitsinvisibleandnotontop(newposx,newposy)
-		'
-		'set the new position
-		x = newposx
-		y = newposy
-		myunitmethod.removefog(x,y)							
-		myunitmethod.updateunitcargo()		
-		visible = True
-		ontop = True
-		blinktimer = 0
-
-		' here we do the movement cost
-		If myworld.roadmap[newposx,newposy].hasroad = True
-			movesleft -=.33
-		Else
-			movesleft -= 1
-		End If
-		
-		If movesleft <.33
+		Local exitloop:Bool=False
+		While exitloop = false
+			Local oldposx:Int=x
+			Local oldposy:Int=y
+			Local newposx:Int=path.First.x
+			Local newposy:Int=path.First.y				
+			' at old position set one unit to visible
+			' and ontop
+			myunitmethod.unitvisibleandontopat(oldposx,oldposy)					
+			' at new pos set units to invisible
+			' and not ontop
+			myunitmethod.unitsinvisibleandnotontop(newposx,newposy)
+			'
+			'set the new position
+			x = newposx
+			y = newposy
+			myunitmethod.removefog(x,y)							
+			myunitmethod.updateunitcargo()		
 			visible = True
-			active = False
-			myunitmethod.activateamovableunit()			
-		End If
-		'		
-		path.RemoveFirst()
+			ontop = True
+			blinktimer = 0
+	
+			' here we do the movement cost
+			If myworld.roadmap[newposx,newposy].hasroad = True
+				movesleft -=.33
+			Else
+				movesleft -= 1
+			End If
+			
+			If movesleft <.33
+				exitloop = True
+				visible = True
+				active = False
+				myunitmethod.activateamovableunit()			
+			End If
+			'		
+			path.RemoveFirst()
+			If path.Count() = 0 Then exitloop = true
+			
+		wend
 	End Method
 	'remove cargo from the list
 	Method removecargo(id:Int)		
