@@ -62,15 +62,13 @@ Function drawfooddisplay(canvas:Canvas)
 	Local mx:Float=16,my:Float=16
 	Local exitloop:Bool=False
 	While exitloop = False
-		If ( (Float(foodsw)-(foodcount/70))/mx ) * ( (Float(foodsh)-(foodcount/70))/my ) > foodcount
+		If ( (Float(foodsw-16)/my) * (Float(foodsh-8)/my )) > foodcount
 		exitloop = True
 		Else
 		mx -= .1
 		my -= .1
 		End If
 	Wend
-	mx -= .2
-	my -= .2 
 	' Draw the food images 
 	Local x:Float,y:Float
 	Local count:Int
@@ -87,11 +85,11 @@ Function drawfooddisplay(canvas:Canvas)
 		count+=1
 		' if we are at the bottom then
 		' increase x and reset y
-		If y > Float(foodsh-(foodcount/70))-(my) Then
+		If y > Float(foodsh-16) Then
 			x += mx
 			y = 0
 			' If the screen if filled then exit
-			If x > Float(foodsw-(foodcount/70))-(mx) Then 
+			If x > Float(foodsw-16) Then 
 				Exit
 			End If
 		End If
