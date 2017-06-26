@@ -4,6 +4,10 @@
 Using std..
 Using mojo..
 
+'
+' These are the variables for the city food window.
+' x and y and w and height and the total count of food
+'
 Global foodsx:Int
 Global foodsy:Int
 Global foodsw:Int
@@ -14,6 +18,7 @@ Global foodcount:Int
 Class MyWindow Extends Window
 
 	Method New()
+		' Set up the window variables
 		foodsx = 100
 		foodsy = 100
 		foodsw = 150
