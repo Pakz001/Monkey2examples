@@ -3225,7 +3225,7 @@ Class world
 '	Method drawroads(canvas:Canvas)
 '		canvas.DrawImage(image
 '	End Method
-	Method updatedraw(canvas:Canvas)
+	Method updatedraw(canvas:Canvas)		
 		canvas.Clear(Color.Black)
 		For Local y:Float=0 Until mh-1 Step 1
 		For Local x:Float=0 Until mw Step 1
@@ -3265,7 +3265,7 @@ Class world
 			End Select
 			'canvas.DrawRect(x*tw,y*th,tw,th)
 		Next
-		Next
+		Next		
 		canvas.Flush()
 	End Method
 	Method updatedrawfog(canvas:Canvas)
