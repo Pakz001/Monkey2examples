@@ -10,24 +10,24 @@ Using mojo..
 ' x and y and w and height and the 
 ' current amount and required amount of resources
 '
-Global prodx:Int
-Global prody:Int
-Global prodw:Int
-Global prodh:Int
-Global prodcurrentresourcescount:Int
-Global prodrequiredresourcescount:Int
+Global prod2x:Int
+Global prod2y:Int
+Global prod2w:Int
+Global prod2h:Int
+Global prod2currentresourcescount:Int
+Global prod2requiredresourcescount:Int
 
 
 Class MyWindow Extends Window
 
 	Method New()
 		' Set up the window variables
-		prodx = 100
-		prody = 100
-		prodw = 150
-		prodh = 200
-		prodcurrentresourcescount = 4
-		prodrequiredresourcescount = 7
+		prod2x = 100
+		prod2y = 100
+		prod2w = 150
+		prod2h = 200
+		prod2currentresourcescount = 4
+		prod2requiredresourcescount = 7
 
 	End Method
 	
@@ -42,13 +42,13 @@ Class MyWindow Extends Window
 		' variable a random number
 		If Keyboard.KeyReleased(Key.Space) Or Mouse.ButtonReleased(MouseButton.Left) Then 
 			If Rnd(2)<1 ' once in a while
-				prodrequiredresourcescount = Rnd(30)
-				prodcurrentresourcescount = Rnd(0,prodrequiredresourcescount)
+				prod2requiredresourcescount = Rnd(30)
+				prod2currentresourcescount = Rnd(0,prod2requiredresourcescount)
 				
 
 			Else 'every other once in a while
-				prodrequiredresourcescount = Rnd(330)
-				prodcurrentresourcescount = Rnd(0,prodrequiredresourcescount)
+				prod2requiredresourcescount = Rnd(330)
+				prod2currentresourcescount = Rnd(0,prod2requiredresourcescount)
 				
 			End If		 			 	
 		End If
@@ -64,19 +64,19 @@ End	Class
 Function drawproductionwindow(canvas:Canvas)
 	'draw the white outline
 	canvas.Color = Color.White
-	canvas.DrawRect(prodx-2,prody-2,prodw+4,prodh+4)
+	canvas.DrawRect(prod2x-2,prod2y-2,prod2w+4,prod2h+4)
 	'Draw the black screen
 	canvas.Color = Color.Black
-	canvas.DrawRect(prodx,prody,prodw,prodh)
+	canvas.DrawRect(prod2x,prod2y,prod2w,prod2h)
 	' Draw a title label
 	canvas.Color = Color.White
-	canvas.DrawText("Currently creating : ",prodx,prody-15)
+	canvas.DrawText("Currently creating : ",prod2x,prod2y-15)
 	' Count how much space we must have between the resources
 	' images.
 	Local mx:Float=16,my:Float=16
 	Local exitloop:Bool=False
 	While exitloop = False
-		If ( (Float(prodw-16)/my) * (Float(prodh-8)/my )) > prodrequiredresourcescount
+		If ( (Float(prod2w-16)/my) * (Float(prod2h-8)/my )) > prod2requiredresourcescount
 		exitloop = True
 		Else
 		mx -= .1
@@ -102,18 +102,18 @@ Function drawproductionwindow(canvas:Canvas)
 	Local count:Int
 	Repeat
 		' Draw the resources images
-		mydrawresource(prodx+x+8,prody+y+8)
+		mydrawresource(prod2x+x+8,prod2y+y+8)
 		' Left top down
 		x+=mx
 		count+=1
-		If count>prodcurrentresourcescount Then Exit
+		If count>prod2currentresourcescount Then Exit
 		' if we are at the bottom then
 		' increase x and reset y
-		If x > Float(prodw-16) Then
+		If x > Float(prod2w-16) Then
 			y += my
 			x = 0
 			' If the screen if filled then exit
-			If y > Float(prodh-16) Then 
+			If y > Float(prod2h-16) Then 
 				Exit
 			End If
 		End If
