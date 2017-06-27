@@ -3048,12 +3048,13 @@ Class tile
 		Local x1:Float=x+Rnd(tw)
 		Local y1:Float=y+Rnd(th)
 		For Local i2:=0 Until 5
-			Local x2:float=x1+Rnd(-w,w)
-			Local y2:float=y1+Rnd(-h,h)
+			Local x2:Float=x1+Rnd(-w,w)
+			Local y2:Float=y1+Rnd(-h,h)
 			canvas.Color = New Color(0,Rnd(0,0.5),0)
 			canvas.DrawCircle(x2,y2,w)
 		Next
 		Next
+		'noise
 		For Local y2:Int=y Until y+th
 		For Local x2:Int=x Until x+tw
 			If Rnd(2)<.2
@@ -3065,14 +3066,33 @@ Class tile
 	End Method
 
 	Method drawgrass(x:float,y:Float,canvas:Canvas)		
-		SeedRnd(1)
+		SeedRnd(x*y)
 		canvas.Color = New Color(0,0.5,0)
 		canvas.DrawRect(x,y,tw,th)
-		For Local y2:Int=y Until y+th
+	
+		' larger noise (chunks)
+		If Rnd(1)<.65
+			Local sw:Int=Rnd(4,18)
+			For Local i:=0 Until sw
+				Local grey:Float=Rnd(.25,.35)
+				canvas.Color = New Color(grey,Rnd(0.1,0.4)+grey,grey)
+				canvas.DrawOval(x+tw/2+Rnd(-tw/2,tw/2),y+th/2+Rnd(-th/2,th/2),Rnd(2,5),Rnd(2,5))
+			Next
+		End If 
+
+		' noise
+		For Local y2:Int=y Until y+th			
 		For Local x2:Int=x Until x+tw
-			If Rnd(2)<.2
-				canvas.Color = New Color(0,Rnd(0.2,0.6),0)
+			'noise
+			If Rnd(2)<.2				
+				canvas.Color = New Color(0,Rnd(0.2,0.6),0)				
 				canvas.DrawPoint(x2,y2)
+				' highlight noise
+				If Rnd(1)<.2 Then 
+					Local grey:Float=Rnd(.3,.7)
+					canvas.Color = New Color(grey,Rnd(0.2,0.3)+grey,grey)
+					canvas.DrawPoint(x2,y2)
+				End If
 			End If
 		Next
 		Next		
