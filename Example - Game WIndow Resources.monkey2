@@ -3,7 +3,7 @@
 
 Using std..
 Using mojo..
-' window coordinates and variables
+' resource window coordinates and variables
 Global resourcex:Int
 Global resourcey:Int
 Global resourcew:Int
@@ -37,8 +37,8 @@ Class MyWindow Extends Window
 		' Run the function that draws the city food
 		' overview window.
 		drawfooddisplay(canvas)
-		' If we press the space bar then make the foodcount
-		' variable a random number
+		' If we press the space bar then make the food and resource count
+		' variables a random number
 		If Keyboard.KeyReleased(Key.Space) Or Mouse.ButtonReleased(MouseButton.Left) Then 
 			If Rnd(2)<1 ' once in a while
 				resourcefoodcount=Rnd(1,20) 
@@ -80,20 +80,26 @@ Function drawfooddisplay(canvas:Canvas)
 		' Draw the food images
 		canvas.Color = Color.Grey
 		canvas.DrawCircle(x,y,8)		
-		canvas.Color = Color.Red
+		canvas.Color = New Color(.2,.2,.2)
 		canvas.DrawCircle(x,y,7)
+		canvas.Color = Color.Red
+		canvas.DrawCircle(x,y,6)
 		canvas.Color = Color.Brown
-		canvas.DrawCircle(x,y,6)				
+		canvas.DrawCircle(x,y,5)				
+		canvas.Color = New Color(.9,.7,.3)
+		canvas.DrawCircle(x-1,y-1,2)				
 	End Lambda
 	'Drawing function(draw the resource)
 	Local mydrawresource := Lambda:Void(x:Int,y:Int)
-		' Draw the food images
+		' Draw the resource image
 		canvas.Color = Color.Grey
 		canvas.DrawCircle(x,y,8)		
 		canvas.Color = New Color(.2,.2,.2)
 		canvas.DrawCircle(x,y,7)
 		canvas.Color = New Color(.7,.7,.7)
 		canvas.DrawCircle(x,y,6)				
+		canvas.Color = Color.White
+		canvas.DrawCircle(x-1,y-1,2)				
 	End Lambda
 	
 	'
