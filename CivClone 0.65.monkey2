@@ -1316,6 +1316,52 @@ Class cityscreen
 	Field garx:Int,gary:Int,garw:Int,garh:Int
 	'variables for the city info
 	Field cityix:Int,cityiy:int,cityiw:int,cityih:Int
+	'
+	'
+	' These are the variables for the city food window.
+	' x and y and w and height and the total count of food
+	'
+	Field foodsx:Int
+	Field foodsy:Int
+	Field foodsw:Int
+	Field foodsh:Int
+	Field foodcount:Int	
+	'
+	' City resource window coordinates and variables
+	Field resourcex:Int
+	Field resourcey:Int
+	Field resourcew:Int
+	Field resourceh:Int
+	' count is the amount used and surplus is what we have left
+	Field resourcecount:Int
+	Field resourcesurpluscount:Int
+	Field resourcefoodsurpluscount:Int
+	Field resourcefoodcount:Int
+	'	
+	'
+	' These are the variables for the city production window.
+	' x and y and w and height and the 
+	' current amount and required amount of resources
+	'
+	Field prod2x:Int
+	Field prod2y:Int
+	Field prod2w:Int
+	Field prod2h:Int
+	Field prod2currentresourcescount:Int
+	field prod2requiredresourcescount:Int
+
+	'
+	' These are the variables for the city population window.
+	' x and y and w and height and the 
+	' current population count
+	'
+	Field popx:Int
+	Field popy:Int
+	Field popw:Int
+	Field poph:Int
+	field popcount:Int
+
+	
 	Method New(Width:Int,Height:Int)
 		Self.Width = Width
 		Self.Height = Height
@@ -1347,6 +1393,34 @@ Class cityscreen
 		cityiy = Height/2
 		cityiw = 220
 		cityih = 200
+		
+		'
+		'		
+		' Set up the food stock window window variables
+		foodsx = 100
+		foodsy = 100
+		foodsw = 150
+		foodsh = 200
+		foodcount = 10		
+
+		' fil in the variables of city resources (used and surples)
+		resourcex = 100
+		resourcey = 100
+		resourcew = 200
+		resourceh = 80
+		resourcecount = 10
+		resourcesurpluscount = 4
+		resourcefoodcount = 20
+		resourcefoodsurpluscount = 4		
+
+		' Set up the population window variables
+		popx = 100
+		popy = 100
+		popw = 320
+		poph = 40
+		popcount = 4
+		
+		
 	End Method
 	Method updatecitybuildlist()		
 		mybuildlist = New Stack<buildlist>
@@ -1392,6 +1466,342 @@ Class cityscreen
 			End If
 		Next
 	End Method
+	'
+	' New city windows
+	'
+	' Based on the Civilization 1 population window
+	'
+	method drawpopulationwindow(canvas:Canvas)
+		'draw the white outline
+		canvas.Color = Color.White
+		canvas.DrawRect(popx-2,popy-2,popw+4,poph+4)
+		'Draw the black screen
+		canvas.Color = Color.Black
+		canvas.DrawRect(popx,popy,popw,poph)
+		' Draw a title label
+		canvas.Color = Color.White
+		canvas.DrawText("Population : ",popx,popy-15)
+		' Count how much space we must have between the people
+		' images.
+		Local mx:Float=16,my:Float=16
+		Local exitloop:Bool=False
+		While exitloop = False
+			If ( (Float(popw-16)/my) ) > popcount
+			exitloop = True
+			Else
+			mx -= .1
+			my -= .1
+			End If
+		Wend
+		
+		'Drawing function(draw the resource)
+		Local mydrawperson := Lambda:Void(x:Int,y:Int)
+			' Draw the resource image
+			'head
+			canvas.Color = New Color(.8,.6,.2)
+			canvas.DrawCircle(x,y,5)		
+			'headhighlight
+			canvas.Color = New Color(1,.8,.5)
+			canvas.DrawCircle(x-2,y-2,1)
+			'eyes
+			canvas.Color = New Color(1,1,1)
+			canvas.DrawCircle(x-2,y,1)
+			canvas.DrawCircle(x+3,y,1)
+			canvas.Color = New Color(0,0,0)
+			canvas.DrawPoint(x-1,y)
+			canvas.DrawPoint(x+2,y)
+			'mouth
+			canvas.Color = New Color(0,0,0)
+			canvas.DrawPoint(x,y+4)
+			'body
+			canvas.Color = New Color(.1,.4,1)		
+			canvas.DrawOval(x-2,y+3,8,8)				
+			'body highlight
+			canvas.Color = New Color(.4,.7,1)		
+			canvas.DrawOval(x-6,y+3,12,2)				
+			'arms
+			canvas.Color = New Color(.3,.7,1)		
+			canvas.DrawOval(x-7,y+3,5,11)				
+			canvas.DrawOval(x,y+3,5,11)				
+			'arms highlight
+			canvas.Color = New Color(.6,1,3)		
+			canvas.DrawOval(x-7,y+5,2,3)				
+			canvas.DrawOval(x,y+5,2,3)				
+			'legs
+			canvas.Color = New Color(.7,.3,.1)		
+			canvas.DrawOval(x-5,y+9,4,10)				
+			canvas.DrawOval(x,y+9,4,10)				
+			'feet
+			canvas.Color = New Color(.9,.5,.2)		
+			canvas.DrawOval(x-5,y+15,3,3)				
+			canvas.DrawOval(x,y+15,3,3)				
+		End Lambda
+		
+		' Draw the population images 
+		Local x:Float,y:Float
+		Local count:Int
+		Repeat
+			' Draw the population image
+			mydrawperson(popx+x+8,popy+y+8)
+			' Left top down
+			x+=mx
+			count+=1		
+			' if we are at the bottom then
+			' increase x and reset y
+			If x > Float(popw-16) Or count>popcount Then
+				Exit
+			End If
+		Forever
+		
+	End Method
+	
+	
+	
+	' Based on the Civilization 1 city build
+	' production window
+	'
+	method drawproductionwindow(canvas:Canvas)
+		'draw the white outline
+		canvas.Color = Color.White
+		canvas.DrawRect(prod2x-2,prod2y-2,prod2w+4,prod2h+4)
+		'Draw the black screen
+		canvas.Color = Color.Black
+		canvas.DrawRect(prod2x,prod2y,prod2w,prod2h)
+		' Draw a title label
+		canvas.Color = Color.White
+		canvas.DrawText("Currently creating : ",prod2x,prod2y-15)
+		' Count how much space we must have between the resources
+		' images.
+		Local mx:Float=16,my:Float=16
+		Local exitloop:Bool=False
+		While exitloop = False
+			If ( (Float(prod2w-16)/my) * (Float(prod2h-8)/my )) > prod2requiredresourcescount
+			exitloop = True
+			Else
+			mx -= .1
+			my -= .1
+			End If
+		Wend
+		
+		'Drawing function(draw the resource)
+		Local mydrawresource := Lambda:Void(x:Int,y:Int)
+			' Draw the resource image
+			canvas.Color = Color.Grey
+			canvas.DrawCircle(x,y,8)		
+			canvas.Color = New Color(.2,.2,.2)
+			canvas.DrawCircle(x,y,7)
+			canvas.Color = New Color(.7,.7,.7)
+			canvas.DrawCircle(x,y,6)				
+			canvas.Color = Color.White
+			canvas.DrawCircle(x-1,y-1,2)				
+		End Lambda
+		
+		' Draw the food images 
+		Local x:Float,y:Float
+		Local count:Int
+		Repeat
+			' Draw the resources images
+			mydrawresource(prod2x+x+8,prod2y+y+8)
+			' Left top down
+			x+=mx
+			count+=1
+			If count>prod2currentresourcescount Then Exit
+			' if we are at the bottom then
+			' increase x and reset y
+			If x > Float(prod2w-16) Then
+				y += my
+				x = 0
+				' If the screen if filled then exit
+				If y > Float(prod2h-16) Then 
+					Exit
+				End If
+			End If
+		Forever
+		
+	End Method
+	
+	' Based on the Civilization 1 city resources window
+	'
+	Method drawresourcewindow(canvas:Canvas)
+		'draw the white outline
+		canvas.Color = Color.White
+		canvas.DrawRect(resourcex-2,resourcey-2,resourcew+4,resourceh+4)
+		'Draw the black screen
+		canvas.Color = Color.Black
+		canvas.DrawRect(resourcex,resourcey,resourcew,resourceh)
+		' Draw a title label
+		canvas.Color = Color.White
+		canvas.DrawText("City Resources : ",resourcex,resourcey-15)
+		
+		'Lambda functions below
+		
+		' Drawing function (draw the food)
+		Local mydrawfood := Lambda:Void(x:Int,y:Int)
+			' Draw the food images
+			canvas.Color = Color.Grey
+			canvas.DrawCircle(x,y,8)		
+			canvas.Color = New Color(.2,.2,.2)
+			canvas.DrawCircle(x,y,7)
+			canvas.Color = Color.Red
+			canvas.DrawCircle(x,y,6)
+			canvas.Color = Color.Brown
+			canvas.DrawCircle(x,y,5)				
+			canvas.Color = New Color(.9,.7,.3)
+			canvas.DrawCircle(x-1,y-1,2)				
+		End Lambda
+		'Drawing function(draw the resource)
+		Local mydrawresource := Lambda:Void(x:Int,y:Int)
+			' Draw the resource image
+			canvas.Color = Color.Grey
+			canvas.DrawCircle(x,y,8)		
+			canvas.Color = New Color(.2,.2,.2)
+			canvas.DrawCircle(x,y,7)
+			canvas.Color = New Color(.7,.7,.7)
+			canvas.DrawCircle(x,y,6)				
+			canvas.Color = Color.White
+			canvas.DrawCircle(x-1,y-1,2)				
+		End Lambda
+		
+		'
+		' This function draws a particula resource.
+		' tp = 0 - food
+		' tp = 1 - resource (goods ore ect.)
+		'	
+		Local drawresource:=Lambda:Void(tp:String)
+		
+			' Count how much space we must have between the food 
+			' images. Store the step value in mx
+			Local mx:Float=16	
+			Repeat
+				If tp = 0
+					If ( Float(resourcew-48)/mx) > resourcefoodcount+resourcefoodsurpluscount
+						Exit
+					Else
+						mx -= .1		
+					End If
+				Else 
+					If ( Float(resourcew-48)/mx) > resourcecount+resourcesurpluscount
+						Exit
+					Else
+						mx -= .1		
+					End If
+				End If				
+			Forever
+	
+			' Here we go from left to right and draw
+			' the images.
+			'
+			Local x:Float=0,y:Float
+			Local count:Int
+			Local switch:Bool=False
+			Repeat
+				If tp = 0 Then mydrawfood(resourcex+x+8,resourcey+y+8)
+				If tp = 1 Then mydrawresource(resourcex+x+8,resourcey+y+32)
+				' Left to right
+				x+=mx
+				count+=1
+				' if we are at the end of the window
+				' then exit (everything drawn)
+				If x > Float(resourcew-16) Then
+					Exit
+				End If
+				' If we drawn the food and resourses then draw the
+				' surplus
+				If switch = False 
+					If tp = 0 And count > resourcefoodcount Then 
+						x+=16
+						switch = True
+					End If
+					If tp = 1 And count > resourcecount
+						x+=16
+						switch = True
+					End If
+				End If
+			Forever
+		End Lambda
+	
+		' This calls the functions and fills the resource window
+		'
+		drawresource(0)
+		drawresource(1)
+		canvas.Color = Color.White
+		canvas.DrawText("Food :",resourcex,resourcey+48)
+		mydrawfood(resourcex+60,resourcey+56)
+		canvas.DrawText("Resource :",resourcex+80,resourcey+48)
+		mydrawresource(resourcex+180,resourcey+56)
+		
+	End method
+	
+	' 
+	' Based on the Civilization 1 city food
+	' screen.
+	'
+	method drawfoodwindow(canvas:Canvas)
+		'draw the white outline
+		canvas.Color = Color.White
+		canvas.DrawRect(foodsx-2,foodsy-2,foodsw+4,foodsh+4)
+		'Draw the black screen
+		canvas.Color = Color.Black
+		canvas.DrawRect(foodsx,foodsy,foodsw,foodsh)
+		' Draw a title label
+		canvas.Color = Color.White
+		canvas.DrawText("Food in City : ",foodsx,foodsy-15)
+		' Count how much space we must have between the food 
+		' images.
+		Local mx:Float=16,my:Float=16
+		Local exitloop:Bool=False
+		While exitloop = False
+			If ( (Float(foodsw-16)/my) * (Float(foodsh-8)/my )) > foodcount
+			exitloop = True
+			Else
+			mx -= .1
+			my -= .1
+			End If
+		Wend
+		'
+		' Drawing function (draw the food)
+		Local mydrawfood := Lambda:Void(x:Int,y:Int)
+			' Draw the food images
+			canvas.Color = Color.Grey
+			canvas.DrawCircle(x,y,8)		
+			canvas.Color = New Color(.2,.2,.2)
+			canvas.DrawCircle(x,y,7)
+			canvas.Color = Color.Red
+			canvas.DrawCircle(x,y,6)
+			canvas.Color = Color.Brown
+			canvas.DrawCircle(x,y,5)				
+			canvas.Color = New Color(.9,.7,.3)
+			canvas.DrawCircle(x-1,y-1,2)				
+		End Lambda
+		
+		' Draw the food images 
+		Local x:Float,y:Float
+		Local count:Int
+		Repeat
+			' Draw the food images
+			mydrawfood(foodsx+x+8,foodsy+y+8)
+			' Left top down
+			y+=my
+			count+=1
+			' if we are at the bottom then
+			' increase x and reset y
+			If y > Float(foodsh-16) Then
+				x += mx
+				y = 0
+				' If the screen if filled then exit
+				If x > Float(foodsw-16) Then 
+					Exit
+				End If
+			End If
+			' If the counter is bigger then the amount of food
+			' then exit
+			If count > foodcount Then Exit
+		Forever
+		
+	End method
+	'
+	' old windows ...
+	'	
 	Method drawcityinfo(canvas:Canvas)
 		' Draw the textured window
 		Local rec := New Recti<Int>
