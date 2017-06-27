@@ -37,7 +37,7 @@ Class MyWindow Extends Window
 		canvas.DrawText("Press Space or Press Left Mouse for Random food count",0,0)
 		' Run the function that draws the city food
 		' overview window.
-		drawfooddisplay(canvas)
+		drawfoodwindow(canvas)
 		' If we press the space bar then make the foodcount
 		' variable a random number
 		If Keyboard.KeyReleased(Key.Space) Or Mouse.ButtonReleased(MouseButton.Left) Then 
@@ -56,7 +56,7 @@ End	Class
 ' Based on the Civilization 1 city food
 ' screen.
 '
-Function drawfooddisplay(canvas:Canvas)
+Function drawfoodwindow(canvas:Canvas)
 	'draw the white outline
 	canvas.Color = Color.White
 	canvas.DrawRect(foodsx-2,foodsy-2,foodsw+4,foodsh+4)
