@@ -1373,7 +1373,7 @@ Class cityscreen
 		citymapx = Width/2-citymapw/2
 		citymapy = Height/2-citymaph/2
 		' fill the city production info variables
-		prodx = Width/1.5
+		prodx = 240
 		prody = Height/1.5
 		prodw = Width/3.3
 		prodh = Height/3.3
@@ -1397,15 +1397,15 @@ Class cityscreen
 		'
 		'		
 		' Set up the food stock window window variables
-		foodsx = 100
-		foodsy = 100
+		foodsx = Width-160
+		foodsy = 20
 		foodsw = 150
 		foodsh = 200
 		foodcount = 10		
 
 		' fil in the variables of city resources (used and surples)
-		resourcex = 100
-		resourcey = 100
+		resourcex = 20
+		resourcey = 150
 		resourcew = 200
 		resourceh = 80
 		resourcecount = 10
@@ -1414,11 +1414,19 @@ Class cityscreen
 		resourcefoodsurpluscount = 4		
 
 		' Set up the population window variables
-		popx = 100
-		popy = 100
+		popx = 120
+		popy = 20
 		popw = 320
 		poph = 40
 		popcount = 4
+
+		' Set up the window production variables
+		prod2x = Width-180
+		prod2y = Height-220
+		prod2w = 150
+		prod2h = 200
+		prod2currentresourcescount = 4
+		prod2requiredresourcescount = 7
 		
 		
 	End Method
@@ -1443,6 +1451,12 @@ Class cityscreen
 		drawproduction(canvas)
 		drawgarrison(canvas)
 		drawcityinfo(canvas)
+		' new
+		drawfoodwindow(canvas)
+		drawresourcewindow(canvas)
+		drawproductionwindow(canvas)
+		drawpopulationwindow(canvas)
+		'
 		canvas.Color = Color.White
 		canvas.DrawText("Press Space to Exit",Width/2,Height-20,.5,.5)
 	End Method
@@ -1569,7 +1583,7 @@ Class cityscreen
 		canvas.DrawRect(prod2x,prod2y,prod2w,prod2h)
 		' Draw a title label
 		canvas.Color = Color.White
-		canvas.DrawText("Currently creating : ",prod2x,prod2y-15)
+		canvas.DrawText("Production Progress : ",prod2x,prod2y-15)
 		' Count how much space we must have between the resources
 		' images.
 		Local mx:Float=16,my:Float=16
