@@ -4,7 +4,7 @@
 Using std..
 Using mojo..
 
-Global version:String="v0.5"
+Global version:String="v0.6"
 'Texture quality
 Global texturequality:String="Low" 'High , Medium and Low
 ' Here is how many tiles there are drawn on the screen.
@@ -216,7 +216,12 @@ Class pathfinder
 	                    ' example: roads tile (5) in array cost 2
 	                    ' while forrest tile (8) in array cost 8
 	                    ' below it just adds the map int value and one (heightmap)
-	                    Local gg:Int = map[newx,newy]+1
+	                    Local gg:Int
+	                    If myworld.roadmap[newx,newy].hasroad = True
+		                    gg = 1
+		                else
+	                    	gg = map[newx,newy]+1
+	                    End If
 	                    Local hh:Int = distance(newx,newy,ex,ey)
 	                    Local ff:Int = gg+hh
 	                    ol.AddLast(New openlist(newx,newy,ff,gg,hh,tx,ty))
