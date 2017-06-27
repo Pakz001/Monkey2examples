@@ -3,7 +3,7 @@
 
 Using std..
 Using mojo..
-' resource window coordinates and variables
+' City resource window coordinates and variables
 Global resourcex:Int
 Global resourcey:Int
 Global resourcew:Int
@@ -36,7 +36,7 @@ Class MyWindow Extends Window
 		canvas.DrawText("Press Space or Press Left Mouse for Random food/resource count",0,0)
 		' Run the function that draws the city food
 		' overview window.
-		drawfooddisplay(canvas)
+		drawresourcewindow(canvas)
 		' If we press the space bar then make the food and resource count
 		' variables a random number
 		If Keyboard.KeyReleased(Key.Space) Or Mouse.ButtonReleased(MouseButton.Left) Then 
@@ -62,7 +62,7 @@ End	Class
 
 ' Based on the Civilization 1 city resources window
 '
-Function drawfooddisplay(canvas:Canvas)
+Function drawresourcewindow(canvas:Canvas)
 	'draw the white outline
 	canvas.Color = Color.White
 	canvas.DrawRect(resourcex-2,resourcey-2,resourcew+4,resourceh+4)
