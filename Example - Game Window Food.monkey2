@@ -4,6 +4,11 @@
 Using std..
 Using mojo..
 
+' How much food does the city have in it's stores....
+'
+'
+'
+
 '
 ' These are the variables for the city food window.
 ' x and y and w and height and the total count of food
@@ -41,7 +46,6 @@ Class MyWindow Extends Window
 			Else 'every other once in a while
 				foodcount=Rnd(1,500) 
 			End If		 	
-		 	Print foodcount
 		End If
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
@@ -74,17 +78,28 @@ Function drawfooddisplay(canvas:Canvas)
 		my -= .1
 		End If
 	Wend
+	'
+	' Drawing function (draw the food)
+	Local mydrawfood := Lambda:Void(x:Int,y:Int)
+		' Draw the food images
+		canvas.Color = Color.Grey
+		canvas.DrawCircle(x,y,8)		
+		canvas.Color = New Color(.2,.2,.2)
+		canvas.DrawCircle(x,y,7)
+		canvas.Color = Color.Red
+		canvas.DrawCircle(x,y,6)
+		canvas.Color = Color.Brown
+		canvas.DrawCircle(x,y,5)				
+		canvas.Color = New Color(.9,.7,.3)
+		canvas.DrawCircle(x-1,y-1,2)				
+	End Lambda
+	
 	' Draw the food images 
 	Local x:Float,y:Float
 	Local count:Int
 	Repeat
 		' Draw the food images
-		canvas.Color = Color.Black
-		canvas.DrawCircle(foodsx+x+8,foodsy+y+8,8)		
-		canvas.Color = Color.Red
-		canvas.DrawCircle(foodsx+x+8,foodsy+y+8,7)
-		canvas.Color = Color.Brown
-		canvas.DrawCircle(foodsx+x+8,foodsy+y+8,6)
+		mydrawfood(foodsx+x+8,foodsy+y+8)
 		' Left top down
 		y+=my
 		count+=1
