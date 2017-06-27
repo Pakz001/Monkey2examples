@@ -37,7 +37,7 @@ Class MyWindow Extends Window
 		canvas.DrawText("Press Space or Press Left Mouse for Random production.",0,0)
 		' Run the function that draws the city build
 		' overview window.
-		drawbuildresources(canvas)
+		drawproductionwindow(canvas)
 		' If we press the space bar then make the build resources
 		' variable a random number
 		If Keyboard.KeyReleased(Key.Space) Or Mouse.ButtonReleased(MouseButton.Left) Then 
@@ -61,7 +61,7 @@ End	Class
 ' Based on the Civilization 1 city build
 ' production window
 '
-Function drawbuildresources(canvas:Canvas)
+Function drawproductionwindow(canvas:Canvas)
 	'draw the white outline
 	canvas.Color = Color.White
 	canvas.DrawRect(prodx-2,prody-2,prodw+4,prodh+4)
