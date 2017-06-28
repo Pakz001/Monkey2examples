@@ -24,10 +24,10 @@ Class MyWindow Extends Window
 		resourcey = 100
 		resourcew = 200
 		resourceh = 80
-		resourcecount = 10
-		resourcesurpluscount = 4
-		resourcefoodcount = 20
-		resourcefoodsurpluscount = 4
+		resourcecount = 4
+		resourcesurpluscount = 1
+		resourcefoodcount = 4
+		resourcefoodsurpluscount = 1
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -114,13 +114,13 @@ Function drawresourcewindow(canvas:Canvas)
 		Local mx:Float=16	
 		Repeat
 			If tp = 0
-				If ( Float(resourcew-48)/mx) > resourcefoodcount+resourcefoodsurpluscount
+				If ( Float(resourcew-48)/mx) > (resourcefoodcount+resourcefoodsurpluscount)-1
 					Exit
 				Else
 					mx -= .1		
 				End If
 			Else 
-				If ( Float(resourcew-48)/mx) > resourcecount+resourcesurpluscount
+				If ( Float(resourcew-48)/mx) > (resourcecount+resourcesurpluscount)-1
 					Exit
 				Else
 					mx -= .1		
@@ -147,12 +147,14 @@ Function drawresourcewindow(canvas:Canvas)
 			End If
 			' If we drawn the food and resourses then draw the
 			' surplus
+			If tp = 1 And count+1 > resourcecount + resourcesurpluscount Then Exit
+			If tp = 0 And count+1 > resourcefoodcount + resourcefoodsurpluscount Then exit
 			If switch = False 
-				If tp = 0 And count > resourcefoodcount Then 
+				If tp = 0 And count > resourcefoodcount-1 Then 
 					x+=16
 					switch = True
 				End If
-				If tp = 1 And count > resourcecount
+				If tp = 1 And count > resourcecount-1
 					x+=16
 					switch = True
 				End If
