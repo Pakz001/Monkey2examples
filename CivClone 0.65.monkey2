@@ -25,8 +25,11 @@ Global currentcitybarracks:Bool
 Global currentcitywalls:Bool
 Global currentcitysize:Int
 Global currentcityname:String
+Global currentcityfoodstores:Int
 Global currentcityfood:Int
+Global currentcityfoodused:int
 Global currentcityresources:Int
+Global currentcityresourcesused:Int
 Global currentcityproduction:String
 Global currentcityproductiontime:Int
 Global currentcityharbor:Bool=False
@@ -1408,10 +1411,10 @@ Class cityscreen
 		resourcey = 150
 		resourcew = 200
 		resourceh = 80
-		resourcecount = 10
-		resourcesurpluscount = 4
-		resourcefoodcount = 20
-		resourcefoodsurpluscount = 4		
+		resourcecount = 1
+		resourcesurpluscount = 1
+		resourcefoodcount = 1
+		resourcefoodsurpluscount = 1
 
 		' Set up the population window variables
 		popx = 120
@@ -1428,6 +1431,23 @@ Class cityscreen
 		prod2currentresourcescount = 4
 		prod2requiredresourcescount = 7
 		
+		
+	End Method
+	' Refresh everything in the cityscreen (data)
+	Method refresh()
+		' for the population window get the population count
+		popcount = currentcitysize
+		' for the resource window
+		resourcesurpluscount =  currentcityresourcesused
+		resourcecount = currentcityresources - resourcesurpluscount		
+		resourcefoodsurpluscount = currentcityfoodused
+		resourcefoodcount = currentcityfood-currentcityfoodused
+		'
+		foodcount = currentcityfoodstores
+		'
+		mycityscreen.updatecitybuildlist()
+		mycityscreen.updategarrison()
+		mycityscreen.updateproduction()
 		
 	End Method
 	Method updatecitybuildlist()		
@@ -1559,10 +1579,10 @@ Class cityscreen
 			mydrawperson(popx+x+8,popy+y+8)
 			' Left top down
 			x+=mx
-			count+=1		
+			count+=1					
 			' if we are at the bottom then
 			' increase x and reset y
-			If x > Float(popw-16) Or count>popcount Then
+			If x > Float(popw-16) Or count+1>popcount Then
 				Exit
 			End If
 		Forever
@@ -1647,6 +1667,7 @@ Class cityscreen
 		canvas.Color = Color.White
 		canvas.DrawText("City Resources : ",resourcex,resourcey-15)
 		
+		
 		'Lambda functions below
 		
 		' Drawing function (draw the food)
@@ -1688,13 +1709,13 @@ Class cityscreen
 			Local mx:Float=16	
 			Repeat
 				If tp = 0
-					If ( Float(resourcew-48)/mx) > resourcefoodcount+resourcefoodsurpluscount
+					If ( Float(resourcew-48)/mx) > (resourcefoodcount+resourcefoodsurpluscount)-1
 						Exit
 					Else
 						mx -= .1		
 					End If
 				Else 
-					If ( Float(resourcew-48)/mx) > resourcecount+resourcesurpluscount
+					If ( Float(resourcew-48)/mx) > (resourcecount+resourcesurpluscount)-1
 						Exit
 					Else
 						mx -= .1		
@@ -1719,14 +1740,18 @@ Class cityscreen
 				If x > Float(resourcew-16) Then
 					Exit
 				End If
+				'exit if we drawn all
+				If tp = 1 And count+1 > resourcecount + resourcesurpluscount Then Exit
+				If tp = 0 And count+1 > resourcefoodcount + resourcefoodsurpluscount Then exit
+				
 				' If we drawn the food and resourses then draw the
 				' surplus
 				If switch = False 
-					If tp = 0 And count > resourcefoodcount Then 
+					If tp = 0 And count > resourcefoodcount-1 Then 
 						x+=16
 						switch = True
 					End If
-					If tp = 1 And count > resourcecount
+					If tp = 1 And count > resourcecount-1
 						x+=16
 						switch = True
 					End If
@@ -2086,12 +2111,16 @@ Class controls
 			currentcityfarms = mycitymethod.getcityfarmsat(currentcityx,currentcityy)
 			currentcitywalls = mycitymethod.getcitywallsat(currentcityx,currentcityy)			
 			currentcityfood = mycitymethod.getcityfoodat(currentcityx,currentcityy)
+			currentcityfoodused = mycitymethod.getcityfoodusedat(currentcityx,currentcityy)
 			currentcityresources = mycitymethod.getcityresourcesat(currentcityx,currentcityy)
 			currentcityharbor = mycitymethod.getcityharborsat(currentcityx,currentcityy)
 			currentcitycoastal = mycitymethod.getcitycoastal(currentcityx,currentcityy)
-			mycityscreen.updatecitybuildlist()
-			mycityscreen.updategarrison()
-			mycityscreen.updateproduction()
+			currentcityresourcesused = mycitymethod.getcityresourcesusedat(currentcityx,currentcityy)
+			currentcityfoodstores = mycitymethod.getcityfoodstoresat(currentcityx,currentcityy)
+			mycityscreen.refresh()
+'			mycityscreen.updatecitybuildlist()
+'			mycityscreen.updategarrison()
+'			mycityscreen.updateproduction()
 			cityscreenopen = True
 			mousedelay = 0
 			keydelay = 0			
@@ -2268,8 +2297,9 @@ Class city
 	Field mines:Int=2
 	Field walls:Bool=False
 	Field barracks:Bool=False
-	Field resources:Int=3
-	Field food:Int=5 'the amount of food in the city	
+	Field resources:Int
+	Field food:Int 'the amount of food increased per turn
+	Field foodstores:Int 'the amount of food in the city
 	Field deleteme:Bool=False
 	Field name:String
 	Field myproduction:Stack<production>
@@ -2283,6 +2313,10 @@ Class city
 		'myproduction.Add(new production())
 		Self.x = x
 		Self.y = y
+		'
+		resources = mines
+		foodstores = farms
+		food = 3 'starting food
 		' givbe the city a unique name
 		name = randomcityname()
 		' set the flag coastalcity
@@ -2389,30 +2423,31 @@ Class city
 				myproduction.Pop()
 			End If
 		End If		
+		
 		' increase food
-		food += farms
+		foodstores += farms
 		' increase resources
-		resources += mines
+		resources = mines
+		food = farms
 		' population cost
-		food -= size		
-		resources -= size
+		foodstores -= size
 		
 		'improvement costs
-		If walls = True Then resources-=1
-		If barracks = True Then resources-=1
+		'If walls = True Then resources-=1
+		'If barracks = True Then resources-=1
 		
 		' schrink city if shortages
-		If resources < 0 Or food < 0 Then 
+		If foodstores < 0 Then 
 			size -= 1 		
+			foodstores = 0
 			mygamemessage.pushmessage(name+" Decreased In Size.")
 		End If			
 		If size<1 Then size = 1
 		
 		'grow city in time of plenty
-		If food > 10 And resources > 10 Then 
+		If foodstores > size*8 Then 
 			mygamemessage.pushmessage(name+" Grew In Size")
-			food -= 4
-			resources -= 4
+			foodstores -= 4			
 			size+=1
 		End If
 		
@@ -2422,6 +2457,40 @@ End Class
 
 'city methods
 Class citymethod
+	' how much food is in the stores at x,y
+	Method getcityfoodstoresat:int(x:Int,y:int)
+		Local rval:Int
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y
+				rval = i.foodstores
+			End If
+		Next
+		Return rval
+	End Method
+	' how much food is used every turn
+	Method getcityfoodusedat:int(x:int,y:int)
+		Local rval:Int
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y
+				rval = i.size
+				Exit
+			End If
+		Next
+		Return rval
+	End Method
+	' returns the resources used in city at
+	Method getcityresourcesusedat:Int(x:Int,y:Int)
+		Local rval:Int=0
+		For Local i:=Eachin mycity
+			If i.x = x And i.y = y
+				If i.walls Then rval+=1
+				If i.barracks Then rval+=1
+				Exit
+			End If
+		Next
+		Return rval
+	End Method
+
 	' Return if the city is coastal.
 	Method getcitycoastal:bool(x:Int,y:int)
 		For Local i:=Eachin mycity
@@ -2476,7 +2545,7 @@ Class citymethod
 
 
 	' return bool if city at x,y has barracks
-	Method getcitybarracksat:bool(x:Int,y:Int)
+	Method getcitybarracksat:Bool(x:Int,y:Int)
 		For Local i:=Eachin mycity
 			If i.x = x And i.y = y
 				Return i.barracks
