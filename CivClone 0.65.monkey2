@@ -4,7 +4,7 @@
 Using std..
 Using mojo..
 
-Global version:String="v0.6"
+Global version:String="v0.65"
 'Texture quality
 Global texturequality:String="Low" 'High , Medium and Low
 ' Here is how many tiles there are drawn on the screen.
@@ -1454,11 +1454,11 @@ Class cityscreen
 	Method refresh()
 		' for the population window get the population count
 		popcount = currentcitysize
-		' for the resource window
-		resourcesurpluscount =  currentcityresourcesused
-		resourcecount = currentcityresources - resourcesurpluscount		
-		resourcefoodsurpluscount = currentcityfoodused
-		resourcefoodcount = currentcityfood-currentcityfoodused
+		' for the resource window				
+		resourcecount =  currentcityresourcesused
+		resourcesurpluscount = currentcityresources - currentcityresourcesused		
+		resourcefoodcount = currentcityfoodused
+		resourcefoodsurpluscount = currentcityfood - currentcityfoodused
 		'
 		foodcount = currentcityfoodstores
 		'
@@ -1768,8 +1768,7 @@ Class cityscreen
 		' tp = 0 - food
 		' tp = 1 - resource (goods ore ect.)
 		'	
-		Local drawresource:=Lambda:Void(tp:String)
-		
+		Local drawresource:=Lambda:Void(tp:String)						
 			' Count how much space we must have between the food 
 			' images. Store the step value in mx
 			Local mx:Float=16	
@@ -1807,21 +1806,28 @@ Class cityscreen
 					Exit
 				End If
 				'exit if we drawn all
-				If tp = 1 And count+1 > resourcecount + resourcesurpluscount Then Exit
+				
+				If tp = 1 And count+1 > resourcecount + resourcesurpluscount Then 					
+					Exit
+				End If
 				If tp = 0 And count+1 > resourcefoodcount + resourcefoodsurpluscount Then exit
 				
 				' If we drawn the food and resourses then draw the
 				' surplus
-				If switch = False 
+				If switch = False  And resourcefoodcount>0
 					If tp = 0 And count > resourcefoodcount-1 Then 
 						x+=16
 						switch = True
 					End If
+				End If
+				If switch = False  And resourcecount>0
 					If tp = 1 And count > resourcecount-1
 						x+=16
 						switch = True
 					End If
 				End If
+
+
 			Forever
 		End Lambda
 	
@@ -2631,7 +2637,7 @@ Class citymethod
 	Method getcityfoodat:Int(x:int,y:Int)
 		For Local i:=Eachin mycity
 			If i.x = x And i.y = y
-				Return i.food
+				Return i.farms
 			End If
 		Next
 		Return -1		
