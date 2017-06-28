@@ -40,6 +40,9 @@ Global currentcitycoastal:Bool=False
 ' the list of waiting units.
 Global mywaitweight:Int=0
 
+'
+Global mygotopressed:Bool=false
+
 'This variable is increased in the main loop
 'if a key is pressed and this value is >  0 then this 
 'variable is set to 0 again.
@@ -732,6 +735,7 @@ Class unituserinterface
 	Field bsx:Int,bsy:Int 'button S (Skip turn)
 	Field bex:Int,bey:Int 'button E (End turn)
 	Field bwx:Int,bwy:Int 'button W (Wait)	
+	Field bgx:Int,bgy:Int 'button G (Goto)
 	' Width and height of the interface buttons
 	Field bw:Int = 32
 	Field bh:Int = 32
@@ -758,6 +762,10 @@ Class unituserinterface
 		'button W (button wait x and y)
 		bwx = 100
 		bwy = 128
+		'button G (button goto x and y)
+		bgx = 132
+		bgy = 0
+		
 		
 		dockside("Left")
 		arrowimage = New Image(Width/10,Height/10)
@@ -867,7 +875,7 @@ Class unituserinterface
 				mousedelay = 0
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+45,y+100,Width/10,Height/10)
-				'Print "RightDown"+Millisecs()
+				'Print "RightDown"+Millisecs()				
 				myunitmethod.moveactiveunitto(dx+1,dy+1)
 				redrawgame()
 				mousedelay = 0
@@ -954,13 +962,21 @@ Class unituserinterface
 					myunitmethod.activateamovableunit()
 					
 				End If				
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bgx,y+bgy,bw,bh)					
+					If gamehasmovesleft
+						mousedelay = 0
+						'print "unit goto"
+						If mygotopressed = True Then mygotopressed = False Else mygotopressed = True					
+					End If
+				End If				
+
 			End If
 		End If 'end if docked is false
 	End Method
 	Method dockside(side:String)
 		Select side
 			Case "Right"
-				ix = Width-150
+				ix = Width-200
 				iy = Height-200
 				undockx = ix + 100
 				undocky = iy + 160
@@ -996,12 +1012,13 @@ Class unituserinterface
 			Local x:Int=ix
 			Local y:Int=iy
 			
-			drawunitbutton(canvas,x+brx,y+bry,"R")
-			drawunitbutton(canvas,x+bbx,y+bby,"B")
-			drawunitbutton(canvas,x+bfx,y+bfy,"F")
-			drawunitbutton(canvas,x+bsx,y+bsy,"S")
-			drawunitbutton(canvas,x+bex,y+bey,"E")			
-			drawunitbutton(canvas,x+bwx,y+bwy,"W")			
+			drawunitbutton(canvas,x+brx,y+bry,"R") 'the build road button
+			drawunitbutton(canvas,x+bbx,y+bby,"B") 'the build city button
+			drawunitbutton(canvas,x+bfx,y+bfy,"F") 'the fortify unit button
+			drawunitbutton(canvas,x+bsx,y+bsy,"S") 'the skip unit button
+			drawunitbutton(canvas,x+bex,y+bey,"E") 'the end turn button
+			drawunitbutton(canvas,x+bwx,y+bwy,"W") 'the unit wait button
+			drawunitbutton(canvas,x+bgx,y+bgy,"G") 'the unit Goto button
 			'draw the arrows
 			
 			drawarrow(canvas,x,y,"Up")
@@ -2062,9 +2079,29 @@ End Class
 
 ' Controls like mouse pressed and keyboard
 Class controls
+	' If the goto button was pressed
+	Method gotopressed()
+		If mygotopressed = True
+		If Mouse.ButtonReleased(MouseButton.Left)
+			Local x:Int=Mouse.X / myworld.tw
+			Local y:Int=Mouse.Y / myworld.th			
+			myunitmethod.unitactivefindpath(x,y)			
+			For Local i:=Eachin myunit
+				If i.active = True
+					i.pathmove()
+					redrawgame()					
+					Exit
+				End If
+			Next
+			mygotopressed = False			
+			mousedelay = 0
+		End If
+		End If
+	End Method
+
 	' Find path for unit and set him to go to path.
 	Method gotounit()
-		'todo : sea unit and land unit system
+		' Unit goto
 		If Keyboard.KeyReleased(Key.G)
 			Local x:Int=Mouse.X / myworld.tw
 			Local y:Int=Mouse.Y / myworld.th			
@@ -2076,6 +2113,7 @@ Class controls
 					Exit
 				End If
 			Next
+			keydelay = 0
 		End If
 	End Method
 	'Unit wait
@@ -4004,6 +4042,7 @@ Class MyWindow Extends Window
 		If Keyboard.KeyDown(Key.Key1) = False
 		If mousedelay > 12 And keydelay>12							
 		mycontrols.gotounit()		
+		mycontrols.gotopressed()
 		mycontrols.waitunit()
 		mycontrols.addunit(canvas,Width,Height)
 		mycontrols.moveunit(canvas,Width,Height)
@@ -4116,8 +4155,7 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 		For Local i:=Eachin mycity
 			If i.deleteme = True Then mycity.Remove(i)
 		Next	
-
-
+		
 		'the arrows to move the player with
 		If cityscreenopen = False
 		If myunitview.active = False			
@@ -4126,7 +4164,7 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 '			myunituserinterface.draw(canvas)
 		End If
 		End If
-
+	
 
 		' Lower screen info
 		rec = New Recti<Int>
@@ -4160,6 +4198,16 @@ Function updatemapingame(canvas:Canvas,Width:Int,Height:int)
 		canvas.DrawRect(500,Height-20,200,20)
 		canvas.Color = New Color(1,1,1)
 		canvas.DrawText("Hold 1 for help.",500,Height-15)
+
+
+		'if unit goto was pressed then draw some info at the mouse pointer
+		If mygotopressed = True
+			canvas.Color = New Color(0,0,0)
+			canvas.DrawRect(300,Height-40,200,20)
+			canvas.Color = New Color(1,1,1)
+			canvas.DrawText("Select Destination :",300,Height-40)
+		End If
+
 
 		canvas.DrawText(App.FPS,0,0)
 		
