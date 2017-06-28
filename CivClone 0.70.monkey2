@@ -9,8 +9,8 @@ Global version:String="v0.70"
 Global texturequality:String="Low" 'High , Medium and Low
 ' Here is how many tiles there are drawn on the screen.
 ' Currently tested from 16x16 up to 32x32
-Global mystartmapwidth:Int=20
-Global mystartmapheight:Int=20
+Global mystartmapwidth:Int=32
+Global mystartmapheight:Int=32
 
 Global blinkspeed:Int=5 ' lower is faster
 Global turn:Int=1
@@ -910,12 +910,12 @@ Class unituserinterface
 							x = i.x
 							y = i.y
 							i.deleteme = True
+							mycity.Add(New city(x,y))
+							myworld.updatedrawroads(myworld.roadcanvas)					
+							myunitmethod.activateamovableunit()												
 							Exit
 						End If
 					Next					
-					mycity.Add(New city(x,y))
-					myworld.updatedrawroads(myworld.roadcanvas)					
-					myunitmethod.activateamovableunit()					
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bfx,y+bfy,bw,bh)
 					mousedelay = 0
@@ -2321,12 +2321,12 @@ Class controls
 					x = i.x
 					y = i.y
 					i.deleteme = True
+					mycity.Add(New city(x,y))
+					myworld.updatedrawroads(myworld.roadcanvas)			
+					myunitmethod.activateamovableunit()					
 					Exit
 				End If
 			Next			
-			mycity.Add(New city(x,y))
-			myworld.updatedrawroads(myworld.roadcanvas)			
-			myunitmethod.activateamovableunit()
 		End If
 	End Method
 	' add a unit to the map (cheat)
