@@ -710,7 +710,7 @@ Class greybackground
         Next
         Next    
         canvas.Flush()
-    End Method
+    End Method    
     Method distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
         Return Abs(x2-x1)+Abs(y2-y1)
     End Method    
@@ -1522,13 +1522,28 @@ Class cityscreen
 	'
 	' Based on the Civilization 1 population window
 	'
-	method drawpopulationwindow(canvas:Canvas)
+	Method drawpopulationwindow(canvas:Canvas)
 		'draw the white outline
 		canvas.Color = Color.White
 		canvas.DrawRect(popx-2,popy-2,popw+4,poph+4)
-		'Draw the black screen
+'		
+'		'Draw the black screen
 		canvas.Color = Color.Black
 		canvas.DrawRect(popx,popy,popw,poph)
+		'Texure it
+		Local rec := New Recti<Int>
+		rec.X = popx
+		rec.Y = popy
+		rec.Size = New Vec2i(popw,poph)
+		canvas.Scissor = rec
+		canvas.Color = New Color(.4,.4,.4)
+		canvas.DrawImage(mygreybackground.greyimage,0,0)
+		rec = New Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)
+		canvas.Scissor = rec
+		
 		' Draw a title label
 		canvas.Color = Color.White
 		canvas.DrawText("Population : ",popx,popy-15)
@@ -1615,9 +1630,27 @@ Class cityscreen
 		'draw the white outline
 		canvas.Color = Color.White
 		canvas.DrawRect(prod2x-2,prod2y-2,prod2w+4,prod2h+4)
+		
+		
 		'Draw the black screen
 		canvas.Color = Color.Black
 		canvas.DrawRect(prod2x,prod2y,prod2w,prod2h)
+
+		'Texure it
+		Local rec := New Recti<Int>
+		rec.X = prod2x
+		rec.Y = prod2y
+		rec.Size = New Vec2i(prod2w,prod2h)
+		canvas.Scissor = rec
+		canvas.Color = New Color(.4,.4,.4)
+		canvas.DrawImage(mygreybackground.greyimage,0,0)
+		rec = New Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)
+		canvas.Scissor = rec
+		
+		
 		' Draw a title label
 		canvas.Color = Color.White
 		canvas.DrawText("Production Progress : ",prod2x,prod2y-15)
@@ -1680,6 +1713,22 @@ Class cityscreen
 		'Draw the black screen
 		canvas.Color = Color.Black
 		canvas.DrawRect(resourcex,resourcey,resourcew,resourceh)
+
+		'Texure it
+		Local rec := New Recti<Int>
+		rec.X = resourcex
+		rec.Y = resourcey
+		rec.Size = New Vec2i(resourcew,resourceh)
+		canvas.Scissor = rec
+		canvas.Color = New Color(.4,.4,.4)
+		canvas.DrawImage(mygreybackground.greyimage,0,0)
+		rec = New Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)
+		canvas.Scissor = rec
+
+
 		' Draw a title label
 		canvas.Color = Color.White
 		canvas.DrawText("City Resources : ",resourcex,resourcey-15)
@@ -1796,10 +1845,26 @@ Class cityscreen
 		'draw the white outline
 		canvas.Color = Color.White
 		canvas.DrawRect(foodsx-2,foodsy-2,foodsw+4,foodsh+4)
-		'Draw the black screen
+'		'Draw the black screen
 		canvas.Color = Color.Black
 		canvas.DrawRect(foodsx,foodsy,foodsw,foodsh)
-		' Draw a title label
+
+		'Texure it
+		Local rec := New Recti<Int>
+		rec.X = foodsx
+		rec.Y = foodsy
+		rec.Size = New Vec2i(foodsw,foodsh)
+		canvas.Scissor = rec
+		canvas.Color = New Color(.4,.4,.4)
+		canvas.DrawImage(mygreybackground.greyimage,0,0)
+		rec = New Recti<Int>
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(Width,Height)
+		canvas.Scissor = rec
+
+		
+'		' Draw a title label
 		canvas.Color = Color.White
 		canvas.DrawText("Food in City : ",foodsx,foodsy-15)
 		' Count how much space we must have between the food 
