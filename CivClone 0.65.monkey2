@@ -3588,13 +3588,13 @@ Class world
 	Field sw:Int,sh:Int
 	Field mw:Int,mh:Int
 	Method New(sw:Int,sh:Int,mw:Int,mh:Int)
-		image=New Image( sw,sh)
+		image=New Image( sw,sh,TextureFlags.Dynamic)
 		image.Handle=New Vec2f( 0,0 )
 		icanvas=New Canvas( image )
-		roadimage = New Image(sw,sh)
+		roadimage = New Image(sw,sh,TextureFlags.Dynamic)
 		roadimage.Handle=New Vec2f( 0,0 )
 		roadcanvas = New Canvas(roadimage)
-		fogimage = New Image(sw,sh)
+		fogimage = New Image(sw,sh,TextureFlags.Dynamic)
 		fogimage.Handle=New Vec2f( 0,0 )
 		fogcanvas = New Canvas(fogimage)
 
