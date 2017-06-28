@@ -2735,26 +2735,37 @@ Class citymethod
 		Return False
 	End Method
 	Method drawcity(canvas:Canvas,mx:Int,my:Int,tw:int,th:int,size:int,name:string)
-		
+		'base graphics
 		canvas.Color = New Color(1,0,0)
 		canvas.DrawRect(mx,my,tw,th)
 		canvas.Color = New Color(1,1,1)
 		canvas.DrawRect(mx+4,my+4,tw-8,th-8)
+		' some additions
+		canvas.Color = New Color(.5,.5,.5,.5)
+		canvas.DrawRect(mx+tw/2-tw/6,my,tw/3,th-3)
+
+		'text
 		canvas.Color = New Color(0,0,0)
 		canvas.DrawText(size,mx+tw/2,my+th/2,.5,.5)		
 		canvas.Color = New Color(0,0,0)
 		canvas.DrawText(name,(mx+tw/2),(my),0.5,.8)
 		canvas.Color = New Color(1,1,1)
 		canvas.DrawText(name,(mx+tw/2)+1,(my)+1.2,0.5,.8)		
+		
+		' highlight
+		canvas.Color = New Color(1,1,1,.5)
+		canvas.DrawRect(mx+1,my+1,2,myworld.th-2)'lefttop leftbnottom
+		canvas.DrawRect(mx+1,my+myworld.th-3,myworld.tw-2,2) 'leftbottom,rightbottom
+		canvas.Color = New Color(0,0,0,.5)
+		canvas.DrawRect(mx+1,my+1,myworld.tw-2,2) 'lefttop,righttop
+		canvas.DrawRect(mx+myworld.tw-2,my+1,2,myworld.th-2)'righttop rightnottom
 
 		'border around city
 		canvas.Color = New Color(0,0,0)
 		canvas.DrawLine(mx,my,mx+myworld.tw,my)
+		canvas.DrawLine(mx,my,mx,my+myworld.th)
 		canvas.DrawLine(mx+myworld.tw,my,mx+myworld.tw,my+myworld.th)
-		canvas.Color = New Color(.8,.8,.8)
-		canvas.DrawLine(mx+1,my+myworld.th-1,mx+myworld.tw-1,my+myworld.th-1)
-		canvas.DrawLine(mx+myworld.tw-1,my+1,mx+myworld.tw-1,my+myworld.th-1)
-
+		canvas.DrawLine(mx,my+myworld.th,mx+myworld.tw,my+myworld.th)
 	End Method	
 End Class
 
