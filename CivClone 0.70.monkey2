@@ -2735,6 +2735,7 @@ Class citymethod
 		Return False
 	End Method
 	Method drawcity(canvas:Canvas,mx:Int,my:Int,tw:int,th:int,size:int,name:string)
+		
 		canvas.Color = New Color(1,0,0)
 		canvas.DrawRect(mx,my,tw,th)
 		canvas.Color = New Color(1,1,1)
@@ -2745,6 +2746,15 @@ Class citymethod
 		canvas.DrawText(name,(mx+tw/2),(my),0.5,.8)
 		canvas.Color = New Color(1,1,1)
 		canvas.DrawText(name,(mx+tw/2)+1,(my)+1.2,0.5,.8)		
+
+		'border around city
+		canvas.Color = New Color(0,0,0)
+		canvas.DrawLine(mx,my,mx+myworld.tw,my)
+		canvas.DrawLine(mx+myworld.tw,my,mx+myworld.tw,my+myworld.th)
+		canvas.Color = New Color(.8,.8,.8)
+		canvas.DrawLine(mx+1,my+myworld.th-1,mx+myworld.tw-1,my+myworld.th-1)
+		canvas.DrawLine(mx+myworld.tw-1,my+1,mx+myworld.tw-1,my+myworld.th-1)
+
 	End Method	
 End Class
 
@@ -3520,13 +3530,19 @@ Class unit
 			rec.Y = my
 			rec.Size = New Vec2i(myworld.tw,myworld.th)
 			canvas.Scissor = rec
-			
+			'border around unit
+			canvas.Color = New Color(0,0,0)
+			canvas.DrawRect(mx,my,myworld.tw,myworld.th)
+			canvas.Color = New Color(.8,.8,.8)
+			canvas.DrawLine(mx+1,my+myworld.th-1,mx+myworld.tw-1,my+myworld.th-1)
+			canvas.DrawLine(mx+myworld.tw-1,my+1,mx+myworld.tw-1,my+myworld.th-1)
 			If name="Settlers" Then 	
 			canvas.Color = New Color(1,1,1)
 			Else
 			canvas.Color = New Color(.5,.5,.5)
 			End If
-			canvas.DrawRect(mx,my,myworld.tw,myworld.th)
+			canvas.DrawRect(mx+1,my+1,myworld.tw-2,myworld.th-2)
+			
 			'
 			If movesleft <= .3 or fortify=true
 				canvas.Color = New Color(.5,.5,.5)				
@@ -4397,7 +4413,8 @@ Function redrawgame()
 
 End Function
 
-Function startnewgame(Width:Int,Height:int,seed:Double)		
+Function startnewgame(Width:Int,Height:int,seed:Double)	
+	turn = 0 'set turn count to zero.	
 	SeedRnd(seed)	
 	myunit = New List<unit>		
 	mycity = New List<city>	
