@@ -1568,7 +1568,7 @@ Class cityscreen
 		
 		' Draw a title label
 		canvas.Color = Color.White
-		canvas.DrawText("Population : ",popx,popy-15)
+		canvas.DrawText("Population :  (Growth in : "+turnstocitygrowth+" turns)",popx,popy-15)
 		' Count how much space we must have between the people
 		' images.
 		Local mx:Float=16,my:Float=16
