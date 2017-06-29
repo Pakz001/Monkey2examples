@@ -9,8 +9,8 @@ Global version:String="v0.70"
 Global texturequality:String="Low" 'High , Medium and Low
 ' Here is how many tiles there are drawn on the screen.
 ' Currently tested from 16x16 up to 32x32
-Global mystartmapwidth:Int=32
-Global mystartmapheight:Int=32
+Global mystartmapwidth:Int=20
+Global mystartmapheight:Int=20
 
 Global blinkspeed:Int=5 ' lower is faster
 Global turn:Int=1
@@ -911,7 +911,8 @@ Class unituserinterface
 							y = i.y
 							i.deleteme = True
 							mycity.Add(New city(x,y))
-							myworld.updatedrawroads(myworld.roadcanvas)					
+							myworld.updatedrawroads(myworld.roadcanvas)	
+							myworld.updatedrawcityborders(myworld.bordercanvas)				
 							myunitmethod.activateamovableunit()												
 							Exit
 						End If
@@ -2322,7 +2323,8 @@ Class controls
 					y = i.y
 					i.deleteme = True
 					mycity.Add(New city(x,y))
-					myworld.updatedrawroads(myworld.roadcanvas)			
+					myworld.updatedrawroads(myworld.roadcanvas)	
+					myworld.updatedrawcityborders(myworld.bordercanvas)		
 					myunitmethod.activateamovableunit()					
 					Exit
 				End If
@@ -2771,7 +2773,7 @@ End Class
 
 ' Methods to modify units
 Class unitmethod
-	'boo
+	
 	Method disablepathingunitat(x:Int,y:int)
 				
 		For Local i:=Eachin myunit
@@ -3762,12 +3764,16 @@ Class tile
 End Class
 
 Class world
-	Field image:Image
-	Field icanvas:Canvas
-	Field roadimage:Image	
-	Field roadcanvas:Canvas
-	Field fogimage:Image
+	Field image:Image 'this image holds the bare map
+	Field icanvas:Canvas 'canvas for the bare map
+	Field roadimage:Image	' contains the roads
+	Field roadcanvas:Canvas ' canvas for the roadimage
+	Field fogimage:Image 'contains the fog
 	Field fogcanvas:Canvas
+	Field borderimage:Image 'holds the city borders
+	Field bordercanvas:Canvas
+	Field cityzoneimage:Image
+	Field cityzonecanvas:Canvas
 	Class roadconnection
 		Field hasroad:Bool = False
 		Field n:Bool=False,ne:Bool=False
@@ -3788,11 +3794,18 @@ Class world
 	End Class
 	Field roadmap:roadconnection[,] = New roadconnection[1,1]
 	Field map:Int[,] = New Int[1,1]
-	Field fogmap:Bool[,] = New bool[1,1]
+	Field fogmap:Bool[,] = New Bool[1,1]
 	Field tw:Float,th:Float
 	Field sw:Int,sh:Int
 	Field mw:Int,mh:Int
 	Method New(sw:Int,sh:Int,mw:Int,mh:Int)
+		Self.mw = mw
+		Self.mh = mh
+		Self.sw = sw
+		Self.sh = sh
+		tw = Float(sw)/Float(mw)
+		th = Float(sh)/Float(mh)
+
 		image=New Image( sw,sh,TextureFlags.Dynamic)
 		image.Handle=New Vec2f( 0,0 )
 		icanvas=New Canvas( image )
@@ -3802,13 +3815,13 @@ Class world
 		fogimage = New Image(sw,sh,TextureFlags.Dynamic)
 		fogimage.Handle=New Vec2f( 0,0 )
 		fogcanvas = New Canvas(fogimage)
+		borderimage = New Image(sw,sh,TextureFlags.Dynamic)
+		borderimage.Handle=New Vec2f( 0,0 )
+		bordercanvas = New Canvas(borderimage)
+		cityzoneimage = New Image(tw*5,th*5,TextureFlags.Dynamic)
+		cityzoneimage.Handle=New Vec2f( 0,0 )
+		cityzonecanvas = New Canvas(cityzoneimage)
 
-		Self.mw = mw
-		Self.mh = mh
-		Self.sw = sw
-		Self.sh = sh
-		tw = Float(sw)/Float(mw)
-		th = Float(sh)/Float(mh)
 		map = New Int[mw,mh]
 		roadmap = New roadconnection[mw,mh]
 		For Local my:=0 Until mh
@@ -3822,7 +3835,69 @@ Class world
 			fogmap[x,y] = True
 		Next
 		Next
+
+		'prepare the city zone image
+		makecityzoneimage()		
+		' draw the map
 		makemap()
+	End Method
+	'
+	'Here we make the image that we draw on the city zone buffer
+	' every city will have a zone ontop of it.
+	Method makecityzoneimage()
+		'Make the canvas transparent
+		cityzonecanvas.Clear(New Color(0,0,0,0))
+
+		' Draw the first pass (diagonal lines)
+		Local rec:Recti<Int>
+		rec.X = tw
+		rec.Y = 0
+		rec.Size = New Vec2i(tw*3,th*5)
+		cityzonecanvas.Scissor = rec				
+		
+		cityzonecanvas.Color = New Color(.1,.1,0,.3)
+		For Local x:=-50 To cityzoneimage.Width Step 10
+			cityzonecanvas.DrawLine(x,0,x+tw,cityzoneimage.Height)
+			cityzonecanvas.DrawLine(x+1,0,x+tw+1,cityzoneimage.Height)
+			cityzonecanvas.DrawLine(x+2,0,x+tw+2,cityzoneimage.Height)
+		Next
+'		' Draw the second pass (diagonal lines)
+		rec.X = 0
+		rec.Y = th
+		rec.Size = New Vec2i(tw*5,th*3)
+		cityzonecanvas.Scissor = rec		
+		
+		cityzonecanvas.Color = New Color(.1,.1,0,.3)
+		For Local x:=-50 To cityzoneimage.Width Step 10
+			cityzonecanvas.DrawLine(x,0,x+tw,cityzoneimage.Height)
+			cityzonecanvas.DrawLine(x+1,0,x+tw+1,cityzoneimage.Height)
+			cityzonecanvas.DrawLine(x+2,0,x+tw+2,cityzoneimage.Height)
+		Next
+		
+		'lighter borders
+		rec.X = 0
+		rec.Y = 0
+		rec.Size = New Vec2i(cityzoneimage.Width,cityzoneimage.Height)		
+		cityzonecanvas.Scissor = rec		
+		
+		cityzonecanvas.Color = New Color(1,0,0,.7)
+		cityzonecanvas.DrawLine(tw,0,tw*4,0) 'top
+		cityzonecanvas.DrawLine(tw,th*5-1,tw*4,th*5-1) 'bottom
+		cityzonecanvas.DrawLine(0,th,0,th*4) '' left
+		cityzonecanvas.DrawLine(tw*5-1,th,tw*5-1,th*4) '' right
+		'
+		cityzonecanvas.DrawLine(tw,0,tw,th) 'left top
+		cityzonecanvas.DrawLine(0,th,tw,th)
+		cityzonecanvas.DrawLine(tw*4,0,tw*4,th) 'right top
+		cityzonecanvas.DrawLine(tw*4,th,tw*5,th)
+		cityzonecanvas.DrawLine(0,th*4,tw,th*4) 'left bottom
+		cityzonecanvas.DrawLine(tw,th*4,tw,th*5)
+		cityzonecanvas.DrawLine(tw*4,th*4,tw*5,th*4) 'right bottom
+		cityzonecanvas.DrawLine(tw*4,th*4,tw*4,th*5)
+		
+				
+		cityzonecanvas.Flush()		
+		
 	End Method
 	Method makemap()
 		Local eloop:Bool=False		
@@ -3849,11 +3924,12 @@ Class world
 	Method draw(canvas:Canvas)
 		canvas.DrawImage(image,0,0)
 		canvas.DrawImage(roadimage,0,0)
+		canvas.DrawImage(borderimage,0,0)
 		canvas.DrawImage(fogimage,0,0)
 	End Method
 '	Method drawroads(canvas:Canvas)
 '		canvas.DrawImage(image
-'	End Method
+'	End Method	
 	Method updatedraw(canvas:Canvas)				
 		canvas.Clear(Color.Black)
 		For Local y:Float=0 Until mh-1 Step 1
@@ -3897,6 +3973,18 @@ Class world
 		Next		
 		canvas.Flush()		
 	End Method
+	Method updatedrawcityborders(canvas:Canvas)
+		canvas.Clear(New Color(0,0,0,0))		
+		canvas.Color = Color.Yellow		
+		
+		For Local i:=Eachin mycity						
+			canvas.DrawImage(cityzoneimage,(i.x*tw)-tw*2,(i.y*th)-th*2)
+		Next		
+					
+		canvas.Flush()
+	End Method
+	'
+	' This updates the image containing the fog
 	Method updatedrawfog(canvas:Canvas)
 		canvas.Clear(New Color(0,0,0,0))		
 		canvas.Color = Color.Black
@@ -3906,7 +3994,7 @@ Class world
 			Local y2:Float=y*th
 			If fogmap[x,y] = True Then
 				canvas.DrawRect(x2,y2,tw,th)
-			end If			
+			End If			
 		Next
 		Next		
 		canvas.Flush()
@@ -4418,9 +4506,12 @@ Function redrawgame()
 	myworld.updatedrawlandedge(myworld.icanvas)
 	'myworld.updatedrawroads(myworld.roadcanvas)	
 
+	'myworld.updatedrawcityborders(myworld.bordercanvas)
 	myworld.updatedrawfog(myworld.fogcanvas)
 
 	myworld.updatedrawfogedge(myworld.fogcanvas)
+	
+	
 
 End Function
 
@@ -4455,6 +4546,7 @@ Function startnewgame(Width:Int,Height:int,seed:Double)
 	findunitstartingposition()
 	
 	redrawgame()
+	myworld.updatedrawcityborders(myworld.bordercanvas)
 	myworld.updatedrawroads(myworld.roadcanvas)
 End Function
 
