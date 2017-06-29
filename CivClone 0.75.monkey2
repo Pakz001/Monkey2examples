@@ -2159,6 +2159,15 @@ Class cityscreen
 		canvas.DrawImage(myworld.fogimage,offsetx,offsety)
 		' Draw the city.
 		mycitymethod.drawcity(canvas,citymapx+2*myworld.tw,citymapy+2*myworld.th,myworld.tw,myworld.th,currentcitysize,currentcityname)
+		' Draw black area on city area not part of city. (non city zones)
+		canvas.Color = Color.Black
+		'left
+		canvas.DrawRect(citymapx,citymapy,tw,th)
+		canvas.DrawRect(citymapx,citymapy+th*4,tw,th)
+		'right
+		canvas.DrawRect(citymapx+tw*4,citymapy,tw,th)
+		canvas.DrawRect(citymapx+tw*4,citymapy+th*4,tw,th)
+		
 		
 		'Restore scissor area
 		rec = New Recti<Int>
