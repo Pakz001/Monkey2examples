@@ -1342,11 +1342,15 @@ Class cityscreen
 	' These are the variables for the city food window.
 	' x and y and w and height and the total count of food
 	'
+	' foodcount is the total amount of food in the city
+	' the x,y,w,h are window coordinates (stores)
 	Field foodsx:Int
 	Field foodsy:Int
 	Field foodsw:Int
 	Field foodsh:Int
 	Field foodcount:Int	
+	Field foodincitygrowcount:int
+	Field turnstocitygrowth:int
 	'
 	' City resource window coordinates and variables
 	Field resourcex:Int
@@ -1460,8 +1464,25 @@ Class cityscreen
 		resourcesurpluscount = currentcityresources - currentcityresourcesused		
 		resourcefoodcount = currentcityfoodused
 		resourcefoodsurpluscount = currentcityfood - currentcityfoodused
-		'
+		' set how much food we have in the city
+		' and the amount needed for the city to grow.
+		
 		foodcount = currentcityfoodstores
+		foodincitygrowcount = currentcitysize*8
+		
+		' calculate how many turns it takes before the city
+		' grows. enough food.
+		' if foodsurplus is 0 then 999 turns
+		If resourcefoodsurpluscount = 0 And currentcitysize>0 Then
+			turnstocitygrowth = 999
+		Else
+			Local count:Int=foodcount
+			Repeat
+				count += resourcefoodsurpluscount
+				turnstocitygrowth += 1
+				If count > foodincitygrowcount Then Exit				
+			Forever
+		End If
 		'
 		mycityscreen.updatecitybuildlist()
 		mycityscreen.updategarrison()
