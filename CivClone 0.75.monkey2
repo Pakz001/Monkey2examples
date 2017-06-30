@@ -1148,6 +1148,9 @@ Class unituserinterface
 
 End Class
 
+'
+' Here are some methods for use with the cities
+'
 Class citycontrols
 		'Here we update the production window
 		Method productionupdate()
@@ -1208,10 +1211,27 @@ Class citycontrols
 							Next
 							If myselt = True 'if we have selected a unit to be build
 								mousedelay=0
-								mycityscreen.myproduction.Push(New cityscreen.production(myseltname,4))						
+								Local resneeded:Int'how many resources does it cost
+								Select myseltname
+									Case "Settlers"
+										resneeded = 5
+									Case "City Walls"
+										resneeded = 20
+									Case "Farm"
+										resneeded = 7
+									Case "Mine"
+										resneeded = 10
+									Case "Sea Unit"
+										resneeded = 5
+									Case "Barracks"
+										resneeded = 12
+									Case "Expand City"
+										resneeded = 20
+								End Select								
+								mycityscreen.myproduction.Push(New cityscreen.production(myseltname,resneeded,0))						
 								For Local i:=Eachin mycity
-									If i.x = currentcityx And i.y = currentcityy
-										i.myproduction.Push(New city.production(myseltname))									
+									If i.x = currentcityx And i.y = currentcityy										
+										i.myproduction.Push(New city.production(myseltname,resneeded,0))
 									End If
 								Next
 								mycityscreen.unitprodscreen = False
@@ -1304,10 +1324,14 @@ Class cityscreen
 	' What is the city building
 	Class production
 		Field name:String="Settler"
-		Field turns:Int=4		
-		Method New(name:String,turns:Int)
+		Field turns:Int=4	'depricated
+		Field resourcesneeded:Int
+		Field resourcescurrent:Int
+		Method New(name:String,resourcesneeded:Int,resourcescurrent:Int)
 			Self.name=name
-			Self.turns = turns
+			'Self.turns = turns
+			Self.resourcesneeded = resourcesneeded
+			Self.resourcescurrent = resourcescurrent
 		End Method
 	End Class
 	Field myproduction:Stack<production>
@@ -1371,7 +1395,7 @@ Class cityscreen
 	Field prod2w:Int
 	Field prod2h:Int
 	Field prod2currentresourcescount:Int
-	field prod2requiredresourcescount:Int
+	Field prod2requiredresourcescount:Int
 
 	'
 	' These are the variables for the city population window.
@@ -1382,7 +1406,7 @@ Class cityscreen
 	Field popy:Int
 	Field popw:Int
 	Field poph:Int
-	field popcount:Int
+	Field popcount:Int
 
 	'
 	' This is where we set up the variables for the
@@ -1523,7 +1547,7 @@ Class cityscreen
 				If count > foodincitygrowcount Then Exit				
 			Forever
 		End If
-'		'boo		
+	
 '		Print "foodcount : "+currentcityfoodstores+" turnstocitygroth : "+turnstocitygrowth
 '		Print "resourcefoodsurpluscount: "+resourcefoodsurpluscount
 '		Print "my calced food peak: "+foodincitygrowcount
@@ -1537,9 +1561,23 @@ Class cityscreen
 		mycityscreen.updatecitybuildlist()
 		mycityscreen.updategarrison()
 		mycityscreen.updateproduction()
+		mycityscreen.updateproductionwindow()
 		mycityscreen.updateimprovements()
+		mycityscreen.updateproduction()
 		
 	End Method
+	' Here we update the production window
+	Method updateproductionwindow()
+		If myproduction.Length = 0 Then 
+			prod2currentresourcescount = 0
+			prod2requiredresourcescount = 0
+			Return
+		End If
+		prod2currentresourcescount = myproduction.Top.resourcescurrent
+		prod2requiredresourcescount = myproduction.Top.resourcesneeded				
+	End Method
+	'
+	
 	' Here we clear and recreate the list of the city improvements
 	' window with it's contents.
 	Method updateimprovements()	
@@ -1590,13 +1628,14 @@ Class cityscreen
 		canvas.Color = Color.White
 		canvas.DrawText("Press Space to Exit",Width/2,Height-20,.5,.5)
 	End Method
-	Method updateproduction()		
+	' copy the production list from the city to the city screen
+	Method updateproduction()
 		myproduction = New Stack<production>
 		For Local i:=Eachin mycity
 			If i.x = currentcityx And i.y = currentcityy
 				If i.myproduction.Length
 					For Local i2:= Eachin i.myproduction
-						myproduction.Push(New production(i2.name,i2.turns))						
+						myproduction.Push(New production(i2.name,i2.resourcesneeded,i2.resourcescurrent))						
 					Next
 				End If
 			End If
@@ -1776,6 +1815,9 @@ Class cityscreen
 		' Draw the food images 
 		Local x:Float,y:Float
 		Local count:Int
+		' if we have nothing to do then exit the method
+		If prod2currentresourcescount = 0 Then Return
+		' draw everything		
 		Repeat
 			' Draw the resources images
 			mydrawresource(prod2x+x+8,prod2y+y+8)
@@ -2260,7 +2302,20 @@ Class cityscreen
 		If myproduction.Length > 0
 		canvas.DrawText("Current Production :",prodx+10,prody+10)
 		canvas.DrawText(myproduction.Top.name,prodx+10,prody+30)
-		canvas.DrawText(myproduction.Top.turns+" Turns Left",prodx+10,prody+50)
+		Local turnsleft:Int=0
+		Local a:Int=myproduction.Top.resourcescurrent
+		Local b:Int=myproduction.Top.resourcesneeded
+		If resourcesurpluscount = 0
+			turnsleft = 999
+			Else
+			Repeat
+				a += resourcesurpluscount
+				turnsleft += 1
+				If a>b Then Exit
+			Forever	
+		End If		
+		'boo
+		canvas.DrawText(turnsleft+" Turns Left",prodx+10,prody+50)
 		End If
 		canvas.DrawText("Click to add",prodx+10,prody+70)
 		
@@ -2606,12 +2661,20 @@ Class controls
 	End Method
 End Class
 
+
+'
+' This class holds a city that is used in the game
+'
 Class city
 	Class production
 		Field name:String="Settlers"
 		Field turns:Int=4
-		Method New(name:String="Settlers")
+		Field resourcesneeded:Int
+		Field resourcescurrent:Int
+		Method New(name:String="Settlers",resourcesneeded:Int,resourcescurrent:Int)
 			Self.name=name
+			Self.resourcesneeded = resourcesneeded
+			Self.resourcescurrent = resourcescurrent
 		End Method		
 	End Class
 	Field x:Int
@@ -2619,6 +2682,7 @@ Class city
 	Field size:Int=1	
 	Field farms:Int=2
 	Field mines:Int=2
+	Field resourcessurplus:int
 	Field walls:Bool=False
 	Field barracks:Bool=False
 	Field resources:Int
@@ -2710,11 +2774,16 @@ Class city
 		mycitymethod.drawcity(canvas,mx,my,tw,th,size,name)
 	End Method
 	Method turnend()
-				
+		'calculate resources surplus
+		resourcessurplus = mines
+		If barracks Then resourcessurplus-=1
+		If walls Then resourcessurplus-=1
+
 		'see if we can create anything
-		If myproduction.Length
-			myproduction.Top.turns-=1
-			If myproduction.Top.turns=0
+		If myproduction.Length			
+			myproduction.Top.resourcescurrent += resourcessurplus
+			'myproduction.Top.turns-=1
+			If myproduction.Top.resourcescurrent > myproduction.Top.resourcesneeded
 				Select myproduction.Top.name
 					Case "Sea Unit"
 						mycontrols.addseaunitat(x,y)
@@ -2767,7 +2836,6 @@ Class city
 			mygamemessage.pushmessage(name+" Decreased In Size.")
 		End If			
 		If size<1 Then size = 1
-		'boo
 		'grow city in time of plenty
 		If foodstores > size*8 Then 
 			mygamemessage.pushmessage(name+" Grew In Size")
