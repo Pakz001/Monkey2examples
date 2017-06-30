@@ -409,7 +409,7 @@ Class unitview
 	' write modifications to the units
 	Method updateunits()
 		For Local i:=Eachin myunitlist
-			for Local i2:=Eachin myunit
+			For Local i2:=Eachin myunit
 				If i.id = i2.id
 					i2.fortify = i.fortify
 				End If
@@ -1172,9 +1172,6 @@ Class citycontrols
 			End if
 			End If
 			'if right mouse on production box then erase production
-'		canvas.DrawText("Click to add",prodx+10,prody+70)
-'		canvas.DrawText("Click here to clear",prodx+10,prody+90)
-'			'boo
 			If Mouse.ButtonReleased(MouseButton.Left) = True
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,mycityscreen.prodx+10,mycityscreen.prody+90,80,20)
 				If mycityscreen.unitprodscreen = False
@@ -2321,7 +2318,6 @@ Class cityscreen
 				If a>b Then Exit
 			Forever	
 		End If		
-		'boo
 		canvas.DrawText(turnsleft+" Turns Left",prodx+10,prody+50)
 		End If
 		canvas.DrawText("Click to add",prodx+10,prody+70)
@@ -2576,7 +2572,8 @@ Class controls
 		myunitmethod.disablepathingunitat(x,y)
 		If myunitmethod.ismovableunitatpos(x,y) = False Then Return
 		myunitmethod.unitsactivedisable()
-		myunitmethod.activatemovableunitatpos(x,y)		
+		myunitmethod.activatemovableunitatpos(x,y)
+		gamehasmovesleft = True
 		If x > myworld.mw/2 Then 
 			myunituserinterface.dockside("Left")
 			Else
