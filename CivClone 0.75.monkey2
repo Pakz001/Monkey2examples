@@ -1503,23 +1503,35 @@ Class cityscreen
 		' set how much food we have in the city
 		' and the amount needed for the city to grow.
 		
+		
 		foodcount = currentcityfoodstores
 		foodincitygrowcount = currentcitysize*8
 		
 		' calculate how many turns it takes before the city
 		' grows. enough food.
 		' if foodsurplus is 0 then 999 turns
+		turnstocitygrowth=0
 		If resourcefoodsurpluscount = 0 And currentcitysize>0 Then
 			turnstocitygrowth = 999
 		Else
-			Local count:Int=foodcount
+			Local count:Int=currentcityfoodstores
 			Repeat
 				count += resourcefoodsurpluscount
 				turnstocitygrowth += 1
 				If count > foodincitygrowcount Then Exit				
 			Forever
 		End If
-		'
+'		'boo		
+'		Print "foodcount : "+currentcityfoodstores+" turnstocitygroth : "+turnstocitygrowth
+'		Print "resourcefoodsurpluscount: "+resourcefoodsurpluscount
+'		Print "my calced food peak: "+foodincitygrowcount
+'		For Local i:=Eachin mycity
+'			Print "total food "+i.foodstores 
+'			Print "surplus "+(i.farms-i.size)
+'			Print "city stores growth at food level "+i.size*8
+'			
+'		Next
+'		'
 		mycityscreen.updatecitybuildlist()
 		mycityscreen.updategarrison()
 		mycityscreen.updateproduction()
@@ -2006,7 +2018,6 @@ Class cityscreen
 		
 	End method
 	'
-	'boo
 	' Drawn and interface the city improvements window
 	'	
 	Method drawimprovementswindow(canvas:Canvas)
@@ -2754,7 +2765,7 @@ Class city
 			mygamemessage.pushmessage(name+" Decreased In Size.")
 		End If			
 		If size<1 Then size = 1
-		
+		'boo
 		'grow city in time of plenty
 		If foodstores > size*8 Then 
 			mygamemessage.pushmessage(name+" Grew In Size")
