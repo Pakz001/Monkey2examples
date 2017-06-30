@@ -429,7 +429,6 @@ Class unitview
 				Local y1:Int=20
 				For Local i:=Eachin myunitlist
 					If rectsoverlap(Mouse.X,Mouse.Y,1,1,c1x,uvy+y1,100,20)
-						'Print i.name
 						If i.movesleft > .3
 							i.fortify = False
 							updateunits()
@@ -832,50 +831,50 @@ Class unituserinterface
 				End If
 			Next
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x,y,Width/10,Height/10)
-				'Print "Up"+Millisecs()
+				' "Up"+Millisecs()
 				myunitmethod.moveactiveunitto(dx,dy-1)
 				redrawgame()
 				mousedelay = 0
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x,y+100,Width/10,Height/10)
-				'Print "Down"+Millisecs()
+				'"Down"+Millisecs()
 				myunitmethod.moveactiveunitto(dx,dy+1)
 				redrawgame()
 				mousedelay = 0
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-50,y+50,Width/10,Height/10)
-				'Print "Left"+Millisecs()
+				' "Left"+Millisecs()
 				myunitmethod.moveactiveunitto(dx-1,dy)
 				redrawgame()
 				mousedelay = 0
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+50,y+50,Width/10,Height/10)
-				'Print "Right"+Millisecs()
+				' "Right"+Millisecs()
 				myunitmethod.moveactiveunitto(dx+1,dy)
 				redrawgame()
 				mousedelay = 0
 			End If
 
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-45,y,Width/10,Height/10)
-				'Print "LeftUp"+Millisecs()
+				' "LeftUp"+Millisecs()
 				myunitmethod.moveactiveunitto(dx-1,dy-1)
 				redrawgame()
 				mousedelay = 0
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x-45,y+100,Width/10,Height/10)
-				'Print "LeftDown"+Millisecs()
+				' "LeftDown"+Millisecs()
 				myunitmethod.moveactiveunitto(dx-1,dy+1)
 				redrawgame()
 				mousedelay = 0
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+45,y,Width/10,Height/10)
-				'Print "RightUp"+Millisecs()
+				' "RightUp"+Millisecs()
 				myunitmethod.moveactiveunitto(dx+1,dy-1)
 				redrawgame()
 				mousedelay = 0
 			End If
 			If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+45,y+100,Width/10,Height/10)
-				'Print "RightDown"+Millisecs()				
+				' "RightDown"+Millisecs()				
 				myunitmethod.moveactiveunitto(dx+1,dy+1)
 				redrawgame()
 				mousedelay = 0
@@ -891,7 +890,7 @@ Class unituserinterface
 				Local y:Int=iy
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+brx,y+bry,bw,bh)
 					mousedelay = 0
-					'Print "Build Road"
+					' "Build Road"
 					If myunitmethod.activeunitissetler() = False Then Return
 					myunitmethod.buildroadatactiveunitpos()
 					myworld.updatedrawroads(myworld.roadcanvas)	
@@ -899,7 +898,7 @@ Class unituserinterface
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bbx,y+bby,bw,bh)
 					mousedelay = 0
-					'Print "Build City"
+					' "Build City"
 					If myunitmethod.activeunitissetler() = False Then Return
 					If myunitmethod.iscityatactiveunitpos() = True Then Return
 					myunitmethod.buildroadatactiveunitpos(False)
@@ -920,20 +919,20 @@ Class unituserinterface
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bfx,y+bfy,bw,bh)
 					mousedelay = 0
-					'Print "Fortify"
+					' "Fortify"
 					myunitmethod.unitactivefortify()
 					myunitmethod.activateamovableunit()					
 					
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bsx,y+bsy,bw,bh)
 					mousedelay = 0
-					'Print "Skip turn"
+					' "Skip turn"
 					myunitmethod.activeunitskipturn()
 					myunitmethod.activateamovableunit()					
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bex,y+bey,bw,bh)
 					mousedelay = 0
-					'Print "End Turn"
+					' "End Turn"
 
 					'Update the buildlist of each city
 					For Local i:=Eachin mycity
@@ -958,7 +957,7 @@ Class unituserinterface
 				End If
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bwx,y+bwy,bw,bh)					
 					mousedelay = 0
-					'Print "unit wait"
+					' "unit wait"
 					myunitmethod.unitactivewait()
 					myunitmethod.activateamovableunit()
 					
@@ -966,7 +965,7 @@ Class unituserinterface
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,x+bgx,y+bgy,bw,bh)					
 					If gamehasmovesleft
 						mousedelay = 0
-						'print "unit goto"
+						' "unit goto"
 						If mygotopressed = True Then mygotopressed = False Else mygotopressed = True					
 					End If
 				End If				
@@ -1207,7 +1206,7 @@ Class citycontrols
 							Local y:Int=20
 							For Local i:=Eachin mycityscreen.mybuildlist
 								If rectsoverlap(Mouse.X,Mouse.Y,1,1,x1,y1+y,w1,20)
-									'Print i.name - here we have selected a production
+									' i.name - here we have selected a production
 									myselt = True
 									myseltname = i.name
 								End If
@@ -1551,17 +1550,7 @@ Class cityscreen
 				If count > foodincitygrowcount Then Exit				
 			Forever
 		End If
-	
-'		Print "foodcount : "+currentcityfoodstores+" turnstocitygroth : "+turnstocitygrowth
-'		Print "resourcefoodsurpluscount: "+resourcefoodsurpluscount
-'		Print "my calced food peak: "+foodincitygrowcount
-'		For Local i:=Eachin mycity
-'			Print "total food "+i.foodstores 
-'			Print "surplus "+(i.farms-i.size)
-'			Print "city stores growth at food level "+i.size*8
-'			
-'		Next
-'		'
+
 		mycityscreen.updatecitybuildlist()
 		mycityscreen.updategarrison()
 		mycityscreen.updateproduction()
@@ -2388,7 +2377,6 @@ Class cityscreen
 		Local offsetx:Int=(((myworld.mw*myworld.tw)/2)-(currentcityx*myworld.tw))-myworld.tw/2
 		Local offsety:Int=(((myworld.mh*myworld.th)/2)-(currentcityy*myworld.th))-myworld.th/2
 
-		'Print sx
 		canvas.Color = Color.White
 		canvas.DrawImage(myworld.image,offsetx,offsety)
 		canvas.DrawImage(myworld.roadimage,offsetx,offsety)
@@ -2799,19 +2787,19 @@ Class city
 						mygamemessage.pushmessage(name+" Settlers Build")
 						size-=1
 					Case "City Walls"
-						'Print "Walls Created"
+						' "Walls Created"
 						walls = True
 						mygamemessage.pushmessage(name+" City Walls Build")
 					Case "Barracks"
-						'Print "Barracks Created"
+						' "Barracks Created"
 						mygamemessage.pushmessage(name+" Barracks Build")
 						barracks = True
 					Case "Mine"
-						'Print "Mine created"
+						' "Mine created"
 						mygamemessage.pushmessage(name+" Mine Build")
 						mines+=1
 					Case "Farm"
-						'Print "Farm Created"
+						' "Farm Created"
 						mygamemessage.pushmessage(name+" Farm build")
 						farms+=1
 					Case "Expand City"
@@ -3077,10 +3065,10 @@ Class unitmethod
 				mypath = New pathfinder(myworld.map)
 				If i.landunit Then mypath.mapforlandunits() Else mypath.mapforseaunits()
 				If mypath.findpath(i.x,i.y,destx,desty) = False
-					'Print "error finding path - unitmethod class in unitactivefindpath"
+					' "error finding path - unitmethod class in unitactivefindpath"
 					mygamemessage.pushmessage("Goto : Can not go there..")
 				Else 'path succesfully found
-					Print "path found and put inside unit path list"					
+					mygamemessage.pushmessage("Unit is going to the destination.")
 					'Local lst:=mypath.getpath()
 					'i.path = mypath.getpath()
 					'i.pathcurrentx = i.x
@@ -3148,13 +3136,13 @@ Class unitmethod
 		End If
 		'if he is on a ship then move him onland
 		If landunit And onboard
-			Print "move onland"
+			' "move onland"
 			For Local i:=Eachin myunit
 				If i.active = True
 					i.onboard = False
 					For Local i2:=Eachin myunit
 						If i2.id = i.onboardid
-							Print "found"
+							' "found"
 							i2.removecargo(i.id)
 						End If
 					Next					
@@ -4332,7 +4320,7 @@ Class world
 		Local y3:Float=y1
 		Local s:Float=tw*th/600
 		If s<1 Then s=1
-		'Print tw*th/200
+		' tw*th/200
 		
 		Repeat
 			If x3<x2 Then x3+=Rnd(2)
