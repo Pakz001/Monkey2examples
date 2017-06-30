@@ -9,8 +9,8 @@ Global version:String="v0.70"
 Global texturequality:String="Low" 'High , Medium and Low
 ' Here is how many tiles there are drawn on the screen.
 ' Currently tested from 16x16 up to 32x32
-Global mystartmapwidth:Int=24
-Global mystartmapheight:Int=24
+Global mystartmapwidth:Int=16
+Global mystartmapheight:Int=16
 
 Global blinkspeed:Int=5 ' lower is faster
 Global turn:Int=1
@@ -1432,34 +1432,35 @@ Class cityscreen
 		citymaph = th*5
 		citymapx = Width/2-citymapw/2
 		citymapy = Height/2-citymaph/2
-		' fill the city production info variables
-		prodx = 240
-		prody = Height/1.5
-		prodw = Width/3.3
-		prodh = Height/3.3
-		prodsw = 150
-		prodsh = 200
+		' fill the city production info variables (right bottom)
+
+		prodx = Width-200
+		prody = Height-150
+		prodw = 170
+		prodh = 120
+		prodsw = 150 'production selectino
+		prodsh = 150
 		prodsx = Width/2-prodsw/2
 		prodsy = Height/2-prodsh/2
 		updatecitybuildlist()		
 		myproduction = New Stack<production>		
 		'fill the city garrison info variables
 		garx = 10
-		gary = 10
-		garw = 100
-		garh = 100
+		gary = 70
+		garw = 320
+		garh = 60
 		
 		'
 		'		
 		' Set up the food stock window window variables
-		foodsx = Width-160
+		foodsx = Width-200
 		foodsy = 20
-		foodsw = 150
-		foodsh = 200
+		foodsw = 170
+		foodsh = 150
 		foodcount = 10		
 
 		' fil in the variables of city resources (used and surples)
-		resourcex = 20
+		resourcex = 10
 		resourcey = 150
 		resourcew = 200
 		resourceh = 80
@@ -1469,20 +1470,21 @@ Class cityscreen
 		resourcefoodsurpluscount = 1
 
 		' Set up the population window variables
-		popx = 120
+		popx = 10
 		popy = 20
 		popw = 320
 		poph = 40
 		popcount = 4
 
 		' Set up the window production variables
-		prod2x = Width-180
-		prod2y = Height-220
-		prod2w = 150
-		prod2h = 200
+		prod2x = Width-200
+		prod2y = Height-280
+		prod2w = 170
+		prod2h = 100
 		prod2currentresourcescount = 4
 		prod2requiredresourcescount = 7
-				
+		
+		' city improvements window		
 		improvementsx = 10
 		improvementsy = Height/2+20
 		improvementsw = 180
