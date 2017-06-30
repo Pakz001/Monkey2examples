@@ -4,13 +4,13 @@
 Using std..
 Using mojo..
 
-Global version:String="v0.70"
+Global version:String="v0.75"
 'Texture quality
 Global texturequality:String="Low" 'High , Medium and Low
 ' Here is how many tiles there are drawn on the screen.
 ' Currently tested from 16x16 up to 32x32
-Global mystartmapwidth:Int=16
-Global mystartmapheight:Int=16
+Global mystartmapwidth:Int=20
+Global mystartmapheight:Int=20
 
 Global blinkspeed:Int=5 ' lower is faster
 Global turn:Int=1
