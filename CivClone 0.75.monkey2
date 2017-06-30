@@ -1157,6 +1157,7 @@ Class citycontrols
 			If mousedelay < 20 Then Return
 			' if opressed left mouse in production box
 			If Mouse.ButtonReleased(MouseButton.Left) = True
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,mycityscreen.prodx,mycityscreen.prody,mycityscreen.prodw,mycityscreen.prodh-40)
 				If mycityscreen.unitprodscreen = False
 					Local x1:Int=mycityscreen.prodx
 					Local y1:Int=mycityscreen.prody
@@ -1168,9 +1169,14 @@ Class citycontrols
 						mousedelay=0
 					End If
 				End If				
+			End if
 			End If
 			'if right mouse on production box then erase production
-			If Mouse.ButtonReleased(MouseButton.Right) = True
+'		canvas.DrawText("Click to add",prodx+10,prody+70)
+'		canvas.DrawText("Click here to clear",prodx+10,prody+90)
+'			'boo
+			If Mouse.ButtonReleased(MouseButton.Left) = True
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,mycityscreen.prodx+10,mycityscreen.prody+90,80,20)
 				If mycityscreen.unitprodscreen = False
 					Local x1:Int=mycityscreen.prodx
 					Local y1:Int=mycityscreen.prody
@@ -1187,6 +1193,7 @@ Class citycontrols
 						Next
 					End If
 				End If								
+			End if
 			End If
 			
 			If Mouse.ButtonReleased(MouseButton.Left) = True
@@ -2318,6 +2325,7 @@ Class cityscreen
 		canvas.DrawText(turnsleft+" Turns Left",prodx+10,prody+50)
 		End If
 		canvas.DrawText("Click to add",prodx+10,prody+70)
+		canvas.DrawText("Click here to clear",prodx+10,prody+90)
 		
 		'
 		' The production screen...
