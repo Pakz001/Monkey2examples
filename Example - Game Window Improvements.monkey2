@@ -67,7 +67,7 @@ Class MyWindow Extends Window
 		' If we press the space bar then make the foodcount
 		' variable a random number
 		If Keyboard.KeyReleased(Key.Space) Or Mouse.ButtonReleased(MouseButton.Right) Then 
-			If Rnd(2)<1 ' once in a while
+			If Rnd(2)<1.5 ' once in a while
 				improvementslist = New List<improvements>				
 				improvementslist.Add(New improvements("First",Rnd(0,5),Rnd(0,5),Rnd(0,5),Rnd(0,5),Rnd(0,5)))
 				Local total:Int=Rnd(20,50) 
