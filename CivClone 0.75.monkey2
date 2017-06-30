@@ -1335,8 +1335,6 @@ Class cityscreen
 	Field prodsx:Int,prodsy:Int,prodsw:int,prodsh:Int
 	'variables for the units garrision
 	Field garx:Int,gary:Int,garw:Int,garh:Int
-	'variables for the city info
-	Field cityix:Int,cityiy:int,cityiw:int,cityih:Int
 	'
 	'
 	' These are the variables for the city food window.
@@ -1386,6 +1384,43 @@ Class cityscreen
 	Field poph:Int
 	field popcount:Int
 
+	'
+	' This is where we set up the variables for the
+	' improvements window.
+	'
+	' These are the variables for the improvements window.
+	' x and y and w and height.
+	'
+	Field improvementsx:Int
+	Field improvementsy:Int
+	Field improvementsw:Int
+	Field improvementsh:Int
+	'In each list item this class is used
+	Class improvements
+		Field name:String
+		Field amount:Int'how much of these do we have
+		Field foodout:Int 'how much food cost per turn
+		Field resourceout:Int 'how much resource cost per turn
+		Field foodin:Int'how much food generated per turn
+		Field resourcein:Int'how much resources generated per tun
+		' When we create a new item we set it with
+		' the name, the amount there and the food it costs
+		' the resources it costs and the food it generates
+		' and the resources it generates.
+		Method New(name:String,amount:Int,foodout:Int,resourceout:int,foodin:int,resourcein:Int)
+			Self.name = name
+			Self.amount = amount
+			Self.foodout = foodout 'total amount needs to be inputted
+			Self.resourceout = resourceout'total amount needs to be inputted
+			Self.foodin = foodin'total amount needs to be inputted
+			Self.resourcein = resourcein'total amount needs to be inputted
+		End Method	
+	End Class
+	' This is the list we use for the window (fileld with a class)
+	Field improvementslist:List<improvements>
+	' The page position. (next page - previous page)
+	Field improvementslistpos:Int=0
+	
 	
 	Method New(Width:Int,Height:Int)
 		Self.Width = Width
@@ -1413,11 +1448,6 @@ Class cityscreen
 		gary = 10
 		garw = 100
 		garh = 100
-		' fill the city info variables
-		cityix = 10
-		cityiy = Height/2
-		cityiw = 220
-		cityih = 200
 		
 		'
 		'		
@@ -1452,7 +1482,13 @@ Class cityscreen
 		prod2h = 200
 		prod2currentresourcescount = 4
 		prod2requiredresourcescount = 7
-		
+				
+		improvementsx = 10
+		improvementsy = Height/2+20
+		improvementsw = 180
+		improvementsh = 200
+		improvementslist = New List<improvements>
+		'
 		
 	End Method
 	' Refresh everything in the cityscreen (data)
@@ -1487,8 +1523,28 @@ Class cityscreen
 		mycityscreen.updatecitybuildlist()
 		mycityscreen.updategarrison()
 		mycityscreen.updateproduction()
+		mycityscreen.updateimprovements()
 		
 	End Method
+	' Here we clear and recreate the list of the city improvements
+	' window with it's contents.
+	Method updateimprovements()	
+		improvementslist = New List<improvements>
+		If currentcitywalls Then
+			improvementslist.Add(New improvements("Walls",1,0,1,0,0))
+		End If
+		If currentcitybarracks Then
+			improvementslist.Add(New improvements("Barracks",1,0,1,0,0)			)
+		End If
+		If currentcityfarms > 0 Then
+			improvementslist.Add(New improvements("Farm",currentcityfarms,0,0,currentcityfarms,0)			)
+		End If
+		If currentcitymines > 0 Then
+			improvementslist.Add(New improvements("Mine",currentcitymines,0,0,0,currentcitymines)			)
+		End If
+	end Method
+	' Here we recreate the city build window contents.
+	' what can be build
 	Method updatecitybuildlist()		
 		mybuildlist = New Stack<buildlist>
 		If currentcitycoastal And currentcitysize > 1 Then mybuildlist.Push(New buildlist("Sea Unit"))
@@ -1499,6 +1555,7 @@ Class cityscreen
 		If currentcitybarracks = False Then mybuildlist.Push(New buildlist("Barracks"))
 		If currentcitysize < 22 Then mybuildlist.Push(New buildlist("Expand City"))		
 	End Method
+	' Draw the city screen.
 	Method draw(canvas:Canvas)				
 		canvas.Color = Color.Black
 		canvas.DrawRect(0,0,Width,Height)
@@ -1509,7 +1566,7 @@ Class cityscreen
 		drawcitymap(canvas)		
 		drawproduction(canvas)
 		drawgarrison(canvas)
-		drawcityinfo(canvas)
+		drawimprovementswindow(canvas)
 		' new
 		drawfoodwindow(canvas)
 		drawresourcewindow(canvas)
@@ -1949,71 +2006,178 @@ Class cityscreen
 		
 	End method
 	'
-	' old windows ...
+	'boo
+	' Drawn and interface the city improvements window
 	'	
-	Method drawcityinfo(canvas:Canvas)
-		' Draw the textured window
-		Local rec := New Recti<Int>
-		rec.X = 0
-		rec.Y = 0
-		rec.Size = New Vec2i(Width,Height)
-		canvas.Scissor = rec
+	Method drawimprovementswindow(canvas:Canvas)
+		' Draw a title label
 		canvas.Color = Color.White
-		canvas.DrawRect(cityix-2,cityiy-2,cityiw+4,cityih+4)
-		rec = New Recti<Int>
-		rec.X = cityix
-		rec.Y = cityiy
-		rec.Size = New Vec2i(cityiw,cityih)
+		canvas.DrawText("City Improvements : ",improvementsx,improvementsy-15)
+
+		'draw the white outline
+		canvas.Color = Color.White
+		canvas.DrawRect(improvementsx-2,improvementsy-2,improvementsw+4,improvementsh+4)
+		
+		'Draw the black screen
+		canvas.Color = Color.Black
+		canvas.DrawRect(improvementsx,improvementsy,improvementsw,improvementsh)
+		'Texure it
+		Local rec := New Recti<Int>
+		rec.X = improvementsx
+		rec.Y = improvementsy
+		rec.Size = New Vec2i(improvementsw,improvementsh)
 		canvas.Scissor = rec
-		canvas.Color = New Color(.5,.5,.5)
+		canvas.Color = New Color(.4,.4,.4)
 		canvas.DrawImage(mygreybackground.greyimage,0,0)
 		rec = New Recti<Int>
 		rec.X = 0
 		rec.Y = 0
 		rec.Size = New Vec2i(Width,Height)
 		canvas.Scissor = rec
-		' fill with text
-		canvas.Color = Color.White
-		' Table with text
-		canvas.DrawText("Size:",cityix+10,cityiy+20*1)
-		canvas.DrawText("Farms:",cityix+10,cityiy+20*2)
-		canvas.DrawText("Food:",cityix+10,cityiy+20*3)
-		canvas.DrawText("Mines:",cityix+10,cityiy+20*4)
-		canvas.DrawText("Resources:",cityix+10,cityiy+20*5)
-		canvas.DrawText("Barracks:",cityix+10,cityiy+20*6)
-		canvas.DrawText("Walls:",cityix+10,cityiy+20*7)
 
-		' Table with numbers
-		Local foo:Int
-		foo = currentcityfarms-currentcitysize
-		Local min:Int = currentcitymines - currentcitysize
-		If currentcitybarracks =True Then min-=1
-		If currentcitywalls=True Then min-=1
-		canvas.DrawText(currentcitysize,cityix+100,cityiy+20*1)
-		canvas.DrawText(currentcityfarms,cityix+100,cityiy+20*2)
-		canvas.DrawText(currentcityfood,cityix+100,cityiy+20*3)
-		canvas.DrawText(currentcitymines,cityix+100,cityiy+20*4)
-		canvas.DrawText(currentcityresources,cityix+100,cityiy+20*5)
-		Local s:String
-		If currentcitybarracks = True Then s = "Yes" else s="No"
-		canvas.DrawText(s,cityix+100,cityiy+20*6)
-		If currentcitywalls = True Then s = "Yes" else s="No"
-		canvas.DrawText(s,cityix+100,cityiy+20*7)
-		' The numbers behind the food and resources info labels
-		If foo>= 0 Then 
-		canvas.Color=Color.Green 
-		canvas.DrawText("+"+foo,cityix+130,cityiy+20*3)
-		Else 
-		canvas.Color = Color.Red
-		canvas.DrawText(foo,cityix+130,cityiy+20*3)
+
+
+		'
+		'Lambda functions below
+		
+		' Drawing function (draw the food)
+		Local mydrawfood := Lambda:Void(x:Int,y:Int,dark:Bool)
+			' Draw the food images
+			canvas.Color = Color.Grey
+			canvas.DrawCircle(x,y,8)		
+			canvas.Color = New Color(.2,.2,.2)
+			canvas.DrawCircle(x,y,7)
+			If dark = False Then
+				canvas.Color = Color.Red
+				canvas.DrawCircle(x,y,6)
+				canvas.Color = Color.Brown
+				canvas.DrawCircle(x,y,5)				
+				canvas.Color = New Color(.9,.7,.3)
+				canvas.DrawCircle(x-1,y-1,2)				
+			Else
+				canvas.Color = New Color(.3,0,0)
+				canvas.DrawCircle(x,y,6)
+				canvas.Color = New Color(.4,.2,.0)
+				canvas.DrawCircle(x,y,5)				
+				canvas.Color = New Color(.6,.3,.1)
+				canvas.DrawCircle(x-1,y-1,2)							
+			End If
+		End Lambda
+		'Drawing function(draw the resource)
+		Local mydrawresource := Lambda:Void(x:Int,y:Int,dark:Bool)
+			' Draw the resource image
+			canvas.Color = Color.Grey
+			canvas.DrawCircle(x,y,8)		
+			If dark = False
+				canvas.Color = New Color(.2,.2,.2)
+				canvas.DrawCircle(x,y,7)
+				canvas.Color = New Color(.7,.7,.7)
+				canvas.DrawCircle(x,y,6)				
+				canvas.Color = Color.White
+				canvas.DrawCircle(x-1,y-1,2)				
+			Else
+				canvas.Color = New Color(.2,.2,.2)
+				canvas.DrawCircle(x,y,7)
+				canvas.Color = New Color(.4,.4,.4)
+				canvas.DrawCircle(x,y,6)				
+				canvas.Color = New Color(.6,.6,.6)
+				canvas.DrawCircle(x-1,y-1,2)							
+			End If
+		End Lambda	
+		' table num x
+		Local t1x:Int=0
+		Local t2x:Int=90
+		Local t3x:Int=130
+		Local t4x:Int=170
+		Local t5x:Int=210
+		' window x and y
+		Local x1:Int=improvementsx
+		Local y1:Int=improvementsy
+		'
+		Local itemsfitonpage:Int=(improvementsh-20)/20
+		
+		' pages interaction
+		If improvementslist.Count() > itemsfitonpage		
+			Local prevpagebuttonx:Int=x1
+			Local prevpagebuttony:Int=y1+improvementsh-20
+			Local pagebuttonw:Int=86
+			Local pagebuttonh:Int=20
+			Local nextpagebuttonx:Int=x1+pagebuttonw
+			Local nextpagebuttony:Int=y1+improvementsh-20
+			canvas.Color = Color.Yellow
+			canvas.DrawText("Prev. Page",prevpagebuttonx,prevpagebuttony)
+			canvas.DrawText("Next. Page",nextpagebuttonx,nextpagebuttony)
+			If rectsoverlap(nextpagebuttonx,nextpagebuttony,pagebuttonw,pagebuttonh,Mouse.X,Mouse.Y,1,1)
+				If Mouse.ButtonReleased(MouseButton.Left)
+					If improvementslistpos+itemsfitonpage<improvementslist.Count() Then
+						improvementslistpos+=itemsfitonpage									
+					End If
+				End If
+			End If
+			If rectsoverlap(prevpagebuttonx,prevpagebuttony,pagebuttonw,pagebuttonh,Mouse.X,Mouse.Y,1,1)
+				If Mouse.ButtonReleased(MouseButton.Left)
+					If improvementslistpos-itemsfitonpage >= 0
+						improvementslistpos-=itemsfitonpage
+					End If
+				End If
+			End If
+	
 		End If
-		If min>= 0 Then 
-		canvas.Color=Color.Green 
-		canvas.DrawText("+"+min,cityix+130,cityiy+20*5)
-		Else 
-		canvas.Color = Color.Red
-		canvas.DrawText(min,cityix+130,cityiy+20*5)
-		End If
+		' draw variables
+		Local y2:Int=0 'Increases with every line drawn with lineheight estimate(20)
+		Local count:Int=0 'Holds the current position in the each loop
+		Local drawnonpage:Int=0 'Holds the amount of lines we drawn
+		'Loop through the city improvements items list
+		For Local i:=Eachin improvementslist		
+			' We will draw the list if it is at the current page position and until
+			' we have drawn all the items that fit on the page.		
+			If count >= improvementslistpos And drawnonpage<itemsfitonpage then
+				' count how many we have drawn
+				drawnonpage+=1
+				canvas.Color = Color.White
+				canvas.DrawText(i.name,x1+t1x,y1+y2)
+				' draw the in/out
+				Local sx:Float=20
+				' total count of all to be drawn
+				Local tc:Int=i.foodin+i.resourcein+i.foodout+i.resourceout
+				' space we have to draw it in
+				Local space:Int=improvementsw-t2x-10
+				' get the x spacing based on the total amount
+				' of things to be drawn.
+				Repeat
+					If Float(tc)*sx > space
+						sx-=.1
+					Else
+						Exit
+					End If
+				Forever
+				' Draw the costs and gains		
+				Local x2:Float=-sx
+				' foodin
+				For Local i2:Int=0 Until i.foodin
+					mydrawfood(x1+x2+t2x+sx,y1+y2+10,False)
+					x2+=sx		
+				Next		
+				' resourcein
+				For Local i2:Int=0 Until i.resourcein
+					mydrawresource(x1+x2+t2x+sx,y1+y2+10,False)
+					x2+=sx		
+				Next
+				' foodout
+				For Local i2:Int=0 Until i.foodout
+					mydrawfood(x1+x2+t2x+sx,y1+y2+10,True)
+					x2+=sx		
+				Next
+				' resourceout
+				For Local i2:Int=0 Until i.resourceout
+					mydrawresource(x1+x2+t2x+sx,y1+y2+10,True)
+					x2+=sx		
+				Next		
+				'
+				y2+=20 'for the next line position increase 20 pixels
+			End If
+			count+=1
+		Next		
 	End Method
 	Method drawgarrison(canvas:Canvas)
 		Local rec := New Recti<Int>
@@ -2177,6 +2341,12 @@ Class cityscreen
 		canvas.Scissor = rec
 
 	End Method
+	' Helper function (rectangle collision)
+	Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+    	If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+    	Return True
+	End	 Function	
 End Class
 
 ' Controls like mouse pressed and keyboard
