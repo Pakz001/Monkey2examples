@@ -26,8 +26,8 @@ Class MyWindow Extends Window
 		prod2y = 100
 		prod2w = 150
 		prod2h = 200
-		prod2currentresourcescount = 4
-		prod2requiredresourcescount = 7
+		prod2currentresourcescount = 0
+		prod2requiredresourcescount = 0
 
 	End Method
 	
@@ -100,12 +100,16 @@ Function drawproductionwindow(canvas:Canvas)
 	' Draw the food images 
 	Local x:Float,y:Float
 	Local count:Int
+	' if we have nothing to do then exit the method
+	If prod2currentresourcescount = 0 Then Return
+	' draw everything	
 	Repeat
 		' Draw the resources images
 		mydrawresource(prod2x+x+8,prod2y+y+8)
 		' Left top down
 		x+=mx
 		count+=1
+		' if we have nothing more to draw then exit
 		If count>prod2currentresourcescount Then Exit
 		' if we are at the bottom then
 		' increase x and reset y
