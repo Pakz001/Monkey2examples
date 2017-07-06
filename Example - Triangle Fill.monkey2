@@ -2,8 +2,7 @@
 #Import "<mojo>"
 
 '
-' Not completely working as it should. There sometimes is a undrawn
-' line in the triangles.
+' Fill triangles using the bresenham algorithm
 '
 
 Using std..
@@ -60,8 +59,21 @@ Class filledtriangle
 	    Local exitloop:Bool=False
 	    While exitloop = False
 			' Here we fill the left and right sides arrays.
-			' we draw lines between these later on to fill the triangle
-	      	If lefty[y4-lowesty] = 0 Then lefty[y4-lowesty] = x4 Else righty[y4-lowesty] = x4      	
+			' we draw lines between these later on to fill the triangle		  	      		
+	      	
+	    	If lefty[y4-lowesty] = 0 Then 
+	     		lefty[y4-lowesty] = x4
+	    	Elseif righty[y4-lowesty] = 0
+	   			righty[y4-lowesty] = x4	
+	     	Else
+		    	If lefty[y4-lowesty] = x4 Then 
+			    	lefty[y4-lowesty] = x4
+				Else
+					righty[y4-lowesty] = x4	
+				End If   	
+	      	End If
+	  
+
 	      If x4 = x5 
 	          If y4 = y5
 	              exitloop = True
@@ -74,6 +86,7 @@ Class filledtriangle
 	          y4 += sy ; e -= dx 
 	          If e < 0 Then e += dy ; x4 += sx
 	      Endif
+
 	    Wend
 	
 	End Method
