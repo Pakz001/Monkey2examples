@@ -2412,7 +2412,7 @@ End Class
 ' Controls like mouse pressed and keyboard
 Class controls
 	' If the goto button was pressed
-	Method gotopressed()
+	Function gotopressed()
 		If mygotopressed = True
 		If Mouse.ButtonReleased(MouseButton.Left)
 			Local x:Int=Mouse.X / myworld.tw
@@ -2429,10 +2429,10 @@ Class controls
 			mousedelay = 0
 		End If
 		End If
-	End Method
+	End Function
 
 	' Find path for unit and set him to go to path.
-	Method gotounit()
+	Function gotounit:void()
 		' Unit goto
 		If Keyboard.KeyReleased(Key.G)
 			Local x:Int=Mouse.X / myworld.tw
@@ -2447,26 +2447,26 @@ Class controls
 			Next
 			keydelay = 0
 		End If
-	End Method
+	End Function
 	'Unit wait
-	Method waitunit()
+	Function waitunit()
 		If Keyboard.KeyReleased(Key.W)
 			myunitmethod.unitactivewait()
 			myunitmethod.activateamovableunit()
 			keydelay = 0
 		End If
-	End Method
+	End Function
 	'fortify unit (f key)
-	Method fortifyunit()
+	Function fortifyunit()
 		If Keyboard.KeyReleased(Key.F)
 			myunitmethod.unitactivefortify()
 			myunitmethod.activateamovableunit()
 			keydelay = 0
 		End If
-	End Method
+	End Function
 
 	'If press on city then open city sceen
-	Method opencityscreen()
+	Function opencityscreen()
 		If Keyboard.KeyDown(Key.LeftShift) = False
 		If Mouse.ButtonReleased(MouseButton.Left)
 		If mycitymethod.hascityatmousepos()			
@@ -2498,17 +2498,17 @@ Class controls
 		End If
 		End If
 		
-	End Method
+	End Function
 	'unit skip turn (space)
-	Method activeunitskipturn()
+	Function activeunitskipturn()
 		If Keyboard.KeyReleased(Key.Space) Or Keyboard.KeyReleased(Key.S)
 			myunitmethod.activeunitskipturn()
 			myunitmethod.activateamovableunit()
 			keydelay = 0
 		End If
-	End Method
+	End Function
 	' build a road
-	Method buildroad()		
+	Function buildroad()		
 		If Keyboard.KeyReleased(Key.R)
 			If myunitmethod.activeunitissetler() = False Then Return
 			myunitmethod.buildroadatactiveunitpos()	
@@ -2517,10 +2517,10 @@ Class controls
 			myunitmethod.activateamovableunit()						
 			keydelay = 0
 		End If
-	End Method
+	End Function
 	
 	' End of turn
-	Method myendofturn()
+	Function myendofturn()
 		If Keyboard.KeyReleased(Key.Enter) Or Mouse.ButtonReleased(MouseButton.Middle)
 			'be sure we can cycle between waiting units.
 			mywaitweight = 0
@@ -2544,9 +2544,9 @@ Class controls
 			redrawgame()
 			keydelay = 0
 		End If
-	End Method
+	End Function
 	' if mouse on unit then activate unit
-	Method activateunit()				
+	Function activateunit()				
 		If Mouse.ButtonReleased(MouseButton.Left) = False Then Return				
 		Local x:Int=Mouse.X / myworld.tw
 		Local y:Int=Mouse.Y / myworld.th
@@ -2568,9 +2568,9 @@ Class controls
 			myunituserinterface.dockside("Right")
 		End If
 		
-	End Method
+	End Function
 	' if pressed b then build city at active unit
-	Method buildcity()
+	Function buildcity()
 		If Keyboard.KeyReleased(Key.B)
 			If myunitmethod.activeunitissetler() = False Then Return
 			If myunitmethod.iscityatactiveunitpos() = true Then Return
@@ -2591,9 +2591,9 @@ Class controls
 				End If
 			Next			
 		End If
-	End Method
+	End Function
 	' add a unit to the map (cheat)
-	Method addunit(canvas:Canvas,Width:Int,Height:Int)
+	Function addunit(canvas:Canvas,Width:Int,Height:Int)
 		If mousedelay < 20 Then Return
 		If Keyboard.KeyDown(Key.LeftShift)
 		If Mouse.Y / myworld.th < myworld.mh-1
@@ -2613,9 +2613,9 @@ Class controls
 		End If
 		End If
 		End If
-	End Method
+	End Function
 	' add a sea unit to the map (cheat)
-	Method addseaunitat(x:Int,y:Int)		
+	Function addseaunitat(x:Int,y:Int)		
 		If myworld.map[x,y] > 5
 			myunit.Add(New unit(x,y,"Sea Unit"))
 			myunitmethod.removefog(x,y)
@@ -2626,10 +2626,10 @@ Class controls
 			End If
 			redrawgame()
 		End If
-	End Method
+	End Function
 
 	' add a unit to the map (cheat)
-	Method addunitat(x:Int,y:int)		
+	Function addunitat(x:Int,y:int)		
 		If myworld.map[x,y] > 5
 			myunit.Add(New unit(x,y,"Settlers"))
 			myunitmethod.removefog(x,y)
@@ -2640,8 +2640,8 @@ Class controls
 			End If
 			redrawgame()
 		End If
-	End Method
-	Method moveunit(canvas:Canvas,Width:Int,Height:Int)
+	End Function
+	Function moveunit(canvas:Canvas,Width:Int,Height:Int)
 		If Mouse.ButtonReleased(MouseButton.Right)
 		If Mouse.Y / myworld.th < myworld.mh-1
 			Local x:Int=Mouse.X / myworld.tw
@@ -2651,7 +2651,7 @@ Class controls
 			redrawgame()
 		End If			
 		End If
-	End Method
+	End function
 End Class
 
 
