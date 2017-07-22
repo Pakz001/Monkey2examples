@@ -138,19 +138,31 @@ Class thetiles
 	End Method
 	Method spikle(canvas:Canvas,x:int,y:int)
 		SeedRnd(x*y)
-		Local a:Int=Rnd(th*th/50,tw*th/20)
+		Local a:Int=Rnd(th*th/60,tw*th/20)
 		For Local i:=0 Until a
 			Local x2:Float=Rnd(0,tw-3)
 			Local y2:Float=Rnd(0,th-3)
 			Local d:Float=Rnd(-.4,0)
 			canvas.Color = New Color(.5+d,.5+d,.5+d,Rnd(0,.25))
 			canvas.DrawRect(x+x2,y+y2,3,3)
-			canvas.Color = New Color(.7,.7,.7,Rnd(0,.45))
+			canvas.Color = New Color(.7,.7,.7,Rnd(0,.25))
 			canvas.DrawRect(x+x2-1,y+y2,2,1)
-			canvas.Color = New Color(.2,.2,.2,Rnd(0,.45))
+			canvas.Color = New Color(.2,.2,.2,Rnd(0,.25))
 			canvas.DrawRect(x+x2+1,y+y2+2,2,1)
+			
+		Next
+		For Local i:=0 Until a/2
+			Local x2:Float=Rnd(0,tw-3)
+			Local y2:Float=Rnd(0,th-3)
+			canvas.Color = New Color(.2,.2,.2,Rnd(0,.5))
+			canvas.DrawPoint(x+x2,y+y2)
+			canvas.Color = New Color(0,0,0,Rnd(0,.5))
+			canvas.DrawPoint(x+x2+1,y+y2+1)
+			canvas.Color = New Color(0.9,0.9,0.9,Rnd(0,.5))
+			canvas.DrawPoint(x+x2-1,y+y2-1)
 
 		Next
+
 	End Method
 		
 End Class
