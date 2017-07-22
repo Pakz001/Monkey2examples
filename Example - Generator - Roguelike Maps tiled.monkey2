@@ -39,13 +39,9 @@ Class thetiles
 	Method drawallaround(canvas:Canvas,x:Int,y:Int)
 		canvas.Color = Color.Grey
 		canvas.DrawRect(x,y,tw,th)			
-		For Local i:=0 Until 20
-			Local x2:Float=Rnd(0,tw)
-			Local y2:Float=Rnd(0,th)
-			Local d:Float=Rnd(-.4,.1)
-			canvas.Color = New Color(.5+d,.5+d,.5+d)
-			canvas.DrawPoint(x+x2,y+y2)
-		Next
+		canvas.Color = New Color(.7,.7,.7,.5)
+		canvas.DrawRect(x+tw/3,y,tw/3,th)	
+		spikle(canvas,x,y)
 	End Method
 	Method drawleftbottomfreewall(canvas:Canvas,x:Int,y:Int)
 		canvas.Color = Color.Grey
@@ -54,6 +50,7 @@ Class thetiles
 		canvas.DrawRect(x,y,tw/3,th)
 		canvas.Color = Color.DarkGrey
 		canvas.DrawRect(x,y+th-th/3,tw,th/3)		
+		spikle(canvas,x,y)
 	End Method
 	Method drawrightbottomfreewall(canvas:Canvas,x:Int,y:Int)
 		canvas.Color = Color.Grey
@@ -61,6 +58,7 @@ Class thetiles
 		canvas.Color = Color.DarkGrey
 		canvas.DrawRect(x+tw-tw/3,y,tw/3,th)
 		canvas.DrawRect(x,y+th-th/3,tw,th/3)		
+		spikle(canvas,x,y)	
 	End Method
 	Method drawrighttopfreewall(canvas:Canvas,x:Int,y:Int)
 		canvas.Color = Color.Grey
@@ -69,6 +67,7 @@ Class thetiles
 		canvas.DrawRect(x,y,tw+1,th/3)			
 		canvas.Color = Color.DarkGrey
 		canvas.DrawRect(x+tw-tw/3,y,tw/3,th)				
+		spikle(canvas,x,y)		
 	End Method
 
 	Method drawlefttopfreewall(canvas:Canvas,x:Int,y:Int)
@@ -78,6 +77,7 @@ Class thetiles
 		canvas.DrawRect(x,y,tw,th/3)			
 		canvas.Color = Color.LightGrey
 		canvas.DrawRect(x,y,tw/3,th)				
+		spikle(canvas,x,y)	
 	End Method
 	Method drawleftfreerightfreewall(canvas:Canvas,x:Int,y:Int)
 		canvas.Color = Color.Grey
@@ -86,6 +86,7 @@ Class thetiles
 		canvas.DrawRect(x,y,tw/3+1,th)
 		canvas.Color = Color.DarkGrey
 		canvas.DrawRect(x+tw-tw/3,y,tw/3,th)
+		spikle(canvas,x,y)
 	End Method
 	Method drawbottomwall(canvas:Canvas,x:Int,y:Int)
 		SeedRnd(1)
@@ -93,6 +94,7 @@ Class thetiles
 		canvas.DrawRect(x,y,tw,th)
 		canvas.Color = Color.DarkGrey
 		canvas.DrawRect(x,y+th-th/3,tw,th/3)
+		spikle(canvas,x,y)		
 	End Method
 	Method drawrightwall(canvas:Canvas,x:Int,y:int)
 		SeedRnd(1)
@@ -100,6 +102,7 @@ Class thetiles
 		canvas.DrawRect(x,y,tw,th)
 		canvas.Color = Color.DarkGrey
 		canvas.DrawRect(x+tw-tw/3,y,tw/3,th)
+		spikle(canvas,x,y)
 	End Method
 	Method drawleftwall(canvas:Canvas,x:Int,y:int)
 		SeedRnd(1)
@@ -107,27 +110,41 @@ Class thetiles
 		canvas.DrawRect(x,y,tw,th)
 		canvas.Color = Color.LightGrey
 		canvas.DrawRect(x,y,tw/3,th)
+		spikle(canvas,x,y)
 	End Method
 	Method drawupperwall(canvas:Canvas,x:int,y:int)
 		SeedRnd(1)
 		canvas.Color = Color.Grey
 		canvas.DrawRect(x,y,tw,th)
 		canvas.Color = Color.LightGrey
-		canvas.DrawRect(x,y,tw,th/3)			
+		canvas.DrawRect(x,y,tw,th/3)
+		spikle(canvas,x,y)			
 	End Method
 	Method drawfloor(canvas:Canvas,x:Int,y:int)
 		SeedRnd(1)
-		canvas.Color = New Color(0.6,.3,.3)
+		canvas.Color = New Color(0.4,.4,.3)
 		canvas.DrawRect(x,y,tw,th)
-		For Local i:=0 Until 20
+		For Local i:=0 Until 10
 			Local x2:Float=Rnd(0,tw)
 			Local y2:Float=Rnd(0,th)
-			Local d:Float=Rnd(-.4,.1)
-			canvas.Color = New Color(.5+d,.5+d,.5+d)
+			Local d:Float=Rnd(-.2,.1)
+			canvas.Color = New Color(.5+d,.5+d,.2+d,Rnd(0.1,0.7))
 			canvas.DrawPoint(x+x2,y+y2)
 		Next
-			
+		spikle(canvas,x,y)			
 	End Method
+	Method spikle(canvas:Canvas,x:int,y:int)
+		SeedRnd(x*y)
+		Local a:Int=Rnd(3,10)
+		For Local i:=0 Until a
+			Local x2:Float=Rnd(0,tw-3)
+			Local y2:Float=Rnd(0,th-3)
+			Local d:Float=Rnd(-.4,0)
+			canvas.Color = New Color(.5+d,.5+d,.5+d,Rnd(0,.25))
+			canvas.DrawRect(x+x2,y+y2,3,3)
+		Next
+	End Method
+		
 End Class
 
 Class themap
