@@ -7,8 +7,8 @@ Using mojo..
 Class thetiles
 	Field tw:Float,th:Float
 	Method New()
-		tw = mymap.tw
-		th = mymap.th
+		tw = mymap.tw+1
+		th = mymap.th+1
 	End Method
 	Method drawtile(canvas:Canvas,t:Int,x:Int,y:Int)
 		Select t
@@ -32,7 +32,20 @@ Class thetiles
 				drawrightbottomfreewall(canvas,x,y)
 			Case 3 ' left bottom free
 				drawleftbottomfreewall(canvas,x,y)
+			Case 15 ' allaround
+				drawallaround(canvas,x,y)
 		End Select 
+	End Method
+	Method drawallaround(canvas:Canvas,x:Int,y:Int)
+		canvas.Color = Color.Grey
+		canvas.DrawRect(x,y,tw,th)			
+		For Local i:=0 Until 20
+			Local x2:Float=Rnd(0,tw)
+			Local y2:Float=Rnd(0,th)
+			Local d:Float=Rnd(-.4,.1)
+			canvas.Color = New Color(.5+d,.5+d,.5+d)
+			canvas.DrawPoint(x+x2,y+y2)
+		Next
 	End Method
 	Method drawleftbottomfreewall(canvas:Canvas,x:Int,y:Int)
 		canvas.Color = Color.Grey
@@ -55,7 +68,7 @@ Class thetiles
 		canvas.Color = Color.LightGrey
 		canvas.DrawRect(x,y,tw+1,th/3)			
 		canvas.Color = Color.DarkGrey
-		canvas.DrawRect(x+tw-tw/3,y,tw/3+1,th)				
+		canvas.DrawRect(x+tw-tw/3,y,tw/3,th)				
 	End Method
 
 	Method drawlefttopfreewall(canvas:Canvas,x:Int,y:Int)
@@ -72,23 +85,23 @@ Class thetiles
 		canvas.Color = Color.LightGrey
 		canvas.DrawRect(x,y,tw/3+1,th)
 		canvas.Color = Color.DarkGrey
-		canvas.DrawRect(x+tw-tw/3,y,tw/3+1,th)
+		canvas.DrawRect(x+tw-tw/3,y,tw/3,th)
 	End Method
 	Method drawbottomwall(canvas:Canvas,x:Int,y:Int)
 		SeedRnd(1)
 		canvas.Color = Color.Grey
 		canvas.DrawRect(x,y,tw,th)
 		canvas.Color = Color.DarkGrey
-		canvas.DrawRect(x,y+th-th/3,tw,th/3+1)
+		canvas.DrawRect(x,y+th-th/3,tw,th/3)
 	End Method
 	Method drawrightwall(canvas:Canvas,x:Int,y:int)
 		SeedRnd(1)
 		canvas.Color = Color.Grey
 		canvas.DrawRect(x,y,tw,th)
 		canvas.Color = Color.DarkGrey
-		canvas.DrawRect(x+tw-tw/3,y,tw/3+1,th)
+		canvas.DrawRect(x+tw-tw/3,y,tw/3,th)
 	End Method
-	Method drawleftwall(canvas:Canvas,x:int,y:int)
+	Method drawleftwall(canvas:Canvas,x:Int,y:int)
 		SeedRnd(1)
 		canvas.Color = Color.Grey
 		canvas.DrawRect(x,y,tw,th)
@@ -104,7 +117,7 @@ Class thetiles
 	End Method
 	Method drawfloor(canvas:Canvas,x:Int,y:int)
 		SeedRnd(1)
-		canvas.Color = Color.DarkGrey
+		canvas.Color = New Color(0.6,.3,.3)
 		canvas.DrawRect(x,y,tw,th)
 		For Local i:=0 Until 20
 			Local x2:Float=Rnd(0,tw)
@@ -260,6 +273,7 @@ Class themap
 	' then we decrease the size and then see if it 
 	' fits in the map and so on.
 	Method createmap()
+		SeedRnd(Millisecs())
 		Local rw:Int = (mw*mh)/100 ' roomwidth
 		Local rh:Int = (mw*mh)/100' roomheight
 		' Do not start with rooms to large or to small
@@ -287,10 +301,10 @@ Class themap
 			End If
 			If rw <= 4 Or rh <= 4 Then Exit
 		Forever
-		
 		' create vertical lines with corridors
 		Local numcors:Int=mw/5
 		Local xpos:List<Int> = New List<Int> 'for the vertical walls (location x)
+		Local cnt2:Int=200
 		While numcors > 0			
 			Local x:Int=Rnd(3,mw-3)
 			Local good:Bool=True
@@ -321,6 +335,8 @@ Class themap
 				Next
 				numcors -= 1
 			End If
+			cnt2-=1
+			If cnt2 < 0 Then Exit
 		Wend
 	End Method
 	' Here we draw(fill in) the rectangle input into 
@@ -383,7 +399,7 @@ Class MyWindow Extends Window
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 		If Keyboard.KeyReleased(Key.Space) Then 
 			SeedRnd(Millisecs())
-			size = Rnd(20,60)
+			size = Rnd(14,50)
 			mymap = New themap(Width,Height,size,size)
 			mytiles = New thetiles()
  		End If
