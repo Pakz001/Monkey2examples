@@ -346,6 +346,7 @@ Class themap
 	End Method
 	' This method simply draws the map to the screen.
 	Method draw(canvas:Canvas)
+		canvas.Clear(Color.Black)
 		For Local y:=0 Until mh
 		For Local x:=0 Until mw
 			If map[x,y] = 1
@@ -376,14 +377,16 @@ Class MyWindow Extends Window
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
-		
+		canvas.Clear(Color.Black)		
 		mymap.draw(canvas)
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 		If Keyboard.KeyReleased(Key.Space) Then 
+			SeedRnd(Millisecs())
 			size = Rnd(20,60)
 			mymap = New themap(Width,Height,size,size)
-		End If
+			mytiles = New thetiles()
+ 		End If
 	End Method	
 	
 End	Class
