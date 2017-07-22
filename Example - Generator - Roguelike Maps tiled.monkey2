@@ -6,9 +6,12 @@ Using mojo..
 
 Class thetiles
 	Field tw:Float,th:Float
+	Field mw:Int,mh:Int
 	Method New()
 		tw = mymap.tw+1
 		th = mymap.th+1
+		mw = mymap.mw
+		mh = mymap.mh
 	End Method
 	Method drawtile(canvas:Canvas,t:Int,x:Int,y:Int)
 		Select t
@@ -135,13 +138,18 @@ Class thetiles
 	End Method
 	Method spikle(canvas:Canvas,x:int,y:int)
 		SeedRnd(x*y)
-		Local a:Int=Rnd(3,10)
+		Local a:Int=Rnd(th*th/50,tw*th/20)
 		For Local i:=0 Until a
 			Local x2:Float=Rnd(0,tw-3)
 			Local y2:Float=Rnd(0,th-3)
 			Local d:Float=Rnd(-.4,0)
 			canvas.Color = New Color(.5+d,.5+d,.5+d,Rnd(0,.25))
 			canvas.DrawRect(x+x2,y+y2,3,3)
+			canvas.Color = New Color(.7,.7,.7,Rnd(0,.45))
+			canvas.DrawRect(x+x2-1,y+y2,2,1)
+			canvas.Color = New Color(.2,.2,.2,Rnd(0,.45))
+			canvas.DrawRect(x+x2+1,y+y2+2,2,1)
+
 		Next
 	End Method
 		
