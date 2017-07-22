@@ -51,8 +51,13 @@ Class thetiles
 		canvas.DrawRect(x,y,tw,th)
 		canvas.Color = Color.LightGrey
 		canvas.DrawRect(x,y,tw/3,th)
+		canvas.Color = Color.White
+		canvas.DrawRect(x,y,1,th)
 		canvas.Color = Color.DarkGrey
 		canvas.DrawRect(x,y+th-th/3,tw,th/3)		
+		canvas.Color = Color.Black
+		canvas.DrawRect(x,y+th-3,tw,3)		
+
 		spikle(canvas,x,y)
 	End Method
 	Method drawrightbottomfreewall(canvas:Canvas,x:Int,y:Int)
@@ -61,6 +66,8 @@ Class thetiles
 		canvas.Color = Color.DarkGrey
 		canvas.DrawRect(x+tw-tw/3,y,tw/3,th)
 		canvas.DrawRect(x,y+th-th/3,tw,th/3)		
+		canvas.DrawRect(x+tw-3,y,2,th)
+		canvas.DrawRect(x,y+th-3,tw,2)		
 		spikle(canvas,x,y)	
 	End Method
 	Method drawrighttopfreewall(canvas:Canvas,x:Int,y:Int)
@@ -68,8 +75,13 @@ Class thetiles
 		canvas.DrawRect(x,y,tw,th)
 		canvas.Color = Color.LightGrey
 		canvas.DrawRect(x,y,tw+1,th/3)			
+		canvas.Color = Color.White
+		canvas.DrawRect(x,y,tw,1)			
 		canvas.Color = Color.DarkGrey
 		canvas.DrawRect(x+tw-tw/3,y,tw/3,th)				
+		canvas.Color = Color.Black
+		canvas.DrawRect(x+tw-3,y,2,th)				
+
 		spikle(canvas,x,y)		
 	End Method
 
@@ -78,8 +90,14 @@ Class thetiles
 		canvas.DrawRect(x,y,tw,th)
 		canvas.Color = Color.LightGrey
 		canvas.DrawRect(x,y,tw,th/3)			
+		canvas.Color = Color.White
+		canvas.DrawRect(x,y,tw,1)			
+
 		canvas.Color = Color.LightGrey
 		canvas.DrawRect(x,y,tw/3,th)				
+		canvas.Color = Color.White
+		canvas.DrawRect(x,y,1,th)				
+
 		spikle(canvas,x,y)	
 	End Method
 	Method drawleftfreerightfreewall(canvas:Canvas,x:Int,y:Int)
@@ -87,8 +105,14 @@ Class thetiles
 		canvas.DrawRect(x,y,tw,th)
 		canvas.Color = Color.LightGrey
 		canvas.DrawRect(x,y,tw/3+1,th)
+		canvas.Color = Color.White
+		canvas.DrawRect(x,y,1,th)
+		
 		canvas.Color = Color.DarkGrey
 		canvas.DrawRect(x+tw-tw/3,y,tw/3,th)
+		canvas.Color = Color.Black
+		canvas.DrawRect(x+tw-3,y,2,th)
+
 		spikle(canvas,x,y)
 	End Method
 	Method drawbottomwall(canvas:Canvas,x:Int,y:Int)
@@ -97,6 +121,8 @@ Class thetiles
 		canvas.DrawRect(x,y,tw,th)
 		canvas.Color = Color.DarkGrey
 		canvas.DrawRect(x,y+th-th/3,tw,th/3)
+		canvas.Color = Color.Black
+		canvas.DrawRect(x,y+th-3,tw,2)
 		spikle(canvas,x,y)		
 	End Method
 	Method drawrightwall(canvas:Canvas,x:Int,y:int)
@@ -105,6 +131,8 @@ Class thetiles
 		canvas.DrawRect(x,y,tw,th)
 		canvas.Color = Color.DarkGrey
 		canvas.DrawRect(x+tw-tw/3,y,tw/3,th)
+		canvas.Color = Color.Black
+		canvas.DrawRect(x+tw-3,y,2,th)
 		spikle(canvas,x,y)
 	End Method
 	Method drawleftwall(canvas:Canvas,x:Int,y:int)
@@ -113,6 +141,8 @@ Class thetiles
 		canvas.DrawRect(x,y,tw,th)
 		canvas.Color = Color.LightGrey
 		canvas.DrawRect(x,y,tw/3,th)
+		canvas.Color = Color.White
+		canvas.DrawRect(x,y,1,th)
 		spikle(canvas,x,y)
 	End Method
 	Method drawupperwall(canvas:Canvas,x:int,y:int)
@@ -121,6 +151,8 @@ Class thetiles
 		canvas.DrawRect(x,y,tw,th)
 		canvas.Color = Color.LightGrey
 		canvas.DrawRect(x,y,tw,th/3)
+		canvas.Color = Color.White
+		canvas.DrawRect(x,y,tw,1)
 		spikle(canvas,x,y)			
 	End Method
 	Method drawfloor(canvas:Canvas,x:Int,y:int)
@@ -435,9 +467,9 @@ Class MyWindow Extends Window
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 		If Keyboard.KeyReleased(Key.Space)  Or Millisecs()>ms
-			ms = Millisecs()+3000
+			ms = Millisecs()+6000
 			SeedRnd(Millisecs())
-			size = Rnd(14,50)
+			size = Rnd(14,20)
 			mymap = New themap(Width,Height,size,size)
 			mytiles = New thetiles()
  		End If
