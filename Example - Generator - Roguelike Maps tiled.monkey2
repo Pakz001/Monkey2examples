@@ -66,6 +66,8 @@ Class thetiles
 		canvas.Color = Color.DarkGrey
 		canvas.DrawRect(x+tw-tw/3,y,tw/3,th)
 		canvas.DrawRect(x,y+th-th/3,tw,th/3)		
+		canvas.Color = Color.Black
+	
 		canvas.DrawRect(x+tw-3,y,2,th)
 		canvas.DrawRect(x,y+th-3,tw,2)		
 		spikle(canvas,x,y)	
