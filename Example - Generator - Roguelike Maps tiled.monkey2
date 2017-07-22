@@ -37,7 +37,72 @@ Class thetiles
 				drawleftbottomfreewall(canvas,x,y)
 			Case 15 ' allaround
 				drawallaround(canvas,x,y)
+			Case 4 ' left top right free
+				drawlefttoprightfreewall(canvas,x,y)
+			Case 0 'all around free
+				drawallaroundfree(canvas,x,y)
+			Case 1 'left bottom right free
+				drawleftbottomrightfreewall(canvas,x,y)
 		End Select 
+	End Method
+	Method drawleftbottomrightfreewall(canvas:Canvas,x:Int,y:Int)
+		canvas.Color = Color.Grey
+		canvas.DrawRect(x,y,tw,th)
+		canvas.Color = Color.LightGrey
+		canvas.DrawRect(x,y,tw/3,th)
+		canvas.Color = Color.White
+		canvas.DrawRect(x,y,1,th)
+		canvas.Color = Color.DarkGrey
+		canvas.DrawRect(x,y+th-th/3,tw,th/3)
+		canvas.Color = Color.Black
+		canvas.DrawRect(x,y+th-3,tw,2)
+		canvas.Color = Color.DarkGrey
+		canvas.DrawRect(x+tw-tw/3,y,tw/3,th-2)
+		canvas.Color = Color.Black
+		canvas.DrawRect(x+tw-3,y,2,th)
+		spikle(canvas,x,y)
+		
+
+	End Method
+	Method drawallaroundfree(canvas:Canvas,x:Int,y:Int)
+		canvas.Color = Color.Grey
+		canvas.DrawRect(x,y,tw,th)
+		canvas.Color = Color.LightGrey
+		canvas.DrawRect(x,y,tw/3,th)
+		canvas.Color = Color.White
+		canvas.DrawRect(x,y,1,th)
+		canvas.Color = Color.LightGrey
+		canvas.DrawRect(x,y,tw,th/3)
+		canvas.Color = Color.White
+		canvas.DrawRect(x,y,tw,1)
+		canvas.Color = Color.DarkGrey
+		canvas.DrawRect(x+tw-tw/3,y,tw/3,th)
+		canvas.Color = Color.Black
+		canvas.DrawRect(x+tw-3,y,2,th)
+		canvas.Color = Color.DarkGrey
+		canvas.DrawRect(x,y+th-th/3,tw,th/3)
+		canvas.Color = Color.Black
+		canvas.DrawRect(x,y+th-3,tw,2)
+
+		spikle(canvas,x,y)				
+	End Method
+	Method drawlefttoprightfreewall(canvas:Canvas,x:Int,y:Int)
+		canvas.Color = Color.Grey
+		canvas.DrawRect(x,y,tw,th)
+		canvas.Color = Color.LightGrey
+		canvas.DrawRect(x,y,tw/3,th)
+		canvas.Color = Color.White
+		canvas.DrawRect(x,y,1,th)
+		canvas.Color = Color.LightGrey
+		canvas.DrawRect(x,y,tw,th/3)
+		canvas.Color = Color.White
+		canvas.DrawRect(x,y,tw,1)
+		canvas.Color = Color.DarkGrey
+		canvas.DrawRect(x+tw-tw/3,y,tw/3,th)
+		canvas.Color = Color.Black
+		canvas.DrawRect(x+tw-3,y,3,th)
+		spikle(canvas,x,y)
+				
 	End Method
 	Method drawallaround(canvas:Canvas,x:Int,y:Int)
 		canvas.Color = Color.Grey
@@ -469,9 +534,10 @@ Class MyWindow Extends Window
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 		If Keyboard.KeyReleased(Key.Space)  Or Millisecs()>ms
-			ms = Millisecs()+6000
+			ms = Millisecs()+4000
 			SeedRnd(Millisecs())
 			size = Rnd(14,20)
+			If Rnd(10) < 2 Then size = Rnd(14,100)
 			mymap = New themap(Width,Height,size,size)
 			mytiles = New thetiles()
  		End If
