@@ -12,25 +12,25 @@ Class thetiles
 	End Method
 	Method drawtile(canvas:Canvas,t:Int,x:Int,y:Int)
 		Select t
-			Case 1 ' floor tile
+			Case -1 ' floor tile
 				drawfloor(canvas,x,y)
-			Case 2 ' upper wall
+			Case 14 ' upper wall
 				drawupperwall(canvas,x,y)
-			Case 3 'left wall
+			Case 7 'left wall
 				drawleftwall(canvas,x,y)
-			Case 4 'right wall
+			Case 13 'right wall
 				drawrightwall(canvas,x,y)
-			Case 5 'bottom wall
+			Case 11 'bottom wall
 				drawbottomwall(canvas,x,y)
-			Case 6 'left free right free
+			Case 5 'left free right free
 				drawleftfreerightfreewall(canvas,x,y)
-			Case 7 'left top free
+			Case 6 'left top free
 				drawlefttopfreewall(canvas,x,y)
-			Case 8 'right top free
+			Case 12 'right top free
 				drawrighttopfreewall(canvas,x,y)
 			Case 9 ' right bottom free
 				drawrightbottomfreewall(canvas,x,y)
-			Case 10 ' left bottom free
+			Case 3 ' left bottom free
 				drawleftbottomfreewall(canvas,x,y)
 		End Select 
 	End Method
@@ -144,37 +144,30 @@ Class themap
 		createtilemap()
 	End Method
 	Method createtilemap()
-		' tile 1 = floor tile
-		' tile 2 = upper wall
-		' tile 3 = left wall
-		' tile 4 = right wall
-		' tile 6 = left free right free
+		' Here we read around a wall tile and then
+		' we use a formula to turn it into a number
+		' and put this into the tilemap.
+		' The formula is.
+		'
+		' x1x
+		' 8x2
+		' x4x
+		'
+		' We add up the numbers if their position is
+		' a wall. Aboveleftrightbottom
 		For Local y:=0 Until mh
 		For Local x:=0 Until mw
 			' create the ground tile
-			'If map[x,y] = 0 Then tilemap[x,y] = 1
-			Local s:Int[] = New Int[9]
-			If map[x,y] = 0 Then s[0] = 0 Else s[0] = 1
-			If y-1 >=0 And map[x,y-1] = 0 Then s[1] = 0 Else s[1] = 1
-			If x+1 < mw And map[x+1,y] = 0 Then s[2] = 0 Else s[2] = 1
-			If y+1 < mh And map[x,y+1] = 0 Then s[3] = 0 Else s[3] = 1
-			If x-1 >= 0 And map[x-1,y] = 0 Then s[4] = 0 Else s[4] = 1
-			
-			Local ss:String=""
-			For Local i:=0 To 4
-				ss+=String(s[i])
-			Next
-			If ss="10000" Then tilemap[x,y] = 1 ' ground tile 
-			If ss="10111" Then tilemap[x,y] = 2 ' upper wall
-			If ss="11110" Then tilemap[x,y] = 3 ' left wall
-			If ss="11011" Then tilemap[x,y] = 4 ' right wall
-			If ss="11101" Then tilemap[x,y] = 5 'bottom wall
-			If ss="11010" Then tilemap[x,y] = 6 'left free right free
-			If ss="10110" Then tilemap[x,y] = 7 ' left and top free
-			If ss="10011" then tilemap[x,y] = 8 'right and top free
-			If ss="11001" Then tilemap[x,y] = 9 ' right and bottom free
-			If ss="11100" Then tilemap[x,y] = 10 ' left and bottom free
-			
+			If map[x,y] = 0 Then tilemap[x,y] = -1
+
+			Local s:Int=0
+			If y-1 >=0 And map[x,y-1] = 0 Then s = 0 Else s = 1
+			If x+1 < mw And map[x+1,y] = 0 Then s += 0 Else s += 2
+			If y+1 < mh And map[x,y+1] = 0 Then s += 0 Else s += 4
+			If x-1 >= 0 And map[x-1,y] = 0 Then s += 0 Else s += 8
+
+			If map[x,y] = 0 Then Continue
+			tilemap[x,y] = s
 		Next
 		Next
 	End Method
