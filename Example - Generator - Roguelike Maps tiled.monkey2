@@ -382,7 +382,7 @@ Global mymap:themap
 Global mytiles:thetiles
 
 Class MyWindow Extends Window
-	Field cntdown:Int=5
+	Field ms:Int=Millisecs()+3000
 	Field size:Int=15 ' Contains the size of the map w/h
 		
 	Method New()
@@ -397,7 +397,8 @@ Class MyWindow Extends Window
 		mymap.draw(canvas)
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
-		If Keyboard.KeyReleased(Key.Space) Then 
+		If Keyboard.KeyReleased(Key.Space)  Or Millisecs()>ms
+			ms = Millisecs()+3000
 			SeedRnd(Millisecs())
 			size = Rnd(14,50)
 			mymap = New themap(Width,Height,size,size)
