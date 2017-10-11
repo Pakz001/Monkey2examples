@@ -267,8 +267,16 @@ Class enemy
 				If distance(i.x,i.y,x,y) < w
 					Local a:Int
 					a = getangle(i.x,i.y,x,y)
-					x += Cos(a)*1
-					y += Sin(a)*1
+					Local nx:Float=x
+					Local ny:Float=y
+					nx += Cos(a)*1
+					ny += Sin(a)*1
+					Local mx:Int=nx/mymap.tilewidth
+					Local my:Int=ny/mymap.tileheight
+					If mymap.map[mx,my] = 1
+						x = nx
+						y = ny
+					End If
 				End If
 			End If
 		Next
