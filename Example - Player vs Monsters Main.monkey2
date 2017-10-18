@@ -894,10 +894,11 @@ Class MyWindow Extends Window
     		If i.deleteme = True Then myenemy.Remove(i)
     	Next
 
-		If myenemy.Empty
+		If myenemy.Empty Or Keyboard.KeyReleased(Key.Apostrophe)
 			Local ms:Int=Rnd(30,36)
 	    	mymap = New map(800,600,ms,ms)
 	        myplayer = New player() 
+	        myenemy = New List<enemy>
 			mybullet = New List<bullet>	        		
 			myrpg = New List<rpg>	        		
 			myparticle = New List<particle>	        			
@@ -966,7 +967,7 @@ Class MyWindow Extends Window
 		myhud.draw(canvas)
 		
         canvas.Color = Color.White
-        canvas.DrawText("Player vs Monsters on Random Map(F1)",0,0)
+        canvas.DrawText("Player vs Monsters on Random Map(' key)",0,0)
         canvas.DrawText("Space & 1/2/3 = Weapon , Cursor l/r/u/d = movement",0,20 )
 		
 		' if key escape then quit
