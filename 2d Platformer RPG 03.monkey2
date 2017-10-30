@@ -162,7 +162,8 @@ Class player
 		pty = py/th
 		If playerladdercollision(px,py)
 			jump=False
-			laddermode()			
+			laddermode()
+			movespeed = 1			
 			Else
 			For Local i:=0 Until 2
 				playergravity()
@@ -473,8 +474,8 @@ Class player
 		'draw monsters
 		canvas.Color = Color.Red
 		For Local i:=Eachin myflyingmonster
-			Local x1:Int=i.x*tw
-			Local y1:Int=i.y*th
+			Local x1:Int=i.px
+			Local y1:Int=i.py
 			Local x2:Int=(x1-(mcx*tw))+mox
 			Local y2:Int=(y1-(mcy*th))+moy
 			canvas.DrawRect(x2,y2,tw,th)
@@ -493,33 +494,47 @@ Class player
 End Class 
 
 Class theflyingmonster
-	Field x:Int,y:Int
+	Field px:float,py:Float 'pixel position (0-width)
+	Field sx:Float,sy:Float 'movement speed
+	Field x:Int,y:Int 'tile x and y position
 	Field w:Float,h:Float
 	' movement between tiles
-	Field ox:Int,oy:Int
+	' Field ox:Int,oy:Int
 	' tx and ty are the next tile the flying monster
 	' are on.
-	Field tx:Int,ty:Int
+	'Field tx:Int,ty:Int
 	Field state:String
 	Field substate:String
 	Method New(x:Int,y:Int)
 		Self.x = x
 		Self.y = y
-		Self.w = 3
-		Self.h = 3
+		Self.w = tilewidth
+		Self.h = tileheight
+		px = x*w
+		py = y*h
+
+		'set the movement speed
+		sx = Rnd(0.3,3)
+		sy = sx
 		state="hatched"
 	End Method
-	Method update()
+	Method update()		
+		If px < x*w Then px += sx
+		If px > x*w Then px -= sx
+		If py < y*h Then py += sy
+		If py > y*h Then py -= sy
+		If distance(px,py,x*w,y*h) > 3 Then Return
 		Select state
 			Case "hatched"
 				state="takeoff"
 '				ty=3 'move distance
 			Case "takeoff"
 				takeoff()
-			Case "roam"				
+			Case "roam"								
+
 				Select substate
 					Case "left"
-						x-=1
+						x-=1						
 						If mymap.mapfinal[x-1,y] = 0 Then substate="right"
 						If x<3 Then substate="right"
 						' if flying on the ground level then move up 1 tile
@@ -679,12 +694,15 @@ Class theflyingmonster
     	Local y1:Float=screenheight/Float(mapheight)*Float(y)
     	canvas.Color = Color.White
     	'SetColor 255,255,255
-		canvas.DrawRect(x1,y1,w+2,h+2)
+		canvas.DrawRect(x1,y1,3+2,3+2)
 		canvas.Color = Color.Red
     	'SetColor 255,0,0		
-		canvas.DrawRect(x1+1,y1+1,w,h)
+		canvas.DrawRect(x1+1,y1+1,3,3)
 
 	End Method
+    Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
+        Return Abs(x2-x1)+Abs(y2-y1)
+    End Function	
 End Class
 
 Class watermap
