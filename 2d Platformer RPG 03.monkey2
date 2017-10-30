@@ -472,13 +472,22 @@ Class player
 		canvas.Color = Color.White
 		canvas.DrawRect(pmx,pmy,pw,ph)
 		'draw monsters
-		canvas.Color = Color.Red
+		
 		For Local i:=Eachin myflyingmonster
 			Local x1:Int=i.px
 			Local y1:Int=i.py
 			Local x2:Int=(x1-(mcx*tw))+mox
 			Local y2:Int=(y1-(mcy*th))+moy
+			canvas.Color = Color.Red
 			canvas.DrawRect(x2,y2,tw,th)
+			
+			'canvas.Color = Color.White
+			'canvas.DrawText(i.state,x2,y2)
+			'canvas.DrawText(i.substate,x2,y2+12)
+			'canvas.DrawText(i.x*i.w+","+i.y*i.h,x2,y2+22)
+			'canvas.DrawText(i.px+","+i.py,x2,y2+37)
+			
+			
 			
 		Next
 		
@@ -498,6 +507,9 @@ Class theflyingmonster
 	Field sx:Float,sy:Float 'movement speed
 	Field x:Int,y:Int 'tile x and y position
 	Field w:Float,h:Float
+	
+	Field dbx:Int,dby:Int
+	Field dbtime:Int
 	' movement between tiles
 	' Field ox:Int,oy:Int
 	' tx and ty are the next tile the flying monster
@@ -519,11 +531,12 @@ Class theflyingmonster
 		state="hatched"
 	End Method
 	Method update()		
+		
 		If px < x*w Then px += sx
 		If px > x*w Then px -= sx
 		If py < y*h Then py += sy
 		If py > y*h Then py -= sy
-		If distance(px,py,x*w,y*h) > 3 Then Return
+		If distance(px,py,x*w,y*h) > 8 Then Return
 		Select state
 			Case "hatched"
 				state="takeoff"
@@ -972,9 +985,9 @@ Class map
 		If mapfinal[x,y+2]= 1
 		If mapfinal[x,y+3] = 1
 		If mapfinal[x,y+4] = 0
-			mapfinal[x,y+1] = 0
-			mapfinal[x,y+2] = 0
-			mapfinal[x,y+3] = 0
+			mapfinal[x,y+1] = 1
+			mapfinal[x,y+2] = 1
+			mapfinal[x,y+3] = 1
 			mapdoor[x,y+1 ] = 1
 			mapdoor[x,y+2 ] = 1
 			mapdoor[x,y+3 ] = 1
@@ -999,9 +1012,9 @@ Class map
 		If mapfinal[x,y+2]= 1
 		If mapfinal[x,y+3] = 1
 		If mapfinal[x,y+4] = 0
-			mapfinal[x,y+1] = 0
-			mapfinal[x,y+2] = 0
-			mapfinal[x,y+3] = 0
+			mapfinal[x,y+1] = 1
+			mapfinal[x,y+2] = 1
+			mapfinal[x,y+3] = 1
 			mapdoor[x,y+1 ] = 1
 			mapdoor[x,y+2 ] = 1
 			mapdoor[x,y+3 ] = 1
