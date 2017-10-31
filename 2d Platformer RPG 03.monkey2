@@ -17,6 +17,132 @@ Global screenheight:Int=600
 Global tilewidth:Int=20
 Global tileheight:Int=20
 
+Class growslime
+	Field map:Int[,]
+	Field w:Float,h:Float
+	Field tw:Float,th:Float
+	Field openx:Stack<Int>
+	Field openy:Stack<Int>
+	Field slimetile:Int=10
+	Field slimestartx:Int,slimestarty:Int
+	Method New()
+		w = mymap.mmw * 2
+		h = mymap.mmh * 2
+		tw = mymap.tw * 2
+		th = mymap.th * 2+2
+		map = New Int[w,h]
+		'copy the map from the game into this map
+		For Local y:Int=0 Until mymap.mmh
+		For Local x:Int=0 Until mymap.mmw
+		For Local y2:Int=0 Until 2
+		For Local x2:Int=0 Until 2
+			map[(x*2)+x2,(y*2)+y2] = mymap.mapfinal[x,y]			
+		Next
+		Next
+		Next
+		Next
+		'create the active slime list
+		openx = New Stack<Int>
+		openy = New Stack<Int>
+		findslimestartpos()
+		openx.Push(slimestartx)
+		openy.Push(slimestarty)
+		map[slimestartx,slimestarty]=slimetile
+	End Method
+	Method findslimestartpos()
+		For Local y:Int=h-1 To 0 Step -1
+		For Local x:Int=0 Until w
+			If map[x,y] = 1 Then 
+				slimestartx = x
+				slimestarty = y
+				Return
+			End If
+		Next
+		Next
+	End Method
+	Method update(speed:String)
+		Local freq:Int
+		If speed = "slow" Then freq = 120 Else freq = 20
+		' Expand Slime
+		
+		For Local i:Int=0 Until openx.Length
+			If Rnd(freq) > 2 Then Continue
+			Local x2:Int=openx.Get(i)
+			Local y2:Int=openy.Get(i)
+			'bottom bleft or bright first
+			Local r:Int=Rnd(0,6)
+			If r=0 And y2+1<h And map[x2,y2+1] = 1 Then addslime(x2,y2+1) ; Continue
+			If r=1 And x2-1 >=0 And y2+1 <h And map[x2-1,y2+1] = 1 Then addslime(x2-1,y2+1) ; Continue
+			If r=2 And y2+1<h And map[x2+1,y2+1] = 1 Then addslime(x2+1,y2+1) ; Continue
+			' left Or right Then
+			r = Rnd(0,2)
+			If r=0 And x2-1>=0 And map[x2-1,y2] = 1 Then addslime(x2-1,y2) ; Continue
+			If r=1 And x2+1<w And map[x2+1,y2] = 1 Then addslime(x2+1,y2) ; Continue
+			' up lup and rup
+			r = Rnd(0,23)
+			If r=0 And y2-1>=0 And map[x2,y2-1] = 1 Then addslime(x2,y2-1);Continue
+			If r=1 And x2-1>=0 And y2-1>=0 And map[x2-1,y2-1] = 1 Then addslime(x2-1,y2-1);Continue
+			If r=2 And x2+1<w And y2-1>=0 And map[x2+1,y2-1] = 1 Then addslime(x2+1,y2-1);Continue
+		Next
+		
+		Local tx:Stack<Int> = New Stack<Int>
+		Local ty:Stack<Int> = New Stack<Int>
+		' Remove Obsolete slime
+		For Local i:Int=0 Until openx.Length
+			Local cnt:Int=0
+			For Local y:Int=-1 To 1
+			For Local x:Int=-1 To 1
+				Local x2:Int=openx.Get(i)+x
+				Local y2:Int=openy.Get(i)+y
+				If x2<0 Or y2<0 Or x2>=w Or y2>=h Then 
+					cnt+=1
+					Continue
+				End If				
+				If map[x2,y2] = 10 Then cnt+=1
+				if map[x2,y2] = 0 Then cnt+=1
+				'if map[x2,y2] = 1 Then cnt+=1
+				'If map[x2,y2] <> 1 Then cnt+=1
+			Next
+			Next		
+			If cnt=9 Then
+				'openx.Remove(i)
+				'openy.Remove(i)
+				Else
+				tx.Push(openx.Get(i))
+				ty.Push(openy.Get(i))
+			End If
+		Next
+		openx = New Stack<Int>
+		openy = New Stack<Int>
+		For Local i:Int=0 Until tx.Length
+			openx.Push(tx.Get(i))
+			openy.Push(ty.Get(i))
+		Next
+	End Method
+
+	Method addslime(sx:Int,sy:Int)
+		openx.Push(sx)
+		openy.Push(sy)
+		map[sx,sy] = slimetile
+	End Method
+
+	Method drawmap(canvas:Canvas)
+		' Draw the solid slimes ()
+        For Local y:Int=0 Until h
+        For Local x:Int=0 Until w
+            Local x1:Float=x*mymap.tw/2
+            Local y1:Float=y*mymap.th/2
+            If map[x,y] = slimetile
+                canvas.Color = Color.Green
+                canvas.DrawRect(x1,y1,mymap.tw/2,mymap.th/2)
+            End If            
+        Next
+        Next
+
+	End Method
+End Class
+
+
 Class menuselect
 	Field image:Image	
 	Field icanvas:Canvas
@@ -140,8 +266,8 @@ Class player
 	Field pw:Int,ph:Int
 	Field mcx:Int,mcy:Int,mpx:Int,mpy:Int ' scroll coordinates
 	Field maptileswidth:Int,maptilesheight:Int
-	Field tw:Int=tilewidth
-	Field th:Int=tileheight
+	Field tw:Float=tilewidth
+	Field th:float=tileheight
 	
 	Method New()
 		movespeed = 1
@@ -370,7 +496,16 @@ Class player
 				Case 3
 				canvas.Color = Color.Yellow
 				canvas.DrawRect(x3,y3,tw,th)
-			End Select			
+			End Select	
+			'draw the slime			
+			For Local y4:Float=0 Until 2 Step 1
+			For Local x4:Float=0 Until 2 Step 1
+				If mygrowslime.map[(x2*2)+x4,(y2*2)+y4] = 10
+					canvas.Color = Color.Green
+					canvas.DrawRect(x3+(x4*(mygrowslime.tw)),y3+(y4*(mygrowslime.th)),mygrowslime.tw,mygrowslime.th)
+				End If
+			Next
+			Next
 			End If
 		Next
 		Next
@@ -1193,7 +1328,7 @@ Class map
 				Case 3				
 				canvas.Color = Color.Yellow
 				canvas.DrawRect(x*tw,y*th,tw,th)
-			End Select						
+			End Select	
 		Next
 		Next		
 	End Method 
@@ -1225,6 +1360,7 @@ End Class
 
 Global mymenuselect:menuselect
 Global mymap:map
+Global mygrowslime:growslime
 Global mywatermap:watermap
 Global myflyingmonster:List<theflyingmonster> = New List<theflyingmonster>
 Global myplayer:player
@@ -1253,6 +1389,7 @@ Class MyWindow Extends Window
 		For Local i:=Eachin myflyingmonster
 			i.update()
 		Next
+		mygrowslime.update("slow")
 		
 		
 		time+=1
@@ -1279,12 +1416,17 @@ Class MyWindow Extends Window
 		'minimap
 		If Keyboard.KeyDown(Key.LeftShift)		
 			canvas.Clear(Color.Black)
-			canvas.DrawImage(mymap.mapimage,0,0)		
+			canvas.DrawImage(mymap.mapimage,0,0)	
+			mygrowslime.drawmap(canvas)
+			
+				
 			mywatermap.draw(canvas)				
+			canvas.Color = Color.White
 			canvas.DrawImage(mymap.mapladderimage,0,0)		
 			For Local i:=Eachin myflyingmonster
 				i.draw(canvas)
 			Next
+
 			canvas.Color = New Color(255,255,255,0.5)
 			Local x1:Int=myplayer.mcx*mymap.tw
 			Local y1:Int=myplayer.mcy*mymap.th
@@ -1330,6 +1472,7 @@ Function resetmap(Width:Int,Height:int)
 		screenwidth = Width
 		screenheight = Height
 		mymap = New map(Width,Height,mapwidth,mapheight)
+		mygrowslime = New growslime()
 		mywatermap = New watermap(Width,Height,mapwidth,mapheight,mapwidth*400)
 		For Local y:=0 Until mapheight
 		For Local x:=0 Until mapwidth
