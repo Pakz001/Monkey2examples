@@ -33,17 +33,23 @@ Class bullet
 		Self.angle = angle
 	End Method
 	Method update()
-		For Local bulletspeed:Int=0 Until 3
+		For Local bulletspeed:Int=0 Until 5
 		countdown-=1
 		If countdown < 0 Then deleteme = True ; Return
 		If mymap.mapcollide(px,py,w,h) Then deleteme = True
+		For Local i:=Eachin myflyingmonster
+			If distance(px,py,i.x*tilewidth+tilewidth/2,i.y*tileheight+tileheight/2) < tilewidth Then i.deleteme = True
+		Next
 		px += Cos(angle)
 		py += Sin(angle)
 		Next
 	End Method
 	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
 		Return ATan2(y2-y1, x2-x1)
-	End Function 		
+	End Function 
+    Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
+        Return Abs(x2-x1)+Abs(y2-y1)
+    End Function			
 End Class
 
 'uses myflyingmonster
@@ -54,13 +60,27 @@ Class turret
 	Field owner:String="town"
 	Method New()
 		findstartposition()
+		tw = tilewidth
+		th = tileheight
 	End Method
 	Method update()
+		If Rnd(20)<10 Then Return
 		For Local i:=Eachin myflyingmonster			
-			If distance(mapx,mapy,i.x,i.y) > 10 Then Continue
+			If distance(mapx,mapy,i.x,i.y) > 15 Then Continue
 			'if distance is close by
-			
+			If clearshot(mapx*tw,mapy*th,getangle(mapx*tw,mapy*th,i.x*tw,i.y*th)+Rnd(-.2,.2))
+				mybullet.AddLast(New bullet(mapx*tw,mapy*th,getangle(mapx*tw,mapy*th,i.x*tw,i.y*th)+Rnd(-.2,.2)))
+			Endif
 		Next
+	End Method
+	' Check if we are not recklessly shooting into a solid tile
+	Method clearshot:Bool(x:Float,y:Float,angle:Float)
+		For Local i:Int=0 Until 100
+			x+=Cos(angle)
+			y+=Sin(angle)
+			If mymap.mapcollide(x,y,3,3) Then Return False
+		Next
+		Return True
 	End Method
 	Method findstartposition()
 		' position on the left side
@@ -94,6 +114,9 @@ Class turret
     Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
         Return Abs(x2-x1)+Abs(y2-y1)
     End Function
+	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
+		Return ATan2(y2-y1, x2-x1)
+	End Function     
 End Class
 
 Class growslime
@@ -1473,10 +1496,10 @@ Class map
 		If rightbottomx < 0 Or rightbottomx >= mmw Then Return True
 		If rightbottomy < 0 Or rightbottomy >= mmh Then Return True
 		
-		If mapfinal[lefttopx,lefttopy] <> mymap.tileempty Then Return True
-		If mapfinal[righttopx,righttopy] <> mymap.tileempty Then Return True
-		If mapfinal[leftbottomx,leftbottomy] <> mymap.tileempty Then Return True
-		If mapfinal[rightbottomx,rightbottomy] <> mymap.tileempty Then Return True						
+		If mapfinal[lefttopx,lefttopy] = mymap.tilesolid Then Return True
+		If mapfinal[righttopx,righttopy] = mymap.tilesolid Then Return True
+		If mapfinal[leftbottomx,leftbottomy] = mymap.tilesolid Then Return True
+		If mapfinal[rightbottomx,rightbottomy] = mymap.tilesolid Then Return True						
 		Return False
 	End Method	
 End Class
@@ -1514,6 +1537,10 @@ Class MyWindow Extends Window
 		For Local i:=Eachin myflyingmonster
 			i.update()
 		Next
+		For Local i:=Eachin myflyingmonster
+			If i.deleteme = True Then myflyingmonster.Remove(i)
+		Next
+
 		mygrowslime.update("slow")
 		For Local i:=Eachin mybullet
 			i.update()
@@ -1523,7 +1550,12 @@ Class MyWindow Extends Window
 		Next
 
 		
-		If Rnd(20)<2 Then mybullet.AddLast(New bullet(100,200,Rnd(TwoPi)))
+		For Local i:=Eachin myturret
+			i.update()
+		Next
+		
+		'debugbullettest
+		'If Rnd(10)<2 Then mybullet.AddLast(New bullet(myplayer.px,myplayer.py,Rnd(TwoPi)))
 		
 		time+=1
 		If time>4000
