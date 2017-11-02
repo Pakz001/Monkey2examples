@@ -622,7 +622,7 @@ Class player
 	Field gtkd:Bool=False 'grenade thrown key down
 	Method New()
 		movespeed = 1
-		px = tilewidth*10
+		px = tilewidth*20
 		py = tileheight*10
 		pw = tilewidth
 		ph = tileheight
