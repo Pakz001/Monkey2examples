@@ -27,19 +27,21 @@ Class frag
 	Field countdown:Int
 	Field mx:Float
 	Field my:Float
+	Field fragspeed:Int
 	Method New(x:Int,y:Int,owner:String)
 		Self.owner = owner
 		Self.px = x
 		Self.py = y
 		Self.w = 3
 		Self.h = 3
+		fragspeed = Rnd(4,7)
 		countdown = 100+Rnd(300)
 		Self.angle = Rnd(TwoPi)
 		mx = Cos(angle)
 		my = Sin(angle)
 	End Method
 	Method update()		
-		For Local particlespeed:Int=0 Until 4
+		For Local ps:Int=0 Until fragspeed
 		countdown-=1
 		If countdown < 0 Then deleteme = True ; Return
 		'bouncy vertical
@@ -145,10 +147,10 @@ Class grenade
 		End If
 		
 		'bouncy vertical
-		If mymap.mapcollide(px,py+2,1,h) Then 			
+		If mapcollide(px,py+2,1,h) Then 			
 			my = -my+Rnd(-.1,.1)
 			Local cnt:Int=0
-			While mymap.mapcollide(px,py+2,1,h)
+			While mapcollide(px,py+2,1,h)
 				py+=my
 				cnt+=1
 				If cnt>100 Then Exit
@@ -162,10 +164,10 @@ Class grenade
 			
 		End If
 		'bounce horizontally
-		If mymap.mapcollide(px-w,py,w*2,1) Then 			
+		If mapcollide(px-w,py,w*2,1) Then 			
 			mx = -mx+Rnd(-.1,.1)
 			Local cnt:Int=0
-			While mymap.mapcollide(px-w,py,w*2,1)
+			While mapcollide(px-w,py,w*2,1)
 				px+=mx	
 				cnt+=1
 				If cnt>100 Then Exit			
@@ -187,6 +189,38 @@ Class grenade
 		
 		Next
 	End Method
+	Method mapcollide:Bool(x:Int,y:Int,w:Int,h:Int)
+		Local mmw:Int=mymap.mmw
+		Local mmh:Int=mymap.mmh
+		Local lefttopx:Int		=((x)/tilewidth)
+		Local lefttopy:Int		=((y)/tileheight)
+		Local righttopx:Int		=((x+w)/tilewidth)
+		Local righttopy:Int		=((y)/tileheight)
+		Local leftbottomx:Int	=((x)/tilewidth)
+		Local leftbottomy:Int	=((y+h)/tileheight)
+		Local rightbottomx:Int	=((x+w)/tilewidth)												
+		Local rightbottomy:Int	=((y+h)/tileheight)
+		If lefttopx < 0 Or lefttopx >= mmw Then Return True
+		If lefttopy < 0 Or lefttopy >= mmh Then Return True
+		If righttopx < 0 Or righttopx >= mmw Then Return True
+		If righttopy < 0 Or righttopy >= mmh Then Return True
+		If leftbottomx < 0 Or leftbottomx >= mmw Then Return True
+		If leftbottomy < 0 Or leftbottomy >= mmh Then Return True
+		If rightbottomx < 0 Or rightbottomx >= mmw Then Return True
+		If rightbottomy < 0 Or rightbottomy >= mmh Then Return True
+		
+		If mymap.mapfinal[lefttopx,lefttopy] = mymap.tilesolid Then Return True
+		If mymap.mapfinal[righttopx,righttopy] = mymap.tilesolid Then Return True
+		If mymap.mapfinal[leftbottomx,leftbottomy] = mymap.tilesolid Then Return True
+		If mymap.mapfinal[rightbottomx,rightbottomy] = mymap.tilesolid Then Return True						
+		If mygrowslime.map[lefttopx*2,lefttopy*2] = mymap.tileslime Then Return True
+		If mygrowslime.map[righttopx*2,righttopy*2] = mymap.tileslime Then Return True
+		If mygrowslime.map[leftbottomx*2,leftbottomy*2] = mymap.tileslime Then Return True
+		If mygrowslime.map[rightbottomx*2,rightbottomy*2] = mymap.tileslime Then Return True						
+
+		Return False
+	End Method	
+	
 	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
 		Return ATan2(y2-y1, x2-x1)
 	End Function 
@@ -1363,6 +1397,7 @@ Class map
 	Field tileempty:Int=1
 	Field tileegg:Int=3
 	Field tileturret:Int=4
+	Field tileslime:Int=10
 	Method New(sw:float,sh:Float,mw:Float,mh:Float)
 		Self.mmw = mw
 		Self.mmh = mh
