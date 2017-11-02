@@ -86,14 +86,47 @@ Class frag
 		' frag collision with flying monsters
 		For Local i:=Eachin myflyingmonster
 			If distance(i.x*tilewidth+tilewidth/2,i.y*tileheight+tileheight/2,px,py) < 10
-				i.deleteme = True
+				i.hp -= 5
+				If i.hp<=0
+					i.deleteme = True
+				End If
 				deleteme = True
+				Return
 			End If
 		Next
 		
-		
+		' frag collision with the eggs
+		If eggcollide(px,py,w,h)
+			deleteme = True
+			Return
+		End if
 		Next
 	End Method	
+	Method eggcollide:Bool(x:Int,y:Int,w:Int,h:Int)
+		Local lefttopx:Int		=((x)/tilewidth)
+		Local lefttopy:Int		=((y)/tileheight)
+		Local righttopx:Int		=((x+w)/tilewidth)
+		Local righttopy:Int		=((y)/tileheight)
+		Local leftbottomx:Int	=((x)/tilewidth)
+		Local leftbottomy:Int	=((y+h)/tileheight)
+		Local rightbottomx:Int	=((x+w)/tilewidth)												
+		Local rightbottomy:Int	=((y+h)/tileheight)
+		
+		Local x2:Int=-1,y2:Int=-1
+		If mymap.mapfinal[lefttopx,lefttopy] = mymap.tileegg Then x2=lefttopx;y2=lefttopy
+		If mymap.mapfinal[righttopx,righttopy] = mymap.tileegg Then x2=righttopx;y2=righttopy
+		If mymap.mapfinal[leftbottomx,leftbottomy] = mymap.tileegg Then x2=leftbottomx;y2=leftbottomy
+		If mymap.mapfinal[rightbottomx,rightbottomy] = mymap.tileegg Then x2=rightbottomx;y2=rightbottomy
+		If x2<>-1			
+			If Rnd(7)<1 Then 
+				mymap.mapfinal[x2,y2] = mymap.tileempty
+				mymap.updateimage(mymap.mapcanvas)
+			End If
+			Return True
+		End If
+		Return False
+	End Method	
+
     Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
         Return Abs(x2-x1)+Abs(y2-y1)
     End Function			
@@ -148,6 +181,27 @@ Class grenade
 						
 		If slimed=False Then 
 			If slimecollide(px-w,py-h,w*2.5,h*2.5) Then slimed = True ; Continue
+			'bounc ceiling
+			If mapcollide(px,py-2,1,h) Then 			
+				'slimed=slimecollide(px,py+2,1,h)
+				'If slimed = True Then Return
+				my = -my+Rnd(-.1,.1)
+				Local cnt:Int=0
+				While mapcollide(px,py-2,1,h)
+					py+=my
+					cnt+=1
+					If cnt>100 Then Exit
+				Wend
+			
+				mx*=.8
+				my*=.8
+			
+				If my<0 And my>-0.2 Then my=-0.2
+				If my>0 And my<.2 Then my=.2
+				If mx<0 And mx>-0.2 Then mx=-0.2
+				If mx>0 And mx<.2 Then mx=.2
+			
+			End If
 			'bouncy vertical
 			If mapcollide(px,py+2,1,h) Then 			
 				'slimed=slimecollide(px,py+2,1,h)
@@ -297,10 +351,12 @@ Class bullet
 		For Local i:=Eachin myflyingmonster
 			If distance(px,py,i.x*tilewidth,i.y*tileheight) < tilewidth Then 
 				i.hp -= 1
+				deleteme = True				
 				If i.hp <= 0
 					i.deleteme = True
 					Return
 				End if
+				Return
 			End If
 		Next
 		If eggcollide(px,py,w,h) Then 						
@@ -327,7 +383,10 @@ Class bullet
 		If mymap.mapfinal[leftbottomx,leftbottomy] = mymap.tileegg Then x2=leftbottomx;y2=leftbottomy
 		If mymap.mapfinal[rightbottomx,rightbottomy] = mymap.tileegg Then x2=rightbottomx;y2=rightbottomy
 		If x2<>-1			
-			If Rnd(7)<1 Then mymap.mapfinal[x2,y2] = mymap.tileempty
+			If Rnd(7)<1 Then 
+				mymap.mapfinal[x2,y2] = mymap.tileempty
+				mymap.updateimage(mymap.mapcanvas)
+			End If
 			Return True
 		End If
 		Return False
@@ -664,7 +723,7 @@ Class player
 	Method New()
 		movespeed = 1
 		px = tilewidth*20
-		py = tileheight*10
+		py = tileheight*14
 		pw = tilewidth
 		ph = tileheight
 		maptileswidth = screenwidth / tw
@@ -1119,7 +1178,7 @@ Class theflyingmonster
 		Self.h = tileheight
 		px = x*w
 		py = y*h
-		hp = Rnd(2,6)
+		hp = Rnd(10,30)
 		'set the movement speed
 		sx = Rnd(0.3,3)
 		sy = sx
@@ -2013,6 +2072,7 @@ Function addflyingmonster() 'hatch
 				If mymap.mapfinal[x,y] = 3
 					mymap.mapfinal[x,y] = 1
 					myflyingmonster.AddLast(New theflyingmonster(x,y))
+					mymap.updateimage(mymap.mapcanvas)
 				End If
 			End If
 		Next
