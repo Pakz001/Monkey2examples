@@ -102,7 +102,7 @@ End Class
 
 Class grenade
 	Field px:Float,py:Float 'pixel x and y
-
+	Field slimed:Bool=False
 	Field angle:Float
 	Field w:Int,h:Int
 	Field deleteme:Bool
@@ -145,47 +145,55 @@ Class grenade
 			next
 			Return
 		End If
-		
-		'bouncy vertical
-		If mapcollide(px,py+2,1,h) Then 			
-			my = -my+Rnd(-.1,.1)
-			Local cnt:Int=0
-			While mapcollide(px,py+2,1,h)
-				py+=my
-				cnt+=1
-				If cnt>100 Then Exit
-			Wend
-			mx*=.8
-			my*=.8
-			If my<0 And my>-0.2 Then my=-0.2
-			If my>0 And my<.2 Then my=.2
-			If mx<0 And mx>-0.2 Then mx=-0.2
-			If mx>0 And mx<.2 Then mx=.2
-			
-		End If
-		'bounce horizontally
-		If mapcollide(px-w,py,w*2,1) Then 			
-			mx = -mx+Rnd(-.1,.1)
-			Local cnt:Int=0
-			While mapcollide(px-w,py,w*2,1)
-				px+=mx	
-				cnt+=1
-				If cnt>100 Then Exit			
-			Wend
-			mx*=.8
-			my*=.8
-			If my<0 And my>-0.2 Then my=-0.2
-			If my>0 And my<.2 Then my=.2
-			If mx<0 And mx>-0.2 Then mx=-0.2
-			If mx>0 And mx<.2 Then mx=.2
-			
-		End If
-
-		' update the frag location
-		px += mx
-		py += my
-		my+=.005
-		
+						
+		If slimed=False Then 
+			If slimecollide(px-w,py-h,w*2.5,h*2.5) Then slimed = True ; Continue
+			'bouncy vertical
+			If mapcollide(px,py+2,1,h) Then 			
+				'slimed=slimecollide(px,py+2,1,h)
+				'If slimed = True Then Return
+				my = -my+Rnd(-.1,.1)
+				Local cnt:Int=0
+				While mapcollide(px,py+2,1,h)
+					py+=my
+					cnt+=1
+					If cnt>100 Then Exit
+				Wend
+				
+				mx*=.8
+				my*=.8
+				
+				If my<0 And my>-0.2 Then my=-0.2
+				If my>0 And my<.2 Then my=.2
+				If mx<0 And mx>-0.2 Then mx=-0.2
+				If mx>0 And mx<.2 Then mx=.2
+				
+			End If
+			'bounce horizontally
+			If mapcollide(px-w,py,w*2,1) Then 			
+				'slimed=mapcollide(px-w,py,w*2,1)
+				'If slimed Then Return
+				mx = -mx+Rnd(-.1,.1)
+				Local cnt:Int=0
+				While mapcollide(px-w,py,w*2,1)
+					px+=mx	
+					cnt+=1
+					If cnt>100 Then Exit			
+				Wend
+				mx*=.8
+				my*=.8			
+				If my<0 And my>-0.2 Then my=-0.2
+				If my>0 And my<.2 Then my=.2
+				If mx<0 And mx>-0.2 Then mx=-0.2
+				If mx>0 And mx<.2 Then mx=.2
+				
+			End If
+	
+			' update the frag location
+			px += mx
+			py += my
+			my+=.005
+		End if		
 		
 		Next
 	End Method
@@ -218,6 +226,33 @@ Class grenade
 		If mygrowslime.map[leftbottomx*2,leftbottomy*2] = mymap.tileslime Then Return True
 		If mygrowslime.map[rightbottomx*2,rightbottomy*2] = mymap.tileslime Then Return True						
 
+		Return False
+	End Method	
+	Method slimecollide:Bool(x:Int,y:Int,w:Int,h:Int)
+		Local mmw:Int=mymap.mmw
+		Local mmh:Int=mymap.mmh
+		Local lefttopx:Int		=((x)/tilewidth)
+		Local lefttopy:Int		=((y)/tileheight)
+		Local righttopx:Int		=((x+w)/tilewidth)
+		Local righttopy:Int		=((y)/tileheight)
+		Local leftbottomx:Int	=((x)/tilewidth)
+		Local leftbottomy:Int	=((y+h)/tileheight)
+		Local rightbottomx:Int	=((x+w)/tilewidth)												
+		Local rightbottomy:Int	=((y+h)/tileheight)
+'		If lefttopx < 0 Or lefttopx >= mmw Then Return True
+'		If lefttopy < 0 Or lefttopy >= mmh Then Return True
+'		If righttopx < 0 Or righttopx >= mmw Then Return True
+'		If righttopy < 0 Or righttopy >= mmh Then Return True
+'		If leftbottomx < 0 Or leftbottomx >= mmw Then Return True
+'		If leftbottomy < 0 Or leftbottomy >= mmh Then Return True
+'		If rightbottomx < 0 Or rightbottomx >= mmw Then Return True
+'		If rightbottomy < 0 Or rightbottomy >= mmh Then Return True
+'	
+		If mygrowslime.map[lefttopx*2,lefttopy*2] = mymap.tileslime Then Return True
+		If mygrowslime.map[righttopx*2,righttopy*2] = mymap.tileslime Then Return True
+		If mygrowslime.map[leftbottomx*2,leftbottomy*2] = mymap.tileslime Then Return True
+		If mygrowslime.map[rightbottomx*2,rightbottomy*2] = mymap.tileslime Then Return True						
+	
 		Return False
 	End Method	
 	
