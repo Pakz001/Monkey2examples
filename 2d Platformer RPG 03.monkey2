@@ -17,6 +17,35 @@ Global screenheight:Int=600
 Global tilewidth:Int=20
 Global tileheight:Int=20
 
+Class bullet
+	Field px:Float,py:Float
+	Field mx:Float,my:Float
+	Field angle:Float
+	Field w:Int,h:Int
+	Field deleteme:Bool
+	Field countdown:Int
+	Method New(x:Int,y:Int,angle:Float)
+		Self.px = x
+		Self.py = y
+		Self.w = 3
+		Self.h = 3
+		countdown = 500
+		Self.angle = angle
+	End Method
+	Method update()
+		For Local bulletspeed:Int=0 Until 3
+		countdown-=1
+		If countdown < 0 Then deleteme = True ; Return
+		If mymap.mapcollide(px,py,w,h) Then deleteme = True
+		px += Cos(angle)
+		py += Sin(angle)
+		Next
+	End Method
+	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
+		Return ATan2(y2-y1, x2-x1)
+	End Function 		
+End Class
+
 'uses myflyingmonster
 Class turret
 	Field deleteme:Bool
@@ -679,6 +708,14 @@ Class player
 			
 		Next
 		
+		' Draw the bullets
+		'
+		For Local i:=Eachin mybullet
+			Local x2:Int=i.px-mcx*tw+mox
+			Local y2:Int=i.py-mcy*th+moy
+			canvas.DrawCircle(x2,y2,3)
+		Next
+		
 	End Method
 	Method m:Int(x:Int,y:Int,offx:int,offy:int)
 		Return mywatermap.map[x+offx,y+offy]
@@ -695,7 +732,8 @@ Class theflyingmonster
 	Field sx:Float,sy:Float 'movement speed
 	Field x:Int,y:Int 'tile x and y position
 	Field w:Float,h:Float
-	
+	Field hp:Int 'hitpoints
+	Field deleteme:Bool
 	Field dbx:Int,dby:Int
 	Field dbtime:Int
 	' movement between tiles
@@ -1417,6 +1455,30 @@ Class map
 		Next
 		canvas.Flush()
 	End Method 
+	Method mapcollide:Bool(x:Int,y:Int,w:Int,h:Int)
+		Local lefttopx:Int		=((x)/tilewidth)
+		Local lefttopy:Int		=((y)/tileheight)
+		Local righttopx:Int		=((x+w)/tilewidth)
+		Local righttopy:Int		=((y)/tileheight)
+		Local leftbottomx:Int	=((x)/tilewidth)
+		Local leftbottomy:Int	=((y+h)/tileheight)
+		Local rightbottomx:Int	=((x+w)/tilewidth)												
+		Local rightbottomy:Int	=((y+h)/tileheight)
+		If lefttopx < 0 Or lefttopx >= mmw Then Return True
+		If lefttopy < 0 Or lefttopy >= mmh Then Return True
+		If righttopx < 0 Or righttopx >= mmw Then Return True
+		If righttopy < 0 Or righttopy >= mmh Then Return True
+		If leftbottomx < 0 Or leftbottomx >= mmw Then Return True
+		If leftbottomy < 0 Or leftbottomy >= mmh Then Return True
+		If rightbottomx < 0 Or rightbottomx >= mmw Then Return True
+		If rightbottomy < 0 Or rightbottomy >= mmh Then Return True
+		
+		If mapfinal[lefttopx,lefttopy] <> mymap.tileempty Then Return True
+		If mapfinal[righttopx,righttopy] <> mymap.tileempty Then Return True
+		If mapfinal[leftbottomx,leftbottomy] <> mymap.tileempty Then Return True
+		If mapfinal[rightbottomx,rightbottomy] <> mymap.tileempty Then Return True						
+		Return False
+	End Method	
 End Class
 
 Global mymenuselect:menuselect
@@ -1425,6 +1487,7 @@ Global mygrowslime:growslime
 Global mywatermap:watermap
 Global myflyingmonster:List<theflyingmonster> = New List<theflyingmonster>
 Global myturret:List<turret> = New List<turret>
+Global mybullet:List<bullet> = New List<bullet>
 Global myplayer:player
 
 Class MyWindow Extends Window
@@ -1452,7 +1515,15 @@ Class MyWindow Extends Window
 			i.update()
 		Next
 		mygrowslime.update("slow")
+		For Local i:=Eachin mybullet
+			i.update()
+		Next
+		For Local i:=Eachin mybullet
+			If i.deleteme = True Then mybullet.Remove(i)
+		Next
+
 		
+		If Rnd(20)<2 Then mybullet.AddLast(New bullet(100,200,Rnd(TwoPi)))
 		
 		time+=1
 		If time>4000
