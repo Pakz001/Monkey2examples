@@ -17,6 +17,56 @@ Global screenheight:Int=600
 Global tilewidth:Int=20
 Global tileheight:Int=20
 
+'uses myflyingmonster
+Class turret
+	Field deleteme:Bool
+	Field mapx:Int,mapy:Int 
+	Field tw:Int,th:Int 'tilewidht and height
+	Field owner:String="town"
+	Method New()
+		findstartposition()
+	End Method
+	Method update()
+		For Local i:=Eachin myflyingmonster			
+			If distance(mapx,mapy,i.x,i.y) > 10 Then Continue
+			'if distance is close by
+			
+		Next
+	End Method
+	Method findstartposition()
+		' position on the left side
+		For Local y:Int=2 Until mymap.mmh-2
+		For Local x:Int=2 Until mymap.mmw-2
+			If mymap.mapfinal[x,y] = mymap.tileempty
+			If mymap.mapfinal[x+1,y] = mymap.tileempty
+			If mymap.mapfinal[x+1,y+1] = mymap.tileempty
+			If mymap.mapfinal[x,y+1] = mymap.tilesolid				
+				If mymap.mapfinal[x-1,y] = mymap.tileempty					
+					mymap.mapfinal[x-1,y] = mymap.tileturret
+					mapx = x - 1
+					mapy = y
+					Return
+				Elseif mymap.mapfinal[x+5,y] = mymap.tileempty
+					mymap.mapfinal[x+5,y] = mymap.tileturret
+					mapx = x + 5
+					mapy = y
+					Return
+				Else ' no place for turret
+					deleteme = True					
+					Return
+				End if
+			End If
+			End If
+			End If
+			End If
+		Next
+		Next
+	End Method
+    Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
+        Return Abs(x2-x1)+Abs(y2-y1)
+    End Function
+End Class
+
 Class growslime
 	Field map:Int[,]
 	Field w:Float,h:Float
@@ -490,12 +540,15 @@ Class player
 				Case 0
 				canvas.Color = Color.Brown
 				canvas.DrawRect(x3,y3,tw,th)
-				Case 1
+				Case mymap.tilesolid
 				canvas.Color = Color.Black
 				canvas.DrawRect(x3,y3,tw,th)
-				Case 3
+				Case mymap.tileegg
 				canvas.Color = Color.Yellow
 				canvas.DrawRect(x3,y3,tw,th)
+				Case mymap.tileturret					
+				canvas.Color = Color.Grey
+				canvas.DrawRect(x3,y3,tw,th)	
 			End Select	
 			'draw the slime			
 			For Local y4:Float=0 Until 2 Step 1
@@ -1027,7 +1080,7 @@ End Class
 Class map
 	Field tw:Float,th:Float
 	Field mw:Float,mh:Float
-	Field sw:Float,sh:Float,mmh:Float,mmw:Float
+	Field sw:Float,sh:Float,mmh:Float,mmw:Float'mmh is actual finalmap size
 	Field map:=New Int[1,1]
 	Field mapfinal:=New Int[1,1]
 	Field mapladder:=New Int[1,1]
@@ -1036,6 +1089,10 @@ Class map
 	Field mapladderimage:Image
 	Field mapladdercanvas:Canvas
 	Field mapdoor:=New Int[1,1]
+	Field tilesolid:Int=0
+	Field tileempty:Int=1
+	Field tileegg:Int=3
+	Field tileturret:Int=4
 	Method New(sw:float,sh:Float,mw:Float,mh:Float)
 		Self.mmw = mw
 		Self.mmh = mh
@@ -1071,10 +1128,10 @@ Class map
 	Method finalizemap()
 	For Local y:=1 Until mh-1
 	For Local x:=1 Until mw-1
-		If map[x,y] = 1
+		If map[x,y] = tileempty
 			For Local y2:=-1 To 1
 			For Local x2:=-1 To 1
-				mapfinal[(x*3)+x2,(y*3)+y2] = 1				
+				mapfinal[(x*3)+x2,(y*3)+y2] = tileempty
 			Next
 			Next			
 		End If
@@ -1332,7 +1389,7 @@ Class map
 		Next
 		Next		
 	End Method 
-	Method updateimage(canvas:Canvas)	
+	Method updateimage(canvas:Canvas)			
 		'canvas.BlendMode = BlendMode.Opaque	
 		canvas.Clear(Color.Black)
 		canvas.BlendMode = BlendMode.Opaque
@@ -1343,14 +1400,18 @@ Class map
 				'canvas.Alpha = 1
 				canvas.Color = Color.Brown
 				canvas.DrawRect(x*tw,y*th,tw,th)
-				Case 1
+				Case tilesolid
 				'canvas.Alpha = 0.5
 				'canvas.Color = Color.None'New Color(0,0,0,.8)
 				'canvas.DrawRect(x*tw,y*th,tw,th)
-				Case 3			
+				Case tileegg		
 				canvas.Alpha = 0.8	
 				canvas.Color = Color.Yellow
 				canvas.DrawRect(x*tw,y*th,tw,th)
+				Case tileturret
+				canvas.Alpha = 0.8	
+				canvas.Color = Color.Grey
+				canvas.DrawRect(x*tw,y*th,tw,th)				
 			End Select						
 		Next
 		Next
@@ -1363,6 +1424,7 @@ Global mymap:map
 Global mygrowslime:growslime
 Global mywatermap:watermap
 Global myflyingmonster:List<theflyingmonster> = New List<theflyingmonster>
+Global myturret:List<turret> = New List<turret>
 Global myplayer:player
 
 Class MyWindow Extends Window
@@ -1465,6 +1527,7 @@ End Function
 
 Function resetmap(Width:Int,Height:int)
 		myflyingmonster.Clear()
+		myturret.Clear()
 		SeedRnd(100+Microsecs())
 		'Local s:Int=Rnd(140,150)
 		'mapwidth = 
@@ -1472,6 +1535,9 @@ Function resetmap(Width:Int,Height:int)
 		screenwidth = Width
 		screenheight = Height
 		mymap = New map(Width,Height,mapwidth,mapheight)
+		myturret.AddFirst(New turret())		
+		myturret.AddFirst(New turret())
+		mymap.updateimage(mymap.mapcanvas)
 		mygrowslime = New growslime()
 		mywatermap = New watermap(Width,Height,mapwidth,mapheight,mapwidth*400)
 		For Local y:=0 Until mapheight
