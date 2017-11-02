@@ -1811,7 +1811,7 @@ Class MyWindow Extends Window
 			mymenuselect.draw(canvas)
 		End If
 		If gamestate<>"play" Then Return
-		If Keyboard.KeyReleased(Key.F1) Then
+		If Keyboard.KeyReleased(Key.Key1) Then
 			resetmap(screenwidth,screenheight)
 		End If  
 		
@@ -1900,8 +1900,8 @@ Class MyWindow Extends Window
 		'
 		canvas.Scissor = New Recti(0,0,screenwidth,screenheight)
 		canvas.Color = Color.White
-		canvas.DrawText(App.FPS+"  Press F1 for new level. Left shift for map overview",0,0)
-		canvas.DrawText("Cursors to move player +ctrl to move map..",0,20)
+		canvas.DrawText(App.FPS+"  Press 1 for new level. Left shift for map overview",0,0)
+		canvas.DrawText("Cursors, f, space..",0,20)
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 	
