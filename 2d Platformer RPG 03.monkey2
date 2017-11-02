@@ -264,7 +264,6 @@ Class grenade
     End Function			
 End Class
 
-
 Class bullet
 	Field px:Float,py:Float
 	Field mx:Float,my:Float
@@ -272,13 +271,23 @@ Class bullet
 	Field w:Int,h:Int
 	Field deleteme:Bool
 	Field countdown:Int
-	Method New(x:Int,y:Int,angle:Float)
+	Field owner:String	
+	Method New(x:Int,y:Int,angle:Float,owner:String,kind:String)
+		Self.owner = owner
 		Self.px = x
-		Self.py = y
-		Self.w = 3
-		Self.h = 3
+		Self.py = y		
+		Self.w = 2
+		Self.h = 2
+		mx = 1
+		my = 1
+		If kind="shotgun"
+			w = 2
+			h = 2
+			mx = Rnd(.9,1)
+			my = Rnd(.9,1)
+		End If
 		countdown = 500
-		Self.angle = angle
+		Self.angle = angle		
 	End Method
 	Method update()
 		For Local bulletspeed:Int=0 Until 5
@@ -286,12 +295,43 @@ Class bullet
 		If countdown < 0 Then deleteme = True ; Return
 		If mymap.mapcollide(px,py,w,h) Then deleteme = True
 		For Local i:=Eachin myflyingmonster
-			If distance(px,py,i.x*tilewidth+tilewidth/2,i.y*tileheight+tileheight/2) < tilewidth Then i.deleteme = True
+			If distance(px,py,i.x*tilewidth,i.y*tileheight) < tilewidth Then 
+				i.hp -= 1
+				If i.hp <= 0
+					i.deleteme = True
+					Return
+				End if
+			End If
 		Next
-		px += Cos(angle)
-		py += Sin(angle)
+		If eggcollide(px,py,w,h) Then 						
+			deleteme = True
+			Return
+		End If
+		px += Cos(angle)*mx
+		py += Sin(angle)*my
 		Next
 	End Method
+	Method eggcollide:Bool(x:Int,y:Int,w:Int,h:Int)
+		Local lefttopx:Int		=((x)/tilewidth)
+		Local lefttopy:Int		=((y)/tileheight)
+		Local righttopx:Int		=((x+w)/tilewidth)
+		Local righttopy:Int		=((y)/tileheight)
+		Local leftbottomx:Int	=((x)/tilewidth)
+		Local leftbottomy:Int	=((y+h)/tileheight)
+		Local rightbottomx:Int	=((x+w)/tilewidth)												
+		Local rightbottomy:Int	=((y+h)/tileheight)
+		
+		Local x2:Int=-1,y2:Int=-1
+		If mymap.mapfinal[lefttopx,lefttopy] = mymap.tileegg Then x2=lefttopx;y2=lefttopy
+		If mymap.mapfinal[righttopx,righttopy] = mymap.tileegg Then x2=righttopx;y2=righttopy
+		If mymap.mapfinal[leftbottomx,leftbottomy] = mymap.tileegg Then x2=leftbottomx;y2=leftbottomy
+		If mymap.mapfinal[rightbottomx,rightbottomy] = mymap.tileegg Then x2=rightbottomx;y2=rightbottomy
+		If x2<>-1			
+			If Rnd(7)<1 Then mymap.mapfinal[x2,y2] = mymap.tileempty
+			Return True
+		End If
+		Return False
+	End Method	
 	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
 		Return ATan2(y2-y1, x2-x1)
 	End Function 
@@ -317,7 +357,7 @@ Class turret
 			If distance(mapx,mapy,i.x,i.y) > 15 Then Continue
 			'if distance is close by
 			If clearshot(mapx*tw,mapy*th,getangle(mapx*tw,mapy*th,i.x*tw,i.y*th)+Rnd(-.2,.2))
-				mybullet.AddLast(New bullet(mapx*tw,mapy*th,getangle(mapx*tw,mapy*th,i.x*tw,i.y*th)+Rnd(-.2,.2)))
+				mybullet.AddLast(New bullet(mapx*tw,mapy*th,getangle(mapx*tw,mapy*th,i.x*tw,i.y*th)+Rnd(-.2,.2),"town","turret"))
 			Endif
 		Next
 	End Method
@@ -620,6 +660,7 @@ Class player
 	Field th:float=tileheight
 	Field facing:String="right"
 	Field gtkd:Bool=False 'grenade thrown key down
+	Field sfkd:Bool=False 'shogun fire key down
 	Method New()
 		movespeed = 1
 		px = tilewidth*20
@@ -681,13 +722,40 @@ Class player
 		If Keyboard.KeyDown(Key.Up) Then facing="up"
 		If Keyboard.KeyDown(Key.Down) Then facing="down"
 
-		If Keyboard.KeyDown(Key.F) = False Then gtkd = False
-		If gtkd = False And Keyboard.KeyDown(Key.F)
+		' throw grenade
+		If Keyboard.KeyDown(Key.G) = False Then gtkd = False
+		If gtkd = False And Keyboard.KeyDown(Key.G)
 			gtkd = True
 			mygrenade.AddLast(New grenade(myplayer.px,myplayer.py,myplayer.facing))
 		End if
+		
+		' Fire shotgun
+		If Keyboard.KeyDown(Key.S) = False Then sfkd = False
+		If sfkd = False And Keyboard.KeyDown(Key.S)
+			sfkd = True	
+			fireshotgun()					
+		End if
+
 
 	End Method
+	Method fireshotgun()
+		Local angle:Float
+		Select facing
+			Case "left"
+				angle=Pi
+			Case "right"
+				angle=0
+			Case "up"
+				'Print Pi*1.5
+				angle=Pi*1.55+Rnd(-.2,.2)
+				
+			Case "down"
+				angle = Pi/2+Rnd(-.2,.2)
+		End Select
+		For Local i:Int=0 Until 7
+			mybullet.AddLast(New bullet(px,py,angle+Rnd(-.1,.1),"player","shotgun"))
+		Next
+	End method
 	Method scrollmap(x:Int,y:Int)
 		If x=-1 Then mox+=1
 		If x=1 Then mox-=1
@@ -997,7 +1065,7 @@ Class player
 		For Local i:=Eachin mybullet
 			Local x2:Int=i.px-mcx*tw+mox
 			Local y2:Int=i.py-mcy*th+moy
-			canvas.DrawCircle(x2,y2,3)
+			canvas.DrawCircle(x2,y2,i.w)
 		Next
 		' Draw the grenades
 		'
@@ -1051,7 +1119,7 @@ Class theflyingmonster
 		Self.h = tileheight
 		px = x*w
 		py = y*h
-
+		hp = Rnd(2,6)
 		'set the movement speed
 		sx = Rnd(0.3,3)
 		sy = sx
@@ -1454,7 +1522,7 @@ Class map
 		finalizemap()
 		For Local i:=0 Until 1000
 			Local x:Int=Rnd(2,mmw-4)
-			Local y:Int=Rnd(2,mmh-4)
+			Local y:Int=Rnd(17,mmh-4)
 			If mapfinal[x,y] = 1
 			If mapfinal[x,y+1] = 0
 			mapfinal[x,y] = 3
@@ -1757,6 +1825,30 @@ Class map
 		Next
 		canvas.Flush()
 	End Method 
+	Method tilecollide:Bool(x:Int,y:Int,w:Int,h:Int,tile:Int)
+		Local lefttopx:Int		=((x)/tilewidth)
+		Local lefttopy:Int		=((y)/tileheight)
+		Local righttopx:Int		=((x+w)/tilewidth)
+		Local righttopy:Int		=((y)/tileheight)
+		Local leftbottomx:Int	=((x)/tilewidth)
+		Local leftbottomy:Int	=((y+h)/tileheight)
+		Local rightbottomx:Int	=((x+w)/tilewidth)												
+		Local rightbottomy:Int	=((y+h)/tileheight)
+		If lefttopx < 0 Or lefttopx >= mmw Then Return False
+		If lefttopy < 0 Or lefttopy >= mmh Then Return false
+		If righttopx < 0 Or righttopx >= mmw Then Return false
+		If righttopy < 0 Or righttopy >= mmh Then Return false
+		If leftbottomx < 0 Or leftbottomx >= mmw Then Return false
+		If leftbottomy < 0 Or leftbottomy >= mmh Then Return false
+		If rightbottomx < 0 Or rightbottomx >= mmw Then Return false
+		If rightbottomy < 0 Or rightbottomy >= mmh Then Return false
+		
+		If mapfinal[lefttopx,lefttopy] = tile Then Return True
+		If mapfinal[righttopx,righttopy] = tile Then Return True
+		If mapfinal[leftbottomx,leftbottomy] = tile Then Return True
+		If mapfinal[rightbottomx,rightbottomy] = tile Then Return True						
+		Return False
+	End Method	
 	Method mapcollide:Bool(x:Int,y:Int,w:Int,h:Int)
 		Local lefttopx:Int		=((x)/tilewidth)
 		Local lefttopy:Int		=((y)/tileheight)
@@ -1901,7 +1993,7 @@ Class MyWindow Extends Window
 		canvas.Scissor = New Recti(0,0,screenwidth,screenheight)
 		canvas.Color = Color.White
 		canvas.DrawText(App.FPS+"  Press 1 for new level. Left shift for map overview",0,0)
-		canvas.DrawText("Cursors, f, space..",0,20)
+		canvas.DrawText("Cursors, f, g, space..",0,20)
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 	
