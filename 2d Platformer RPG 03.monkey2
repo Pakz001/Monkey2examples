@@ -17,8 +17,89 @@ Global screenheight:Int=600
 Global tilewidth:Int=20
 Global tileheight:Int=20
 
+'fragmentation things
+Class frag
+	Field px:Float,py:Float 'pixel x and y
+	Field owner:String
+	Field angle:Float
+	Field w:Int,h:Int
+	Field deleteme:Bool
+	Field countdown:Int
+	Field mx:Float
+	Field my:Float
+	Method New(x:Int,y:Int,owner:String)
+		Self.owner = owner
+		Self.px = x
+		Self.py = y
+		Self.w = 3
+		Self.h = 3
+		countdown = 100+Rnd(300)
+		Self.angle = Rnd(TwoPi)
+		mx = Cos(angle)
+		my = Sin(angle)
+	End Method
+	Method update()		
+		For Local particlespeed:Int=0 Until 4
+		countdown-=1
+		If countdown < 0 Then deleteme = True ; Return
+		'bouncy vertical
+		If mymap.mapcollide(px,py+2,1,h) Then 			
+			my = -my+Rnd(-.1,.1)
+			Local cnt:Int=0
+			While mymap.mapcollide(px,py+2,1,h)
+				py+=my
+				cnt+=1
+				If cnt>100 Then Exit
+			Wend
+			mx*=.8
+			my*=.8
+			If my<0 And my>-0.2 Then my=-0.2
+			If my>0 And my<.2 Then my=.2
+			If mx<0 And mx>-0.2 Then mx=-0.2
+			If mx>0 And mx<.2 Then mx=.2
+			
+		End If
+		'bounce horizontally
+		If mymap.mapcollide(px-w,py,w*2,1) Then 			
+			mx = -mx+Rnd(-.1,.1)
+			Local cnt:Int=0
+			While mymap.mapcollide(px-w,py,w*2,1)
+				px+=mx	
+				cnt+=1
+				If cnt>100 Then Exit			
+			Wend
+			mx*=.8
+			my*=.8
+			If my<0 And my>-0.2 Then my=-0.2
+			If my>0 And my<.2 Then my=.2
+			If mx<0 And mx>-0.2 Then mx=-0.2
+			If mx>0 And mx<.2 Then mx=.2
+			
+		End If
+
+		px += mx
+		py += my
+		my+=.005
+		
+		' frag collision with flying monsters
+		For Local i:=Eachin myflyingmonster
+			If distance(i.x*tilewidth+tilewidth/2,i.y*tileheight+tileheight/2,px,py) < 10
+				i.deleteme = True
+				deleteme = True
+			End If
+		Next
+		
+		
+		Next
+	End Method	
+    Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
+        Return Abs(x2-x1)+Abs(y2-y1)
+    End Function			
+
+End Class
+
 Class grenade
-	Field px:Float,py:Float
+	Field px:Float,py:Float 'pixel x and y
 
 	Field angle:Float
 	Field w:Int,h:Int
@@ -49,17 +130,27 @@ Class grenade
 		mx = Cos(angle)
 		my = Sin(angle)
 	End Method
-	Method update()
+	Method update()		
 		For Local bulletspeed:Int=0 Until 4
+		
+		' Life of frags	
 		countdown-=1
-		If countdown < 0 Then deleteme = True ; Return
+		If countdown < 0 Then 
+			deleteme = True
+			Local numfrags:Int=Rnd(6,20)
+			For Local i:Int=0 Until numfrags
+				myfrag.AddLast(New frag(px,py,"player"))
+			next
+			Return
+		End If
+		
 		'bouncy vertical
-		If mymap.mapcollide(px,py+2,1,h) Then 
-			
+		If mymap.mapcollide(px,py+2,1,h) Then 			
 			my = -my+Rnd(-.1,.1)
 			Local cnt:Int=0
 			While mymap.mapcollide(px,py+2,1,h)
 				py+=my
+				cnt+=1
 				If cnt>100 Then Exit
 			Wend
 			mx*=.8
@@ -71,8 +162,7 @@ Class grenade
 			
 		End If
 		'bounce horizontally
-		If mymap.mapcollide(px-w,py,w*2,1) Then 
-			
+		If mymap.mapcollide(px-w,py,w*2,1) Then 			
 			mx = -mx+Rnd(-.1,.1)
 			Local cnt:Int=0
 			While mymap.mapcollide(px-w,py,w*2,1)
@@ -89,10 +179,10 @@ Class grenade
 			
 		End If
 
+		' update the frag location
 		px += mx
 		py += my
 		my+=.005
-		
 		
 		
 		Next
@@ -847,6 +937,14 @@ Class player
 			Local x2:Int=i.px-mcx*tw+mox
 			Local y2:Int=i.py-mcy*th+moy
 			canvas.DrawCircle(x2,y2,6)
+		Next
+		' Draw the fragmentation 
+		'
+		canvas.Color = Color.Gold
+		For Local i:=Eachin myfrag
+			Local x2:Int=i.px-mcx*tw+mox
+			Local y2:Int=i.py-mcy*th+moy
+			canvas.DrawCircle(x2,y2,3)
 		Next
 
 		
@@ -1623,6 +1721,7 @@ Global myflyingmonster:List<theflyingmonster> = New List<theflyingmonster>
 Global myturret:List<turret> = New List<turret>
 Global mybullet:List<bullet> = New List<bullet>
 Global mygrenade:List<grenade> = New List<grenade>
+Global myfrag:List<frag> = New List<frag>
 Global myplayer:player
 
 Class MyWindow Extends Window
@@ -1672,7 +1771,14 @@ Class MyWindow Extends Window
 		For Local i:=Eachin mygrenade
 			If i.deleteme = True Then mygrenade.Remove(i)
 		Next
-		
+
+		For Local i:=Eachin myfrag
+			i.update()
+		Next
+		For Local i:=Eachin myfrag
+			If i.deleteme = True Then myfrag.Remove(i)
+		Next
+			
 		
 		'debugbullettest
 		'If Rnd(20)<2 Then mygrenade.AddLast(New grenade(myplayer.px,myplayer.py,myplayer.facing))
