@@ -17,6 +17,95 @@ Global screenheight:Int=600
 Global tilewidth:Int=20
 Global tileheight:Int=20
 
+Class grenade
+	Field px:Float,py:Float
+
+	Field angle:Float
+	Field w:Int,h:Int
+	Field deleteme:Bool
+	Field countdown:Int
+	Field mx:Float
+	Field my:Float
+	Method New(x:Int,y:Int,facing:String)
+		Self.px = x
+		Self.py = y
+		Self.w = 6
+		Self.h = 6
+		countdown = 500
+		Select facing
+			Case "left"
+				angle=Pi+.3
+			Case "right"
+				angle=0-.3
+			Case "up"
+				'Print Pi*1.5
+				angle=Pi*1.55+Rnd(-.2,.2)
+				
+			Case "down"
+				angle = Pi/2+Rnd(-.2,.2)
+		End Select
+		
+		Self.angle = angle
+		mx = Cos(angle)
+		my = Sin(angle)
+	End Method
+	Method update()
+		For Local bulletspeed:Int=0 Until 4
+		countdown-=1
+		If countdown < 0 Then deleteme = True ; Return
+		'bouncy vertical
+		If mymap.mapcollide(px,py+2,1,h) Then 
+			
+			my = -my+Rnd(-.1,.1)
+			Local cnt:Int=0
+			While mymap.mapcollide(px,py+2,1,h)
+				py+=my
+				If cnt>100 Then Exit
+			Wend
+			mx*=.8
+			my*=.8
+			If my<0 And my>-0.2 Then my=-0.2
+			If my>0 And my<.2 Then my=.2
+			If mx<0 And mx>-0.2 Then mx=-0.2
+			If mx>0 And mx<.2 Then mx=.2
+			
+		End If
+		'bounce horizontally
+		If mymap.mapcollide(px-w,py,w*2,1) Then 
+			
+			mx = -mx+Rnd(-.1,.1)
+			Local cnt:Int=0
+			While mymap.mapcollide(px-w,py,w*2,1)
+				px+=mx	
+				cnt+=1
+				If cnt>100 Then Exit			
+			Wend
+			mx*=.8
+			my*=.8
+			If my<0 And my>-0.2 Then my=-0.2
+			If my>0 And my<.2 Then my=.2
+			If mx<0 And mx>-0.2 Then mx=-0.2
+			If mx>0 And mx<.2 Then mx=.2
+			
+		End If
+
+		px += mx
+		py += my
+		my+=.005
+		
+		
+		
+		Next
+	End Method
+	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
+		Return ATan2(y2-y1, x2-x1)
+	End Function 
+    Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
+        Return Abs(x2-x1)+Abs(y2-y1)
+    End Function			
+End Class
+
+
 Class bullet
 	Field px:Float,py:Float
 	Field mx:Float,my:Float
@@ -370,7 +459,8 @@ Class player
 	Field maptileswidth:Int,maptilesheight:Int
 	Field tw:Float=tilewidth
 	Field th:float=tileheight
-	
+	Field facing:String="right"
+	Field gtkd:Bool=False 'grenade thrown key down
 	Method New()
 		movespeed = 1
 		px = tilewidth*10
@@ -427,6 +517,17 @@ Class player
 			End If
 		  	End If			
 		Next
+		If Keyboard.KeyDown(Key.Left) Then facing="left"
+		If Keyboard.KeyDown(Key.Right) Then facing="right"
+		If Keyboard.KeyDown(Key.Up) Then facing="up"
+		If Keyboard.KeyDown(Key.Down) Then facing="down"
+
+		If Keyboard.KeyDown(Key.F) = False Then gtkd = False
+		If gtkd = False And Keyboard.KeyDown(Key.F)
+			gtkd = True
+			mygrenade.AddLast(New grenade(myplayer.px,myplayer.py,myplayer.facing))
+		End if
+
 	End Method
 	Method scrollmap(x:Int,y:Int)
 		If x=-1 Then mox+=1
@@ -733,11 +834,21 @@ Class player
 		
 		' Draw the bullets
 		'
+		canvas.Color = Color.Yellow
 		For Local i:=Eachin mybullet
 			Local x2:Int=i.px-mcx*tw+mox
 			Local y2:Int=i.py-mcy*th+moy
 			canvas.DrawCircle(x2,y2,3)
 		Next
+		' Draw the grenades
+		'
+		canvas.Color = Color.Grey
+		For Local i:=Eachin mygrenade
+			Local x2:Int=i.px-mcx*tw+mox
+			Local y2:Int=i.py-mcy*th+moy
+			canvas.DrawCircle(x2,y2,6)
+		Next
+
 		
 	End Method
 	Method m:Int(x:Int,y:Int,offx:int,offy:int)
@@ -1511,6 +1622,7 @@ Global mywatermap:watermap
 Global myflyingmonster:List<theflyingmonster> = New List<theflyingmonster>
 Global myturret:List<turret> = New List<turret>
 Global mybullet:List<bullet> = New List<bullet>
+Global mygrenade:List<grenade> = New List<grenade>
 Global myplayer:player
 
 Class MyWindow Extends Window
@@ -1553,6 +1665,17 @@ Class MyWindow Extends Window
 		For Local i:=Eachin myturret
 			i.update()
 		Next
+		
+		For Local i:=Eachin mygrenade
+			i.update()
+		Next
+		For Local i:=Eachin mygrenade
+			If i.deleteme = True Then mygrenade.Remove(i)
+		Next
+		
+		
+		'debugbullettest
+		'If Rnd(20)<2 Then mygrenade.AddLast(New grenade(myplayer.px,myplayer.py,myplayer.facing))
 		
 		'debugbullettest
 		'If Rnd(10)<2 Then mybullet.AddLast(New bullet(myplayer.px,myplayer.py,Rnd(TwoPi)))
