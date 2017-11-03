@@ -1,4 +1,4 @@
-' slow computers - do not run in debug mode::
+
 #Import "<std>"
 #Import "<mojo>"
 
@@ -988,6 +988,9 @@ Class player
 				Case mymap.tileturret					
 				canvas.Color = Color.Grey
 				canvas.DrawRect(x3,y3,tw,th)	
+				Case mymap.tilemineable
+				canvas.Color = Color.Brown.Blend(Color.Yellow,.2)
+				canvas.DrawRect(x3,y3,tw,th)
 			End Select	
 			'draw the slime			
 			For Local y4:Float=0 Until 2 Step 1
@@ -1560,6 +1563,7 @@ Class map
 	Field tileegg:Int=3
 	Field tileturret:Int=4
 	Field tileslime:Int=10
+	Field tilemineable:Int=50
 	Method New(sw:float,sh:Float,mw:Float,mh:Float)
 		Self.mmw = mw
 		Self.mmh = mh
@@ -1588,10 +1592,84 @@ Class map
 			End If
 			End If
 		Next		
-
+		createfinalmineable()
 		updateladderimage(mapladdercanvas)
 		updateimage(mapcanvas)
 	End Method 
+	' Here we create the parts on the mapfinal that can be mined
+	' by the player (like in minecraft/digger) tilemineable
+	Method createfinalmineable()
+		' 3 high mineable mineshafts right to left
+		For Local y1:Int=15 Until mmh-10
+		For Local x1:Int=3 Until mmw-3
+			' Find suitable spot
+			If mapfinal[x1,y1] <> tilesolid Then Continue
+			If mapfinal[x1+1,y1] <> tileempty Then Continue
+			If mapfinal[x1,y1+1] <> tilesolid Then Continue
+			If mapfinal[x1,y1+2] <> tilesolid Then Continue
+			If mapfinal[x1,y1+3] <> tilesolid Then Continue
+			If mapfinal[x1+1,y1+4] <> tilesolid Then Continue
+			If mapfinal[x1+1,y1+1] <> tileempty Then Continue
+			If mapfinal[x1+1,y1+2] <> tileempty Then Continue
+			If mapfinal[x1+1,y1+3] <> tileempty Then Continue
+			' See how far left we can go
+			Local len:Int=0			
+			For Local x2:Int=x1 Until 3 Step -1
+				If mapfinal[x2,y1] <> tilesolid Then Exit
+				If mapfinal[x2,y1+1] <> tilesolid Then Exit
+				If mapfinal[x2,y1+2] <> tilesolid Then Exit
+				If mapfinal[x2,y1+3] <> tilesolid Then Exit
+				If mapfinal[x2,y1+4] <> tilesolid Then Exit
+				len+=1
+			Next
+			' If we can go deep enough then prepare mineshaft
+			If len<=10 Then Continue
+			len = Rnd(7,len)
+			For Local x2:Int=x1 Until x1-(len-3) Step -1
+			For Local y2:Int=y1+1 Until y1+4 
+				mapfinal[x2,y2] = tilemineable
+			Next
+			Next
+		Next
+		Next
+		'
+		'
+		' 3 high mineable mineshafts left to right
+		For Local y1:Int=15 Until mmh-10
+		For Local x1:Int=3 Until mmw-3
+			' Find suitable spot
+			If mapfinal[x1,y1] <> tilesolid Then Continue
+			If mapfinal[x1-1,y1] <> tileempty Then Continue
+			If mapfinal[x1,y1+1] <> tilesolid Then Continue
+			If mapfinal[x1,y1+2] <> tilesolid Then Continue
+			If mapfinal[x1,y1+3] <> tilesolid Then Continue
+			If mapfinal[x1-1,y1+4] <> tilesolid Then Continue
+			If mapfinal[x1-1,y1+1] <> tileempty Then Continue
+			If mapfinal[x1-1,y1+2] <> tileempty Then Continue
+			If mapfinal[x1-1,y1+3] <> tileempty Then Continue
+			' See how far left we can go
+			Local len:Int=0			
+			For Local x2:Int=x1 Until mmw-4
+				If mapfinal[x2,y1] <> tilesolid Then Exit
+				If mapfinal[x2,y1+1] <> tilesolid Then Exit
+				If mapfinal[x2,y1+2] <> tilesolid Then Exit
+				If mapfinal[x2,y1+3] <> tilesolid Then Exit
+				If mapfinal[x2,y1+4] <> tilesolid Then Exit
+				len+=1
+			Next
+			' If we can go deep enough then prepare mineshaft
+			If len<=10 Then Continue
+			len = Rnd(7,len)
+			For Local x2:Int=x1 Until x1+(len-3)
+			For Local y2:Int=y1+1 Until y1+4 
+				mapfinal[x2,y2] = tilemineable
+			Next
+			Next
+		Next
+		Next
+
+
+	End Method
 	Method finalizemap()
 	For Local y:=1 Until mh-1
 	For Local x:=1 Until mw-1
@@ -1879,6 +1957,10 @@ Class map
 				canvas.Alpha = 0.8	
 				canvas.Color = Color.Grey
 				canvas.DrawRect(x*tw,y*th,tw,th)				
+				Case tilemineable
+				canvas.Alpha = 0.8	
+				canvas.Color = Color.Brown.Blend(Color.Yellow,.2)
+				canvas.DrawRect(x*tw,y*th,tw,th)
 			End Select						
 		Next
 		Next
@@ -1964,6 +2046,9 @@ Class MyWindow Extends Window
 		If gamestate<>"play" Then Return
 		If Keyboard.KeyReleased(Key.Key1) Then
 			resetmap(screenwidth,screenheight)
+		End If
+		If Keyboard.KeyReleased(Key.Home) Then
+			gamestate="select"
 		End If  
 		
 		For Local i:=Eachin myflyingmonster
@@ -2051,7 +2136,7 @@ Class MyWindow Extends Window
 		'
 		canvas.Scissor = New Recti(0,0,screenwidth,screenheight)
 		canvas.Color = Color.White
-		canvas.DrawText(App.FPS+"  Press 1 for new level. Left shift for map overview",0,0)
+		canvas.DrawText(App.FPS+"  Press 1(new level) or Home(selection). Left shift(total map view)",0,0)
 		canvas.DrawText("Cursors, f, g, space..",0,20)
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
