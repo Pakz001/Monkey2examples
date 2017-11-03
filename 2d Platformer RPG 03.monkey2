@@ -906,7 +906,7 @@ Class player
         For Local y2:=cy-1 Until cy+2
         For Local x2:=cx-1 Until cx+2
             If x2>=0 And x2<mapwidth And y2>=0 And y2<mapheight	            		        
-                If mymap.mapfinal[x2,y2] = 0           
+                If mymap.mapfinal[x2,y2] = mymap.tilesolid Or mymap.mapfinal[x2,y2] = mymap.tilemineable           
 	                	                     
                     If rectsoverlap(x,y,pw,ph,x2*tw,
                                     y2*th,tw,th) = True                                    	                    
