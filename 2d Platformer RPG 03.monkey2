@@ -720,6 +720,7 @@ Class player
 	Field facing:String="right"
 	Field gtkd:Bool=False 'grenade thrown key down
 	Field sfkd:Bool=False 'shogun fire key down
+	Field minedelay:Int
 	Method New()
 		movespeed = 1
 		px = tilewidth*20
@@ -795,6 +796,55 @@ Class player
 			fireshotgun()					
 		End if
 
+		' Mine left or right
+		If minedelay > 0 Then minedelay -= 1
+		If Keyboard.KeyDown(Key.M) And minedelay <=0
+		minedelay = 30
+		mine()
+		End If
+
+	End Method
+	Method mine()
+		If facing = "left"
+		For Local x:Int=px Until px-tilewidth Step -1
+			Local x2:Int = x / tilewidth
+			Local y2:Int = py / tileheight
+			If mymap.mapfinal[x2,y2] = mymap.tilemineable
+				mymap.mapfinal[x2,y2] = mymap.tileempty
+				Return
+			End If
+		Next
+		End If
+		If facing = "right"
+		For Local x:Int=px Until px+tilewidth
+			Local x2:Int = x / tilewidth
+			Local y2:Int = py / tileheight
+			If mymap.mapfinal[x2,y2] = mymap.tilemineable
+				mymap.mapfinal[x2,y2] = mymap.tileempty
+				Return
+			End If
+		Next
+		End If	
+		If facing = "up"
+		For Local y:Int=py Until py-tileheight*2 Step -1
+			Local x2:Int = px / tilewidth
+			Local y2:Int = y / tileheight
+			If mymap.mapfinal[x2,y2] = mymap.tilemineable
+				mymap.mapfinal[x2,y2] = mymap.tileempty
+				Return
+			End If
+		Next
+		End If	
+		If facing = "down"
+		For Local y:Int=py Until py+tileheight
+			Local x2:Int = px / tilewidth
+			Local y2:Int = y / tileheight
+			If mymap.mapfinal[x2,y2] = mymap.tilemineable
+				mymap.mapfinal[x2,y2] = mymap.tileempty
+				Return
+			End If
+		Next
+		End If	
 
 	End Method
 	Method fireshotgun()
