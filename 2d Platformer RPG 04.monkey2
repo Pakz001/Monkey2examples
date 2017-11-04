@@ -1,4 +1,3 @@
-
 #Import "<std>"
 #Import "<mojo>"
 
@@ -2187,7 +2186,7 @@ Class MyWindow Extends Window
 		canvas.Scissor = New Recti(0,0,screenwidth,screenheight)
 		canvas.Color = Color.White
 		canvas.DrawText(App.FPS+"  Press 1(new level) or Home(selection). Left shift(total map view)",0,0)
-		canvas.DrawText("Cursors, f, g, space..",0,20)
+		canvas.DrawText("Cursors(move), f(shotgun), g(grenade), m(mine) space(jump)..",0,20)		
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 	
