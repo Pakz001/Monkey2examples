@@ -16,6 +16,10 @@ Global screenheight:Int=600
 Global tilewidth:Int=20
 Global tileheight:Int=20
 
+'
+' Items that move towards the player and into his inventory
+' by mining,
+'
 Class item
 	Field px:Float,py:Float
 	Field w:Int,h:Int
@@ -23,7 +27,7 @@ Class item
 	Field angle:Float
 	Field mx:Float,my:Float
 	Field speed:Float
-	Field kind:String 'coal,metal,gold,rock
+	Field kind:String 'coal,metal,gold,rock	
 	Field removetime:Int=2000
 	Field time:Int
 	Method New(x:Int,y:Int,kind:String)
@@ -42,8 +46,16 @@ Class item
 		If distance(pcx,pcy,px,py) < 20 Then
 			deleteme = True
 		End If
+
+		' gravity
+		If mymap.mapcollide(px,py+Ceil(my)+2,w,h) = False Then 			
+			If my<3 Then my+=.1
+			Else
+				my=0
+		End if
+
 		' if in range then move to player
-		If distance(pcx,pcy,px,py) < 150 Then 
+		If distance(pcx,pcy,px,py) < 150 Then 			
 			angle = getangle(px,py,pcx,pcy)
 			mx = Cos(angle)
 			my = Sin(angle)			
@@ -51,12 +63,11 @@ Class item
 			mx=0			
 		End if
 
-		' gravity
-		If mymap.mapcollide(px,py+Ceil(my)+2,w,h) = False Then 
-			If my<3 Then my+=.1
-			Else
-				my=0
-		End if
+		' floor collision
+		If mymap.mapcollide(px,py+1,w,h) = True Then 						
+				my=-1
+		End If
+
 		' ceiling collision
 		If mymap.mapcollide(px,py-1,w,h) = True Then 						
 				my=1
@@ -768,6 +779,7 @@ Class menuselect
 End Class
 
 Class player
+	Field mineitem:String[] = New String[]("gold","coal","metal","rock")
 	Field regularmode:Bool=True
 	Field jump:Bool=False
 	Field incy:Float=0
@@ -875,7 +887,7 @@ Class player
 			Local y2:Int = py / tileheight
 			If mymap.mapfinal[x2,y2] = mymap.tilemineable
 				mymap.mapfinal[x2,y2] = mymap.tileempty
-				addrandomitem(x2,y2)
+				createmineitem(x2,y2)
 				Return
 			End If
 		Next
@@ -886,7 +898,7 @@ Class player
 			Local y2:Int = py / tileheight
 			If mymap.mapfinal[x2,y2] = mymap.tilemineable
 				mymap.mapfinal[x2,y2] = mymap.tileempty
-				addrandomitem(x2,y2)
+				createmineitem(x2,y2)
 				Return
 			End If
 		Next
@@ -897,7 +909,7 @@ Class player
 			Local y2:Int = y / tileheight
 			If mymap.mapfinal[x2,y2] = mymap.tilemineable
 				mymap.mapfinal[x2,y2] = mymap.tileempty
-				addrandomitem(x2,y2)
+				createmineitem(x2,y2)
 				Return
 			End If
 		Next
@@ -908,19 +920,21 @@ Class player
 			Local y2:Int = y / tileheight
 			If mymap.mapfinal[x2,y2] = mymap.tilemineable
 				mymap.mapfinal[x2,y2] = mymap.tileempty
-				addrandomitem(x2,y2)
+				createmineitem(x2,y2)
 				Return
 			End If
 		Next
 		End If	
 
 	End Method
-	Method addrandomitem(x2:Int,y2:Int)		
+	Method createmineitem(x2:Int,y2:Int)		
 		x2 *= tw
 		y2 *= th
 		x2 += tw/2
 		y2 += th/2
-		myitem.Add(New item(x2,y2,"gold"))
+		For Local i:Int=0 Until Rnd(3)				
+		myitem.Add(New item(x2+Rnd(-tw/3,th/3),y2+Rnd(th/3,th/3),mineitem[Rnd(mineitem.Length)]))
+		Next
 	End Method
 	Method fireshotgun()
 		Local angle:Float
@@ -1248,6 +1262,9 @@ Class player
 		
 		' Draw the bullets
 		'
+		canvas.OutlineMode=OutlineMode.Solid
+		canvas.OutlineColor = Color.Grey
+		canvas.OutlineWidth = 1					
 		canvas.Color = Color.Yellow
 		For Local i:=Eachin mybullet
 			Local x2:Int=i.px-mcx*tw+mox
@@ -1256,11 +1273,11 @@ Class player
 		Next
 		' Draw the grenades
 		'
-		canvas.Color = Color.Grey
+		canvas.Color = Color.Titanium
 		For Local i:=Eachin mygrenade
 			Local x2:Int=i.px-mcx*tw+mox
 			Local y2:Int=i.py-mcy*th+moy
-			canvas.DrawCircle(x2,y2,6)
+			canvas.DrawCircle(x2,y2,4)
 		Next
 		' Draw the fragmentation 
 		'
@@ -1269,17 +1286,16 @@ Class player
 			Local x2:Int=i.px-mcx*tw+mox
 			Local y2:Int=i.py-mcy*th+moy
 			canvas.DrawCircle(x2,y2,3)
-		Next
-
+		Next		
 		' Draw the items
 		'
-		canvas.Color = Color.White
+		canvas.Color = Color.Red
 		For Local i:=Eachin myitem
 			Local x2:Int=i.px-mcx*tw+mox
-			Local y2:Int=i.py-mcy*th+moy
+			Local y2:Int=i.py-mcy*th+moy			
 			canvas.DrawCircle(x2,y2,3)
 		Next
-		
+		canvas.OutlineMode=OutlineMode.None		
 	End Method
 	Method m:Int(x:Int,y:Int,offx:int,offy:int)
 		Return mywatermap.map[x+offx,y+offy]
