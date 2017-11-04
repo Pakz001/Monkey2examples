@@ -16,6 +16,71 @@ Global screenheight:Int=600
 Global tilewidth:Int=20
 Global tileheight:Int=20
 
+Class item
+	Field px:Float,py:Float
+	Field w:Int,h:Int
+	Field deleteme:Bool
+	Field angle:Float
+	Field mx:Float,my:Float
+	Field speed:Float
+	Field kind:String 'coal,metal,gold,rock
+	Field removetime:Int=2000
+	Field time:Int
+	Method New(x:Int,y:Int,kind:String)
+		Self.px = x
+		Self.py = y
+		Self.kind = kind
+	End Method
+	Method update()
+		' if to long in game then remove
+		time+=1
+		If time>removetime Then deleteme=True
+		' get player center position
+		Local pcx:Int=myplayer.px + (myplayer.pw/2)
+		Local pcy:Int=myplayer.py + (myplayer.ph/2)
+		'if distance closest then add to player inventory		
+		If distance(pcx,pcy,px,py) < 20 Then
+			deleteme = True
+		End If
+		' if in range then move to player
+		If distance(pcx,pcy,px,py) < 150 Then 
+			angle = getangle(px,py,pcx,pcy)
+			mx = Cos(angle)
+			my = Sin(angle)			
+			Else
+			mx=0			
+		End if
+
+		' gravity
+		If mymap.mapcollide(px,py+Ceil(my)+2,w,h) = False Then 
+			If my<3 Then my+=.1
+			Else
+				my=0
+		End if
+		' ceiling collision
+		If mymap.mapcollide(px,py-1,w,h) = True Then 						
+				my=1
+		End If
+		' left side collision
+		If mymap.mapcollide(px-1,py,w,h) = True Then 						
+				mx=1
+		End if
+		' right side collision
+		If mymap.mapcollide(px+1,py,w,h) = True Then 						
+				mx=-1
+		End If
+		' move the item
+		px += mx
+		py += my		
+	End Method
+    Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
+        Return Abs(x2-x1)+Abs(y2-y1)
+    End Function
+	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
+		Return ATan2(y2-y1, x2-x1)
+	End Function    	
+End Class
+
 'fragmentation things
 Class frag
 	Field px:Float,py:Float 'pixel x and y
@@ -711,7 +776,7 @@ Class player
 	Field pmx:Float,pmy:Float
 	Field ptx:Float,pty:Float
 	Field mox:Int,moy:Float
-	Field pw:Int,ph:Int
+	Field pw:Int,ph:Int	
 	Field mcx:Int,mcy:Int,mpx:Int,mpy:Int ' scroll coordinates
 	Field maptileswidth:Int,maptilesheight:Int
 	Field tw:Float=tilewidth
@@ -810,6 +875,7 @@ Class player
 			Local y2:Int = py / tileheight
 			If mymap.mapfinal[x2,y2] = mymap.tilemineable
 				mymap.mapfinal[x2,y2] = mymap.tileempty
+				addrandomitem(x2,y2)
 				Return
 			End If
 		Next
@@ -820,6 +886,7 @@ Class player
 			Local y2:Int = py / tileheight
 			If mymap.mapfinal[x2,y2] = mymap.tilemineable
 				mymap.mapfinal[x2,y2] = mymap.tileempty
+				addrandomitem(x2,y2)
 				Return
 			End If
 		Next
@@ -830,6 +897,7 @@ Class player
 			Local y2:Int = y / tileheight
 			If mymap.mapfinal[x2,y2] = mymap.tilemineable
 				mymap.mapfinal[x2,y2] = mymap.tileempty
+				addrandomitem(x2,y2)
 				Return
 			End If
 		Next
@@ -840,11 +908,19 @@ Class player
 			Local y2:Int = y / tileheight
 			If mymap.mapfinal[x2,y2] = mymap.tilemineable
 				mymap.mapfinal[x2,y2] = mymap.tileempty
+				addrandomitem(x2,y2)
 				Return
 			End If
 		Next
 		End If	
 
+	End Method
+	Method addrandomitem(x2:Int,y2:Int)		
+		x2 *= tw
+		y2 *= th
+		x2 += tw/2
+		y2 += th/2
+		myitem.Add(New item(x2,y2,"gold"))
 	End Method
 	Method fireshotgun()
 		Local angle:Float
@@ -1195,6 +1271,14 @@ Class player
 			canvas.DrawCircle(x2,y2,3)
 		Next
 
+		' Draw the items
+		'
+		canvas.Color = Color.White
+		For Local i:=Eachin myitem
+			Local x2:Int=i.px-mcx*tw+mox
+			Local y2:Int=i.py-mcy*th+moy
+			canvas.DrawCircle(x2,y2,3)
+		Next
 		
 	End Method
 	Method m:Int(x:Int,y:Int,offx:int,offy:int)
@@ -2075,6 +2159,7 @@ Global mybullet:List<bullet> = New List<bullet>
 Global mygrenade:List<grenade> = New List<grenade>
 Global myfrag:List<frag> = New List<frag>
 Global myplayer:player
+Global myitem:List<item> = New List<item>
 
 Class MyWindow Extends Window
 	Field time:Int
@@ -2133,7 +2218,14 @@ Class MyWindow Extends Window
 		For Local i:=Eachin myfrag
 			If i.deleteme = True Then myfrag.Remove(i)
 		Next
-			
+
+		For Local i:=Eachin myitem
+			i.update()
+		Next
+		For Local i:=Eachin myitem
+			If i.deleteme = True Then myitem.Remove(i)
+		Next
+						
 		
 		'debugbullettest
 		'If Rnd(20)<2 Then mygrenade.AddLast(New grenade(myplayer.px,myplayer.py,myplayer.facing))
@@ -2216,6 +2308,10 @@ End Function
 Function resetmap(Width:Int,Height:int)
 		myflyingmonster.Clear()
 		myturret.Clear()
+		myitem.Clear()
+		mybullet.Clear()
+		myfrag.Clear()
+		mygrenade.Clear()		
 		SeedRnd(100+Microsecs())
 		'Local s:Int=Rnd(140,150)
 		'mapwidth = 
@@ -2244,6 +2340,8 @@ Function resetmap(Width:Int,Height:int)
 		mywatermap.findpoorspot()
 		'
 		myplayer = New player()
+		
+		myitem.Add(New item(100,100,"gold"))
 End Function 
 
 Function Main()
