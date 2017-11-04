@@ -43,9 +43,9 @@ Class item
 		Local pcx:Int=myplayer.px + (myplayer.pw/2)
 		Local pcy:Int=myplayer.py + (myplayer.ph/2)
 		'if distance closest then add to player inventory		
-		If distance(pcx,pcy,px,py) < 20 Then
-			deleteme = True
-		End If
+		If distance(pcx,pcy,px,py) < 10 Then
+			' code to add to player inventory here...
+			deleteme = TrueEnd If
 
 		' gravity
 		If mymap.mapcollide(px,py+Ceil(my)+2,w,h) = False Then 			
@@ -2358,6 +2358,9 @@ Function resetmap(Width:Int,Height:int)
 		myplayer = New player()
 		
 		myitem.Add(New item(100,100,"gold"))
+		myitem.Add(New item(106,105,"gold"))
+		myitem.Add(New item(110,115,"gold"))
+		myitem.Add(New item(115,120,"gold"))
 End Function 
 
 Function Main()
