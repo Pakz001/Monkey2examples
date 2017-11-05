@@ -45,7 +45,8 @@ Class item
 		'if distance closest then add to player inventory		
 		If distance(pcx,pcy,px,py) < 10 Then
 			' code to add to player inventory here...
-			deleteme = TrueEnd If
+			deleteme = True
+		End If
 
 		' gravity
 		If mymap.mapcollide(px,py+Ceil(my)+2,w,h) = False Then 			
