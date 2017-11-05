@@ -26,9 +26,12 @@ Class tentacle
 	Field topx:Float,topy:Float
 	Field angle:Float
 	Field mx:Float,my:Float
-	Field speed:Float = 8
+	Field speed:Float = 14
 	Field deleteme:Bool=False
 	Field state:String = "outgoing"
+	Field grabbed:Bool=False
+	Field grabbedx:Int
+	Field grabbedy:Int
 	Method New(basex:Float,basey:Float,targetx:Float,targety:Float)
 		Self.basex = basex
 		Self.basey = basey
@@ -46,13 +49,29 @@ Class tentacle
 			topx += mx
 			topy += my
 			If state = "outgoing"
-				If distance(topx,topy,targetx,targety) < 10 Then 
+				For Local i:=Eachin myflyingmonster
+					Local x:Int=i.px+(i.w/2)
+					Local y:Int=i.py+(i.h/2)
+					If distance(topx,topy,x,y) < 10
+						topx = i.px
+						topy = i.py
+						angle = getangle(topx,topy,basex,basey)
+						mx = Cos(angle)
+						my = Sin(angle)
+						grabbed = True
+						state = "ingoing"
+						i.deleteme = True
+						Exit						
+					End If
+				Next
+			End if	
+			If state="outgoing" And grabbed=False And distance(topx,topy,targetx,targety) < 10 Then 
 					state = "ingoing"
 					mx = -mx
 					my = -my
 					Return
-				End if 
-			Elseif state = "ingoing"
+			End If
+			If state = "ingoing"
 				If distance(topx,topy,basex,basey) < 10 Then
 					deleteme = True
 					Return
@@ -645,18 +664,45 @@ Class growslime
 		' Every now and then check if active slime part is in range
 		' of player/enemy and then check if path is clear and if so
 		' then initiate tentacle.
+		' Grab player
 		For Local i:Int=0 Until openx.Length
 			Local x1:Int = openx.Get(i) * (myplayer.tw/2)
 			Local y1:Int = openy.Get(i) * (myplayer.th/2)
 			Local pcx:Int=myplayer.px+(myplayer.pw/2)
 			Local pcy:Int=myplayer.py+(myplayer.ph/2)
-			If Rnd(30)<2 And distance(pcx,pcy,x1,y1) < 200 
+			' grab monster
+			If Rnd(300) < 2
+				For Local i2:=Eachin myflyingmonster
+					Local mcx:Int=i2.px+(i2.w/2)
+					Local mcy:Int=i2.py+(i2.h/2)
+					If distance(mcx,mcy,x1,y1) < 200
+						Local an:Float = getangle(x1,y1,mcx,mcy)
+						Local mx:Float = Cos(an)
+						Local my:Float = Sin(an)
+						Local x2:Float = x1
+						Local y2:Float = y1
+						For Local i3:Int=0 Until 200
+							x2 += mx
+							y2 += my
+							If mymap.mapcollide(x2,y2,i2.w,i2.h) = True Then 
+								Exit
+							End If
+							If distance(x2,y2,mcx,mcy) < 50 Then 
+								mytentacle.Add(New tentacle(x1,y1,mcx,mcy))					
+								Exit
+							End If
+						Next
+						Exit
+					End If
+				Next
+			End if
+			'grab player
+			If Rnd(300)<2 And distance(pcx,pcy,x1,y1) < 200 
 				Local an:Float = getangle(x1,y1,pcx,pcy)
 				Local mx:Float = Cos(an)
 				Local my:Float = Sin(an)
 				Local x2:Float = x1
 				Local y2:Float = y1
-				Local graboid:Bool=True
 				For Local i2:Int=0 Until 200
 					x2 += mx
 					y2 += my
@@ -671,6 +717,8 @@ Class growslime
 				Exit
 			End if			
 		Next
+
+
 		
 		' Expand Slime		
 		For Local i:Int=0 Until openx.Length
@@ -1399,6 +1447,9 @@ Class player
 			Local x2:Int=i.topx-mcx*tw+mox
 			Local y2:Int=i.topy-mcy*th+moy			
 			canvas.DrawLine(x1,y1,x2,y2)
+			If i.grabbed = True
+				canvas.DrawRect(x2-(tilewidth/2),y2-(tileheight/2),tilewidth,tileheight)
+			End If
 		Next
 		canvas.OutlineMode=OutlineMode.None		
 	End Method
@@ -2457,8 +2508,6 @@ Function resetmap(Width:Int,Height:int)
 		myturret.AddFirst(New turret())
 		mymap.updateimage(mymap.mapcanvas)
 		mygrowslime = New growslime()
-		mygrowslime.openx.Push(20)
-		mygrowslime.openy.Push(20)
 		mywatermap = New watermap(Width,Height,mapwidth,mapheight,mapwidth*400)
 		For Local y:=0 Until mapheight
 		For Local x:=0 Until mapwidth
@@ -2481,6 +2530,8 @@ Function resetmap(Width:Int,Height:int)
 		myitem.Add(New item(106,105,"gold"))
 		myitem.Add(New item(110,115,"gold"))
 		myitem.Add(New item(115,120,"gold"))
+
+
 End Function 
 
 Function Main()
