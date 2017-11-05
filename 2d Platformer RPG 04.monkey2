@@ -259,8 +259,9 @@ Class frag
 		Next
 		
 		' frag collision with the eggs
-		If eggcollide(px,py,w,h)
+		If eggcollide(px-1,py-1,w+2,h+2)
 			deleteme = True
+			'myitem.Add(New item(px,py,"gold"))
 			Return
 		End if
 		Next
@@ -283,6 +284,7 @@ Class frag
 		If x2<>-1			
 			If Rnd(7)<1 Then 
 				mymap.mapfinal[x2,y2] = mymap.tileempty
+				myitem.Add(New item(x2*tilewidth,y2*tileheight,"gold"))
 				mymap.updateimage(mymap.mapcanvas)
 			End If
 			Return True
@@ -327,6 +329,7 @@ Class grenade
 		Self.angle = angle
 		mx = Cos(angle)
 		my = Sin(angle)
+
 	End Method
 	Method update()		
 		For Local bulletspeed:Int=0 Until 4
@@ -434,10 +437,10 @@ Class grenade
 		If rightbottomx < 0 Or rightbottomx >= mmw Then Return True
 		If rightbottomy < 0 Or rightbottomy >= mmh Then Return True
 		
-		If mymap.mapfinal[lefttopx,lefttopy] = mymap.tilesolid Then Return True
-		If mymap.mapfinal[righttopx,righttopy] = mymap.tilesolid Then Return True
-		If mymap.mapfinal[leftbottomx,leftbottomy] = mymap.tilesolid Then Return True
-		If mymap.mapfinal[rightbottomx,rightbottomy] = mymap.tilesolid Then Return True						
+		If mymap.mapfinal[lefttopx,lefttopy] <> mymap.tileempty Then Return True
+		If mymap.mapfinal[righttopx,righttopy] <> mymap.tileempty Then Return True
+		If mymap.mapfinal[leftbottomx,leftbottomy] <> mymap.tileempty Then Return True
+		If mymap.mapfinal[rightbottomx,rightbottomy] <> mymap.tileempty Then Return True						
 		If mygrowslime.map[lefttopx*2,lefttopy*2] = mymap.tileslime Then Return True
 		If mygrowslime.map[righttopx*2,righttopy*2] = mymap.tileslime Then Return True
 		If mygrowslime.map[leftbottomx*2,leftbottomy*2] = mymap.tileslime Then Return True
@@ -511,6 +514,7 @@ Class bullet
 		countdown-=1
 		If countdown < 0 Then deleteme = True ; Return
 		If mymap.mapcollide(px,py,w,h) Then deleteme = True
+		' Collision with bullet and flying monster
 		For Local i:=Eachin myflyingmonster
 			If distance(px,py,i.x*tilewidth,i.y*tileheight) < tilewidth Then 
 				i.hp -= 1
@@ -523,8 +527,10 @@ Class bullet
 				Return
 			End If
 		Next
+		' Collision with bullet and egg
 		If eggcollide(px,py,w,h) Then 						
 			deleteme = True
+			myitem.Add(New item(px,py,"gold"))
 			Return
 		End If
 		px += Cos(angle)*mx
@@ -1017,8 +1023,10 @@ Class player
 		' throw grenade
 		If Keyboard.KeyDown(Key.G) = False Then gtkd = False
 		If gtkd = False And Keyboard.KeyDown(Key.G)
-			gtkd = True
-			mygrenade.AddLast(New grenade(myplayer.px,myplayer.py,myplayer.facing))
+			gtkd = True			
+			Local pcx:Int=px+(pw/2)
+			Local pcy:Int=py+(ph/2)						
+			mygrenade.AddLast(New grenade(pcx,pcy,myplayer.facing))
 		End if
 		
 		' Fire shotgun
@@ -1201,7 +1209,7 @@ Class player
         For Local y2:=cy-1 Until cy+2
         For Local x2:=cx-1 Until cx+2
             If x2>=0 And x2<mapwidth And y2>=0 And y2<mapheight	            		        
-                If mymap.mapfinal[x2,y2] = mymap.tilesolid Or mymap.mapfinal[x2,y2] = mymap.tilemineable           
+                If mymap.mapfinal[x2,y2] <> mymap.tileempty 'Or mymap.mapfinal[x2,y2] = mymap.tilemineable           
 	                	                     
                     If rectsoverlap(x,y,pw,ph,x2*tw,
                                     y2*th,tw,th) = True                                    	                    
@@ -1451,21 +1459,23 @@ Class player
 			Local y2:Int=i.py-mcy*th+moy			
 			canvas.DrawCircle(x2,y2,3)
 		Next
-		canvas.OutlineMode=OutlineMode.None		
 		'
 		' Draw the tentacles 
 		'
-		canvas.Color = Color.Green
-		canvas.OutlineMode=OutlineMode.Solid
-		canvas.OutlineColor = Color.White
-		canvas.OutlineWidth = 4		
+		
 		For Local i:=Eachin mytentacle
 			Local x1:Int=i.basex-mcx*tw+mox
 			Local y1:Int=i.basey-mcy*th+moy			
 			Local x2:Int=i.topx-mcx*tw+mox
 			Local y2:Int=i.topy-mcy*th+moy			
-			canvas.DrawLine(x1,y1,x2,y2)
+			canvas.Color = Color.Green
+			For Local y3:Int=-1 To 1
+			For Local x3:Int=-1 To 1
+				canvas.DrawLine(x1+x3,y1+y3,x2+x3,y2+y3)
+			Next
+			Next
 			If i.grabbed = True
+				canvas.Color = Color.Red
 				canvas.DrawRect(x2-(tilewidth/2),y2-(tileheight/2),tilewidth,tileheight)
 			End If
 		Next
@@ -2332,10 +2342,10 @@ Class map
 		If rightbottomx < 0 Or rightbottomx >= mmw Then Return True
 		If rightbottomy < 0 Or rightbottomy >= mmh Then Return True
 		
-		If mapfinal[lefttopx,lefttopy] = mymap.tilesolid Then Return True
-		If mapfinal[righttopx,righttopy] = mymap.tilesolid Then Return True
-		If mapfinal[leftbottomx,leftbottomy] = mymap.tilesolid Then Return True
-		If mapfinal[rightbottomx,rightbottomy] = mymap.tilesolid Then Return True						
+		If mapfinal[lefttopx,lefttopy] <> mymap.tileempty Then Return True
+		If mapfinal[righttopx,righttopy] <> mymap.tileempty Then Return True
+		If mapfinal[leftbottomx,leftbottomy] <> mymap.tileempty Then Return True
+		If mapfinal[rightbottomx,rightbottomy] <> mymap.tileempty Then Return True						
 		Return False
 	End Method	
 End Class
