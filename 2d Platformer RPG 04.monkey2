@@ -4,6 +4,7 @@
 Using std..
 Using mojo..
 
+Global developmode:Bool=False
 Global theversion:String="Version 5-11-2017"
 Global gamestate:String="select"
 Global egghatchspeed:Float = 0.1 'how fast eggs hatch
@@ -49,6 +50,7 @@ Class tentacle
 			topx += mx
 			topy += my
 			If state = "outgoing"
+				'check collision with flyingmonster
 				For Local i:=Eachin myflyingmonster
 					Local x:Int=i.px+(i.w/2)
 					Local y:Int=i.py+(i.h/2)
@@ -64,6 +66,19 @@ Class tentacle
 						Exit						
 					End If
 				Next
+				'check collision with player
+				Local x:Int=myplayer.px+(myplayer.pw/2)
+				Local y:Int=myplayer.py+(myplayer.ph/2)
+				If developmode = False And distance(x,y,topx,topy) < 20
+					mx = -mx
+					my = -my
+					state = "ingoing"
+					myplayer.hp -= 10
+					If myplayer.hp < 0 Then 
+						gamestate = "select"
+						Return
+					End if
+				End If
 			End if	
 			If state="outgoing" And grabbed=False And distance(topx,topy,targetx,targety) < 10 Then 
 					state = "ingoing"
@@ -917,6 +932,7 @@ Class menuselect
 End Class
 
 Class player
+	Field hp:Int=100
 	Field mineitem:String[] = New String[]("gold","coal","metal","rock")
 	Field regularmode:Bool=True
 	Field jump:Bool=False
@@ -2462,7 +2478,7 @@ Class MyWindow Extends Window
 		canvas.Scissor = New Recti(0,0,screenwidth,screenheight)
 		canvas.Color = Color.White
 		canvas.DrawText(App.FPS+"  Press 1(new level) or Home(selection). Left shift(total map view)",0,0)
-		canvas.DrawText("Cursors(move), f(shotgun), g(grenade), m(mine) space(jump)..",0,20)
+		canvas.DrawText("Cursors(move), s(shotgun), g(grenade), m(mine) space(jump)..",0,20)
 		canvas.DrawText(theversion,0,Height-20)	
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
