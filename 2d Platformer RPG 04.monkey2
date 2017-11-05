@@ -4,7 +4,7 @@
 Using std..
 Using mojo..
 
-Global theversion:String="Version 4-11-2017"
+Global theversion:String="Version 5-11-2017"
 Global gamestate:String="select"
 Global egghatchspeed:Float = 0.1 'how fast eggs hatch
 Global egglayingfreq:Float = 0.1 ' lay lots of eggs 1 lay less eggs 0 '0 to 1
@@ -16,6 +16,57 @@ Global screenwidth:Int=800
 Global screenheight:Int=600
 Global tilewidth:Int=20
 Global tileheight:Int=20
+
+'
+' The tentacle for the growing slime monster
+'
+Class tentacle
+	Field basex:Float,basey:Float
+	Field targetx:Float,targety:Float
+	Field topx:Float,topy:Float
+	Field angle:Float
+	Field mx:Float,my:Float
+	Field speed:Float = 8
+	Field deleteme:Bool=False
+	Field state:String = "outgoing"
+	Method New(basex:Float,basey:Float,targetx:Float,targety:Float)
+		Self.basex = basex
+		Self.basey = basey
+		Self.topx = basex
+		Self.topy = basey
+		Self.targetx = targetx
+		Self.targety = targety
+		angle = getangle(basex,basey,targetx,targety)
+		mx = Cos(angle)
+		my = Sin(angle)
+	End Method
+	Method update()
+		If speed > 1 Then speed -= .1
+		For Local movement:Int=0 Until speed
+			topx += mx
+			topy += my
+			If state = "outgoing"
+				If distance(topx,topy,targetx,targety) < 10 Then 
+					state = "ingoing"
+					mx = -mx
+					my = -my
+					Return
+				End if 
+			Elseif state = "ingoing"
+				If distance(topx,topy,basex,basey) < 10 Then
+					deleteme = True
+					Return
+				End If
+			End If
+		Next
+	End Method
+    Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
+        Return Abs(x2-x1)+Abs(y2-y1)
+    End Function
+	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
+		Return ATan2(y2-y1, x2-x1)
+	End Function    	
+End Class
 
 '
 ' Items that move towards the player and into his inventory
@@ -589,8 +640,39 @@ Class growslime
 	Method update(speed:String)
 		Local freq:Int
 		If speed = "slow" Then freq = 120 Else freq = 20
-		' Expand Slime
 		
+		' Tentacle check
+		' Every now and then check if active slime part is in range
+		' of player/enemy and then check if path is clear and if so
+		' then initiate tentacle.
+		For Local i:Int=0 Until openx.Length
+			Local x1:Int = openx.Get(i) * (myplayer.tw/2)
+			Local y1:Int = openy.Get(i) * (myplayer.th/2)
+			Local pcx:Int=myplayer.px+(myplayer.pw/2)
+			Local pcy:Int=myplayer.py+(myplayer.ph/2)
+			If Rnd(30)<2 And distance(pcx,pcy,x1,y1) < 200 
+				Local an:Float = getangle(x1,y1,pcx,pcy)
+				Local mx:Float = Cos(an)
+				Local my:Float = Sin(an)
+				Local x2:Float = x1
+				Local y2:Float = y1
+				Local graboid:Bool=True
+				For Local i2:Int=0 Until 200
+					x2 += mx
+					y2 += my
+					If mymap.mapcollide(x2,y2,myplayer.pw,myplayer.ph) = True Then 
+						Exit
+					End If
+					If distance(x2,y2,pcx,pcy) < 50 Then 
+						mytentacle.Add(New tentacle(x1,y1,pcx,pcy))					
+						Exit
+					End If
+				Next
+				Exit
+			End if			
+		Next
+		
+		' Expand Slime		
 		For Local i:Int=0 Until openx.Length
 			If Rnd(freq) > 2 Then Continue
 			Local x2:Int=openx.Get(i)
@@ -666,6 +748,12 @@ Class growslime
         Next
 
 	End Method
+    Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
+        Return Abs(x2-x1)+Abs(y2-y1)
+    End Function
+	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
+		Return ATan2(y2-y1, x2-x1)
+	End Function    	
 End Class
 
 
@@ -1296,6 +1384,21 @@ Class player
 			Local x2:Int=i.px-mcx*tw+mox
 			Local y2:Int=i.py-mcy*th+moy			
 			canvas.DrawCircle(x2,y2,3)
+		Next
+		canvas.OutlineMode=OutlineMode.None		
+		'
+		' Draw the tentacles 
+		'
+		canvas.Color = Color.Green
+		canvas.OutlineMode=OutlineMode.Solid
+		canvas.OutlineColor = Color.White
+		canvas.OutlineWidth = 4		
+		For Local i:=Eachin mytentacle
+			Local x1:Int=i.basex-mcx*tw+mox
+			Local y1:Int=i.basey-mcy*th+moy			
+			Local x2:Int=i.topx-mcx*tw+mox
+			Local y2:Int=i.topy-mcy*th+moy			
+			canvas.DrawLine(x1,y1,x2,y2)
 		Next
 		canvas.OutlineMode=OutlineMode.None		
 	End Method
@@ -2170,6 +2273,7 @@ End Class
 Global mymenuselect:menuselect
 Global mymap:map
 Global mygrowslime:growslime
+Global mytentacle:List<tentacle> = New List<tentacle>
 Global mywatermap:watermap
 Global myflyingmonster:List<theflyingmonster> = New List<theflyingmonster>
 Global myturret:List<turret> = New List<turret>
@@ -2211,6 +2315,17 @@ Class MyWindow Extends Window
 		Next
 
 		mygrowslime.update("slow")
+
+		' Update the tentacles
+		For Local i:=Eachin mytentacle
+			i.update()
+		Next
+		For Local i:=Eachin mytentacle
+			If i.deleteme = True Then mytentacle.Remove(i)
+		Next
+		
+		
+		' Update the bullets
 		For Local i:=Eachin mybullet
 			i.update()
 		Next
@@ -2342,6 +2457,8 @@ Function resetmap(Width:Int,Height:int)
 		myturret.AddFirst(New turret())
 		mymap.updateimage(mymap.mapcanvas)
 		mygrowslime = New growslime()
+		mygrowslime.openx.Push(20)
+		mygrowslime.openy.Push(20)
 		mywatermap = New watermap(Width,Height,mapwidth,mapheight,mapwidth*400)
 		For Local y:=0 Until mapheight
 		For Local x:=0 Until mapwidth
