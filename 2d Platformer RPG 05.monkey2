@@ -208,7 +208,7 @@ Class frag
 		If countdown < 0 Then deleteme = True ; Return
 		'bouncy vertical
 		If mymap.mapcollide(px,py+2,1,h) Then 			
-			my = -my+Rnd(-.1,.1)
+			my = -my*.8'+Rnd(-.1,.1)
 			Local cnt:Int=0
 			While mymap.mapcollide(px,py+2,1,h)
 				py+=my
@@ -223,9 +223,30 @@ Class frag
 			If mx>0 And mx<.2 Then mx=.2
 			
 		End If
+		'bounc ceiling
+		If mymap.mapcollide(px,py-2,1,h) Then 			
+			'slimed=slimecollide(px,py+2,1,h)
+			'If slimed = True Then Return
+			my = -my*.8
+			Local cnt:Int=0
+			While mymap.mapcollide(px,py-2,1,h)
+				py+=my
+				cnt+=1
+				If cnt>100 Then Exit
+			Wend
+		
+			mx*=.8
+			my*=.8
+		
+			If my<0 And my>-0.2 Then my=-0.2
+			If my>0 And my<.2 Then my=.2
+			If mx<0 And mx>-0.2 Then mx=-0.2
+			If mx>0 And mx<.2 Then mx=.2
+		
+		End If		
 		'bounce horizontally
 		If mymap.mapcollide(px-w,py,w*2,1) Then 			
-			mx = -mx+Rnd(-.1,.1)
+			mx = -mx*.8'+Rnd(-.1,.1)
 			Local cnt:Int=0
 			While mymap.mapcollide(px-w,py,w*2,1)
 				px+=mx	
@@ -351,7 +372,7 @@ Class grenade
 			If mapcollide(px,py-2,1,h) Then 			
 				'slimed=slimecollide(px,py+2,1,h)
 				'If slimed = True Then Return
-				my = -my+Rnd(-.1,.1)
+				my = -my*.8
 				Local cnt:Int=0
 				While mapcollide(px,py-2,1,h)
 					py+=my
@@ -372,7 +393,7 @@ Class grenade
 			If mapcollide(px,py+2,1,h) Then 			
 				'slimed=slimecollide(px,py+2,1,h)
 				'If slimed = True Then Return
-				my = -my+Rnd(-.1,.1)
+				my = -my*.8'-.1,.1)
 				Local cnt:Int=0
 				While mapcollide(px,py+2,1,h)
 					py+=my
@@ -393,10 +414,10 @@ Class grenade
 			If mapcollide(px-w,py,w*2,1) Then 			
 				'slimed=mapcollide(px-w,py,w*2,1)
 				'If slimed Then Return
-				mx = -mx+Rnd(-.1,.1)
+				mx = -mx*.8'+Rnd(-.1,.1)
 				Local cnt:Int=0
 				While mapcollide(px-w,py,w*2,1)
-					px+=mx	
+					px+=mx
 					cnt+=1
 					If cnt>100 Then Exit			
 				Wend
