@@ -4,6 +4,7 @@
 Using std..
 Using mojo..
 
+Global theversion:String="Version 4-11-2017"
 Global gamestate:String="select"
 Global egghatchspeed:Float = 0.1 'how fast eggs hatch
 Global egglayingfreq:Float = 0.1 ' lay lots of eggs 1 lay less eggs 0 '0 to 1
@@ -2295,7 +2296,8 @@ Class MyWindow Extends Window
 		canvas.Scissor = New Recti(0,0,screenwidth,screenheight)
 		canvas.Color = Color.White
 		canvas.DrawText(App.FPS+"  Press 1(new level) or Home(selection). Left shift(total map view)",0,0)
-		canvas.DrawText("Cursors(move), f(shotgun), g(grenade), m(mine) space(jump)..",0,20)		
+		canvas.DrawText("Cursors(move), f(shotgun), g(grenade), m(mine) space(jump)..",0,20)
+		canvas.DrawText(theversion,0,Height-20)	
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 	
