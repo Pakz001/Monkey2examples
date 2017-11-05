@@ -251,6 +251,7 @@ Class frag
 				i.hp -= 5
 				If i.hp<=0
 					i.deleteme = True
+					myitem.Add(New item(i.px,i.py,"gold"))
 				End If
 				deleteme = True
 				Return
@@ -515,7 +516,8 @@ Class bullet
 				i.hp -= 1
 				deleteme = True				
 				If i.hp <= 0
-					i.deleteme = True
+					i.deleteme = True					
+					myitem.Add(New item(px,py,"gold"))
 					Return
 				End if
 				Return
@@ -1467,7 +1469,8 @@ Class player
 				canvas.DrawRect(x2-(tilewidth/2),y2-(tileheight/2),tilewidth,tileheight)
 			End If
 		Next
-		canvas.OutlineMode=OutlineMode.None		
+		canvas.OutlineMode=OutlineMode.None	
+		'
 	End Method
 	Method m:Int(x:Int,y:Int,offx:int,offy:int)
 		Return mywatermap.map[x+offx,y+offy]
@@ -2547,7 +2550,9 @@ Function resetmap(Width:Int,Height:int)
 		myitem.Add(New item(110,115,"gold"))
 		myitem.Add(New item(115,120,"gold"))
 
-
+		'For Local i:Int=0 Until 20
+		'myflyingmonster.Add(New theflyingmonster(5,5))
+		'Next
 End Function 
 
 Function Main()
