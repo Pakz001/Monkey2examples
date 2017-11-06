@@ -5,7 +5,7 @@ Using std..
 Using mojo..
 
 Global developmode:Bool=False
-Global theversion:String="Version 5-11-2017"
+Global theversion:String="Version 6-11-2017"
 Global gamestate:String="select"
 Global egghatchspeed:Float = 0.1 'how fast eggs hatch
 Global egglayingfreq:Float = 0.1 ' lay lots of eggs 1 lay less eggs 0 '0 to 1
