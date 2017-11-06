@@ -531,7 +531,7 @@ Class frag
 		If countdown < 0 Then deleteme = True ; Return
 		
 		'Collision with mineable tiles
-		If mymap.mapmineablecollide(px-2,py-2,w+4,h+4,True,"frag")
+		If mymap.mapmineablecollide(px-4,py-4,w+8,h+8,True,"frag")
 			deleteme = True
 		End	if
 		
@@ -2914,7 +2914,7 @@ Class map
 	Method removemineable(x:Int,y:Int,kind:String)
 		Local chance:Int=10
 		If kind="gun" Then chance=50 
-		If kind="frag" Then chance = 10 
+		If kind="frag" Then chance = 10
 		If Rnd(chance) < 2 Then
 			mymap.mapfinal[x,y] = mymap.tileempty
 			myitem.Add(New item((x*tilewidth)+tilewidth/2,(y*tileheight)+tileheight/2,"gold"))
