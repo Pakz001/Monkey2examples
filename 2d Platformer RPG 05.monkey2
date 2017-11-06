@@ -120,8 +120,10 @@ Class item
 		Self.px = x
 		Self.py = y
 		Self.kind = kind
+		Self.mx = Rnd(-2,2)
 	End Method
 	Method update()
+		
 		' if to long in game then remove
 		time+=1
 		If time>removetime Then deleteme=True
@@ -147,7 +149,11 @@ Class item
 			mx = Cos(angle)
 			my = Sin(angle)			
 			Else
-			mx=0			
+			If mx > 0 Then mx-=.01
+			If mx < 0 Then mx+=.01
+			If mx<0.1 And mx>0 Then mx=0
+			If mx>-0.1 And mx<0 Then mx=0
+						
 		End if
 
 		' floor collision
@@ -312,7 +318,8 @@ Class frag
 		If mymap.mapfinal[leftbottomx,leftbottomy] = mymap.tileegg Then x2=leftbottomx;y2=leftbottomy
 		If mymap.mapfinal[rightbottomx,rightbottomy] = mymap.tileegg Then x2=rightbottomx;y2=rightbottomy
 		If x2<>-1			
-			If Rnd(7)<1 Then 
+			' destroy egg
+			If Rnd(3)<1 Then 
 				mymap.mapfinal[x2,y2] = mymap.tileempty
 				myitem.Add(New item(x2*tilewidth,y2*tileheight,"gold"))
 				mymap.updateimage(mymap.mapcanvas)
@@ -1708,7 +1715,7 @@ Class theflyingmonster
 					state="layegg"
 				End If
 			Case "layegg"
-				If mymap.mapfinal[x,y] = 1 Then
+				If mymap.mapfinal[x,y] = 1 Then				
 				mymap.mapfinal[x,y] = 3
 				mymap.updateimage(mymap.mapcanvas)				
 				Else
@@ -1720,6 +1727,8 @@ Class theflyingmonster
 	Method landandlayegg()
 		' Sometimes land and lay egg
 		If Rnd() < (egglayingfreq/10)
+			' Debug - So monster will not lay egg in player
+			If distance(myplayer.px,myplayer.py,px,py) < 150 Then Return
 			Local exitloop:Bool=False
 			Local y1:Int=y
 			Local egghere:Bool=False
@@ -2680,7 +2689,7 @@ Function resetmap(Width:Int,Height:int)
 		myitem.Add(New item(115,120,"gold"))
 
 
-		mygrowslime.addslime(10,30)
+		'mygrowslime.addslime(10,30)
 		'For Local i:Int=0 Until 20
 		'myflyingmonster.Add(New theflyingmonster(5,5))
 		'Next
