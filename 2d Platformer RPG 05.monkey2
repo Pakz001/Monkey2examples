@@ -1691,12 +1691,16 @@ Class player
 		
 		'
 		' Draw the laser walls
-		canvas.Color = Color.Yellow
+		
 		For Local i:=Eachin mylaserwall
 			Local x2:Int=i.tx-mcx*tw+mox
 			Local y2:Int=i.ty-mcy*th+moy
 			Local h:Int=i.by-i.ty
-			canvas.DrawRect(x2,y2,2,h)
+			canvas.Color = Color.Yellow
+			canvas.DrawRect(x2-2,y2,4,h)
+			canvas.Color = Color.Red
+			canvas.DrawRect(x2-4,y2,8,4)
+			canvas.DrawRect(x2-4,y2+h-4,8,4)
 		Next
 		
 	End Method
