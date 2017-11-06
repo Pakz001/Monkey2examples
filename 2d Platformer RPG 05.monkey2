@@ -2854,9 +2854,9 @@ Function resetmap(Width:Int,Height:int)
 
 
 		'mygrowslime.addslime(10,30)
-		For Local i:Int=0 Until 20
-			myflyingmonster.Add(New theflyingmonster(5,5))
-		Next
+		'For Local i:Int=0 Until 20
+		'	myflyingmonster.Add(New theflyingmonster(5,5))
+		'Next
 End Function 
 
 Function Main()
