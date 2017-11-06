@@ -1067,6 +1067,30 @@ Class growslime
 		Local freq:Int
 		If speed = "slow" Then freq = 120 Else freq = 20
 		
+		'every now And then check if we can restore growth
+		If Rnd(1500) < 2 Then
+			For Local y:Int=0 Until mymap.mmw*2
+			For Local x:Int=0 Until mymap.mmh*2
+				If mygrowslime.map[x,y] = mymap.tileslime					
+					For Local i:Int=0 Until openx.Length
+						If openx.Get(i) = x And openy.Get(i) = y Then Continue
+					Next					
+					Local cnt:Int=0
+					For Local y2:Int=y-1 To y+1
+					For Local x2:Int=x-1 To x+1
+						If mygrowslime.map[x2,y2] = mymap.tileempty
+							cnt+=1
+						End If
+					Next
+					Next
+					If cnt<9 Then 
+						addslime(x,y)
+					End If					
+				End if
+			Next
+			Next
+		End If
+		
 		' Tentacle check
 		' Every now and then check if active slime part is in range
 		' of player/enemy and then check if path is clear and if so
@@ -1181,6 +1205,24 @@ Class growslime
 			openx.Push(tx.Get(i))
 			openy.Push(ty.Get(i))
 		Next
+		
+		' Remove open slime where no slimetiles are underneath
+		tx = New Stack<Int>
+		ty = New Stack<Int>
+		For Local i:Int=0 Until openx.Length
+			If map[openx.Get(i),openy.Get(i)] = slimetile Then
+				tx.Push(openx.Get(i))
+				ty.Push(openy.Get(i))
+				Else
+			End if
+		Next
+		openx = New Stack<Int>
+		openy = New Stack<Int>
+		For Local i:Int=0 Until tx.Length
+			openx.Push(tx.Get(i))
+			openy.Push(ty.Get(i))
+		Next
+
 	End Method
 	Method slimecollide:Bool(x:Int,y:Int,w:Int,h:Int,remove:Bool)
 		If remove = True And Rnd(20) > 2 Then remove=False
@@ -1243,6 +1285,7 @@ For Local x2:Int=0 To 1
 	End Method
 
 	Method addslime(sx:Int,sy:Int)
+		If mymap.mapcollide((sx/2)*tilewidth,(sy/2)*tileheight,tilewidth/2,tileheight/2) Then Return
 		openx.Push(sx)
 		openy.Push(sy)
 		map[sx,sy] = slimetile
@@ -3119,7 +3162,7 @@ Function resetmap(Width:Int,Height:int)
 		myitem.Add(New item(115,120,"gold"))
 
 
-		'mygrowslime.addslime(10,30)
+		mygrowslime.addslime(10,30)
 		'For Local i:Int=0 Until 20
 	'		myflyingmonster.Add(New theflyingmonster(5,5))
 	 '	Next
