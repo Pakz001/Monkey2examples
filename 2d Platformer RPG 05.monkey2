@@ -56,7 +56,20 @@ Class laserwall
 			Endif
 		Next
 	End Method
-	
+	Method draw(canvas:Canvas)
+		Local dx:Float=Float(screenwidth)/Float(mapwidth)
+		Local dy:Float=Float(screenheight)/Float(mapheight)
+	    Local x1:Float=Float(tx/tilewidth)*dx
+    	Local y1:Float=Float(ty/tileheight)*dy
+	    Local x2:Float=Float(bx/tilewidth)*dx
+	    Local y2:Float=Float(by/tileheight)*dy
+    	Local h:Float=y2-y1
+    	
+		canvas.Color = Color.Yellow
+    	'SetColor 255,0,0		
+		canvas.DrawRect(x1+1,y1+1,3,h)
+
+	End Method	
 	' Return true if new laserwall is to close to
 	' existing laser wall
 	Method toclosetoother:Bool(x:Int,y:Int)
@@ -2774,6 +2787,9 @@ Class MyWindow Extends Window
 			canvas.Color = Color.White
 			canvas.DrawImage(mymap.mapladderimage,0,0)		
 			For Local i:=Eachin myflyingmonster
+				i.draw(canvas)
+			Next
+			For Local i:=Eachin mylaserwall
 				i.draw(canvas)
 			Next
 
