@@ -18,6 +18,83 @@ Global screenheight:Int=600
 Global tilewidth:Int=20
 Global tileheight:Int=20
 
+
+Class laserwall
+	' bottom x and y and top x and y
+	Field bx:Float,by:Float
+	Field tx:Float,ty:Float
+	Field deleteme:Bool
+	Method New(x:Int,y:Int)
+		If toclosetoother(x,y) Then Return
+		bx = x
+		by = getbottomtile(x,y)
+		tx = x
+		ty = gettoptile(x,y-10)		
+	End Method
+	
+	Method update()
+		Return
+		' Make flying enemies turn into other direction
+		' if close by
+		For Local i:=Eachin myflyingmonster
+			'If i.laserwait<>0 Then Continue
+			Local mx:Int
+			If i.substate="right" Then mx=5 Else mx = -5
+			If rectsoverlap(i.px-i.w+mx,i.py-i.h,i.w*3,i.h*3,tx-20,ty,40,(by-ty))
+			'i.laserwait=160
+			If i.substate="right" 
+				i.substate="left" 
+				i.x-=1
+				i.px -= 6
+			Else 
+				i.substate="right"
+				i.x+=1
+				i.px += 6
+				
+			End If
+			
+			Endif
+		Next
+	End Method
+	
+	' Return true if new laserwall is to close to
+	' existing laser wall
+	Method toclosetoother:Bool(x:Int,y:Int)
+		For Local i:=Eachin mylaserwall
+			If distance(x,y,i.tx,i.ty) < tilewidth*4 Then Return True
+			If distance(x,y,i.bx,i.by) < tilewidth*4 Then Return True
+		Next
+		Return False
+	End Method
+	
+	' Get the y position of bottom of the first tile above
+	Method getbottomtile:Int(x:Int,y:Int)
+		Local y2:Int=y				
+		Repeat
+			If mymap.mapcollide(x,y2,2,2) Then Return y2
+			y2+=1
+		Forever
+		Return y
+	End Method
+	
+	'Get the y position of the top of the first tile below
+	Method gettoptile:Int(x:Int,y:Int)
+		Local y2:Int=y				
+		Repeat
+			If mymap.mapcollide(x,y2,2,2) Then Return y2
+			y2-=1
+		Forever
+		Return y
+	End Method
+	Method rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+	    Return True
+	End	 Method	
+    Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
+        Return Abs(x2-x1)+Abs(y2-y1)
+    End Function	
+End Class
 '
 ' The tentacle for the growing slime monster
 '
@@ -1169,6 +1246,10 @@ Class player
 		mine()
 		End If
 
+		If Keyboard.KeyReleased(Key.L)
+			mylaserwall.Add(New laserwall(px,py+ph))
+		End If
+
 	End Method
 	Method mine()
 		If facing = "left"
@@ -1607,6 +1688,17 @@ Class player
 		Next
 		canvas.OutlineMode=OutlineMode.None	
 		'
+		
+		'
+		' Draw the laser walls
+		canvas.Color = Color.Yellow
+		For Local i:=Eachin mylaserwall
+			Local x2:Int=i.tx-mcx*tw+mox
+			Local y2:Int=i.ty-mcy*th+moy
+			Local h:Int=i.by-i.ty
+			canvas.DrawRect(x2,y2,2,h)
+		Next
+		
 	End Method
 	Method m:Int(x:Int,y:Int,offx:int,offy:int)
 		Return mywatermap.map[x+offx,y+offy]
@@ -1627,6 +1719,7 @@ Class theflyingmonster
 	Field deleteme:Bool
 	Field dbx:Int,dby:Int
 	Field dbtime:Int
+	Field laserwait:Int
 	' movement between tiles
 	' Field ox:Int,oy:Int
 	' tx and ty are the next tile the flying monster
@@ -1648,11 +1741,13 @@ Class theflyingmonster
 		state="hatched"
 	End Method
 	Method update()		
+		If laserwait>0 Then laserwait-=1
 		
 		If px < x*w Then px += sx
 		If px > x*w Then px -= sx
 		If py < y*h Then py += sy
 		If py > y*h Then py -= sy
+		If laserwall() Then changedirection()
 		If distance(px,py,x*w,y*h) > 8 Then Return
 		Select state
 			Case "hatched"
@@ -1705,6 +1800,7 @@ Class theflyingmonster
 				End Select
 				' Change direction to up or down if possible
 				' sometimes
+								
 				gorandupordown()
 				gorandleftorright()
 				'change direction sometimes to left or right
@@ -1726,6 +1822,24 @@ Class theflyingmonster
 				End If
 				state="takeoff"
 		End Select
+	End Method
+	Method laserwall:Bool()
+		For Local i:=Eachin mylaserwall
+			If rectsoverlap((px-w)+(Rnd(-w,w)),py-h,w*2,h*2,i.tx-5,i.ty,10,i.by-i.ty)
+				Return True
+			End If 
+		Next
+		Return False
+	End Method
+	Method changedirection()
+		state = "roam"
+		If substate = "left" Then 
+			substate="right" 
+			x += 2
+		Else 
+			substate="left"
+			x -= 2
+		End If
 	End Method
 	Method landandlayegg()
 		' Sometimes land and lay egg
@@ -1838,6 +1952,11 @@ Class theflyingmonster
     Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
         Return Abs(x2-x1)+Abs(y2-y1)
     End Function	
+	Method rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+	    Return True
+	End	 Method	    
 End Class
 
 Class watermap
@@ -2526,6 +2645,7 @@ Global mygrenade:List<grenade> = New List<grenade>
 Global myfrag:List<frag> = New List<frag>
 Global myplayer:player
 Global myitem:List<item> = New List<item>
+Global mylaserwall:List<laserwall> = New List<laserwall>
 
 Class MyWindow Extends Window
 	Field time:Int
@@ -2603,6 +2723,14 @@ Class MyWindow Extends Window
 			If i.deleteme = True Then myitem.Remove(i)
 		Next
 						
+		For Local i:=Eachin mylaserwall
+			i.update()
+		Next
+		For Local i:=Eachin mylaserwall
+			If i.deleteme = True Then mylaserwall.Remove(i)
+		Next
+						
+
 		
 		'debugbullettest
 		'If Rnd(20)<2 Then mygrenade.AddLast(New grenade(myplayer.px,myplayer.py,myplayer.facing))
@@ -2655,7 +2783,7 @@ Class MyWindow Extends Window
 		canvas.Scissor = New Recti(0,0,screenwidth,screenheight)
 		canvas.Color = Color.White
 		canvas.DrawText(App.FPS+"  Press 1(new level) or Home(selection). Left shift(total map view)",0,0)
-		canvas.DrawText("Cursors(move), s(shotgun), g(grenade), m(mine) space(jump)..",0,20)
+		canvas.DrawText("Cursors(move), s(shotgun), g(grenade), m(mine) space(jump) l(laserwall)..",0,20)
 		canvas.DrawText(theversion,0,Height-20)	
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
@@ -2726,9 +2854,9 @@ Function resetmap(Width:Int,Height:int)
 
 
 		'mygrowslime.addslime(10,30)
-		'For Local i:Int=0 Until 20
-	'		myflyingmonster.Add(New theflyingmonster(5,5))
-	'	Next
+		For Local i:Int=0 Until 20
+			myflyingmonster.Add(New theflyingmonster(5,5))
+		Next
 End Function 
 
 Function Main()
