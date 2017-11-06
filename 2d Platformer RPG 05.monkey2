@@ -530,6 +530,10 @@ Class frag
 		countdown-=1
 		If countdown < 0 Then deleteme = True ; Return
 		
+		'Collision with mineable tiles
+		If mymap.mapmineablecollide(px-2,py-2,w+4,h+4,True,"frag")
+			deleteme = True
+		End	if
 		
 		'Collision with the slime
 		If mygrowslime.slimecollide(px-2,py-2,w+4,h+4,True)
@@ -619,6 +623,8 @@ Class frag
 		End if
 		Next
 	End Method	
+
+	
 	Method eggcollide:Bool(x:Int,y:Int,w:Int,h:Int)
 		Local lefttopx:Int		=((x)/tilewidth)
 		Local lefttopy:Int		=((y)/tileheight)
@@ -868,7 +874,12 @@ Class bullet
 		countdown-=1
 		If countdown < 0 Then deleteme = True ; Return
 		If mymap.mapcollide2(px,py,w,h) Then deleteme = True
-		
+	
+		' Collision with a mineable tile
+		If mymap.mapmineablecollide(px-2,py-2,w+4,h+4,True,"gun")
+			deleteme = True
+			Return
+		End If		
 		' Collision with the slime
 		If mygrowslime.slimecollide(px-2,py-2,w+4,h+4,True)
 			deleteme = True
@@ -2850,6 +2861,66 @@ Class map
 		Next
 		canvas.Flush()
 	End Method 
+	Method mapmineablecollide:Bool(x:Int,y:Int,w:Int,h:Int,remove:Bool,kind:String)
+		Local mmw:Int=mymap.mmw
+		Local mmh:Int=mymap.mmh
+		Local lefttopx:Int		=((x)/tilewidth)
+		Local lefttopy:Int		=((y)/tileheight)
+		Local righttopx:Int		=((x+w)/tilewidth)
+		Local righttopy:Int		=((y)/tileheight)
+		Local leftbottomx:Int	=((x)/tilewidth)
+		Local leftbottomy:Int	=((y+h)/tileheight)
+		Local rightbottomx:Int	=((x+w)/tilewidth)												
+		Local rightbottomy:Int	=((y+h)/tileheight)
+		If lefttopx < 0 Or lefttopx >= mmw Then Return True
+		If lefttopy < 0 Or lefttopy >= mmh Then Return True
+		If righttopx < 0 Or righttopx >= mmw Then Return True
+		If righttopy < 0 Or righttopy >= mmh Then Return True
+		If leftbottomx < 0 Or leftbottomx >= mmw Then Return True
+		If leftbottomy < 0 Or leftbottomy >= mmh Then Return True
+		If rightbottomx < 0 Or rightbottomx >= mmw Then Return True
+		If rightbottomy < 0 Or rightbottomy >= mmh Then Return True
+		
+		If mymap.mapfinal[lefttopx,lefttopy] = mymap.tilemineable Then 
+			If remove=True
+				removemineable(lefttopx,lefttopy,kind)
+			End If
+			Return True
+		End If
+		If mymap.mapfinal[righttopx,righttopy] = mymap.tilemineable Then 
+			If remove=True
+				removemineable(righttopx,righttopy,kind)
+			End If
+			Return True
+		End if
+		If mymap.mapfinal[leftbottomx,leftbottomy] = mymap.tilemineable Then 
+			If remove=True
+				removemineable(leftbottomx,leftbottomy,kind)
+			End If
+			Return True
+		End If
+		If mymap.mapfinal[rightbottomx,rightbottomy] = mymap.tilemineable Then 
+			If remove=True
+				removemineable(rightbottomx,rightbottomy,kind)
+			End If
+			Return True						
+		End If
+		Return False
+	End Method	
+
+	' Every now and then remove mineable tile
+	' and add item
+	'
+	Method removemineable(x:Int,y:Int,kind:String)
+		Local chance:Int=10
+		If kind="gun" Then chance=50 
+		If kind="frag" Then chance = 10 
+		If Rnd(chance) < 2 Then
+			mymap.mapfinal[x,y] = mymap.tileempty
+			myitem.Add(New item((x*tilewidth)+tilewidth/2,(y*tileheight)+tileheight/2,"gold"))
+		End If
+	End Method
+		
 	Method tilecollide:Bool(x:Int,y:Int,w:Int,h:Int,tile:Int)
 		Local lefttopx:Int		=((x)/tilewidth)
 		Local lefttopy:Int		=((y)/tileheight)
@@ -3162,7 +3233,7 @@ Function resetmap(Width:Int,Height:int)
 		myitem.Add(New item(115,120,"gold"))
 
 
-		mygrowslime.addslime(10,30)
+		'mygrowslime.addslime(10,30)
 		'For Local i:Int=0 Until 20
 	'		myflyingmonster.Add(New theflyingmonster(5,5))
 	 '	Next
