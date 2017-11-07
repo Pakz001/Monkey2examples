@@ -1,3 +1,8 @@
+' short list
+' Slime grabs walking monsters
+' Bug walking monster standing still
+'Town turret can shoot walking monsters.
+
 #Import "<std>"
 #Import "<mojo>"
 
