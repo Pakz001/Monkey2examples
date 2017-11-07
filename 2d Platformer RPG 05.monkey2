@@ -1,7 +1,5 @@
 ' short list
-' Slime grabs walking monsters
 ' Bug walking monster standing still
-'Town turret can shoot walking monsters.
 
 #Import "<std>"
 #Import "<mojo>"
@@ -570,6 +568,23 @@ Class tentacle
 			topx += mx
 			topy += my
 			If state = "outgoing"
+				'check collision with walkingmonster
+				For Local i:=Eachin mywalkingmonster
+					Local x:Int=i.px+(i.w/2)
+					Local y:Int=i.py+(i.h/2)
+					If distance(topx,topy,x,y) < 10
+						topx = i.px
+						topy = i.py
+						angle = getangle(topx,topy,basex,basey)
+						mx = Cos(angle)
+						my = Sin(angle)
+						grabbed = True
+						state = "ingoing"
+						i.deleteme = True
+						Exit						
+					End If
+				Next
+
 				'check collision with flyingmonster
 				For Local i:=Eachin myflyingmonster
 					Local x:Int=i.px+(i.w/2)
@@ -1187,6 +1202,14 @@ Class turret
 	End Method
 	Method update()
 		If Rnd(20)<10 Then Return
+		For Local i:=Eachin mywalkingmonster			
+			If distance(mapx,mapy,i.x,i.y) > 15 Then Continue
+			'if distance is close by
+			If clearshot(mapx*tw,mapy*th,getangle(mapx*tw,mapy*th,i.x*tw,i.y*th)+Rnd(-.2,.2))
+				mybullet.AddLast(New bullet(mapx*tw,mapy*th,getangle(mapx*tw,mapy*th,i.x*tw,i.y*th)+Rnd(-.2,.2),"town","turret"))
+			Endif
+		Next
+
 		For Local i:=Eachin myflyingmonster			
 			If distance(mapx,mapy,i.x,i.y) > 15 Then Continue
 			'if distance is close by
@@ -1344,6 +1367,33 @@ Class growslime
 			Local y1:Int = openy.Get(i) * (myplayer.th/2)
 			Local pcx:Int=myplayer.px+(myplayer.pw/2)
 			Local pcy:Int=myplayer.py+(myplayer.ph/2)
+			' grab walking monster
+			If Rnd(300) < 2
+				For Local i2:=Eachin mywalkingmonster
+					Local mcx:Int=i2.px+(i2.w/2)
+					Local mcy:Int=i2.py+(i2.h/2)
+					If distance(mcx,mcy,x1,y1) < 200
+						Local an:Float = getangle(x1,y1,mcx,mcy)
+						Local mx:Float = Cos(an)
+						Local my:Float = Sin(an)
+						Local x2:Float = x1
+						Local y2:Float = y1
+						For Local i3:Int=0 Until 200
+							x2 += mx
+							y2 += my
+							If mymap.mapcollide(x2,y2,i2.w,i2.h) = True Then 
+								Exit
+							End If
+							If distance(x2,y2,mcx,mcy) < 50 Then 
+								mytentacle.Add(New tentacle(x1,y1,mcx,mcy))					
+								Exit
+							End If
+						Next
+						Exit
+					End If
+				Next
+			End if
+
 			' grab monster
 			If Rnd(300) < 2
 				For Local i2:=Eachin myflyingmonster
@@ -3586,7 +3636,9 @@ Function resetmap(Width:Int,Height:int)
 		'For Local i:Int=0 Until 10
 		'	myflyingmonster.Add(New theflyingmonster(5,5))
 	 	'Next
-	 	mywalkingmonster.Add(New walkingmonster(5,16))
+	 	'mywalkingmonster.Add(New walkingmonster(5,16))
+	 	'mywalkingmonster.Add(New walkingmonster(15,16))
+	 	'mywalkingmonster.Add(New walkingmonster(16,16))
 End Function 
 
 Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
