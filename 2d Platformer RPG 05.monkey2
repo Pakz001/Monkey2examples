@@ -43,7 +43,7 @@ Class walkingmonster
 		hp = Rnd(10,30)
 		'set the movement speed
 		sx = Rnd(0.3,3)
-		sy = sx
+'		sy = sx
 		state="hatched"
 	End Method
 	Method update()		
@@ -51,8 +51,8 @@ Class walkingmonster
 		
 		If px < x*w Then px += sx
 		If px > x*w Then px -= sx
-		If py < y*h Then py += sy
-		If py > y*h Then py -= sy
+'		If py < y*h Then py += sy
+'		If py > y*h Then py -= sy
 		If laserwall() Then changedirection()
 		If distance(px,py,x*w,y*h) > 8 Then Return
 		Select state
@@ -63,54 +63,21 @@ Class walkingmonster
 	
 				Select substate
 					Case "left"
-						x-=1						
+						x-=1
+						If Rnd(50) < 1 And mymap.mapfinal[x-1,y] = mymap.tileempty And mymap.mapfinal[x-1,y+1] <> mymap.tileempty Then substate="right"						
 						If mymap.mapfinal[x-1,y]  <> mymap.tileempty Then substate="right"
 						If mymap.mapfinal[x-1,y+1] = mymap.tileempty Then substate="right"
 						If x<3 Then substate="right"
-						' if flying on the ground level then move up 1 tile
-						If mymap.mapfinal[x,y+1]  <> mymap.tileempty Then y-=1
-						If mymap.mapfinal[x,y-1]  <> mymap.tileempty Then y+=1
 					Case "right"
 						x+=1
+						If Rnd(50) < 1 And mymap.mapfinal[x+1,y] = mymap.tileempty And mymap.mapfinal[x+1,y+1] <> mymap.tileempty Then substate="left"						
 						If mymap.mapfinal[x+1,y]  <> mymap.tileempty Then substate="left"
-						If mymap.mapfinal[x+1,y+1] = mymap.tileempty Then substate="right"
+						If mymap.mapfinal[x+1,y+1] = mymap.tileempty Then substate="left"
 						If x>mapwidth-3 Then substate="left"
 				End Select
-				' Change direction to up or down if possible
-				' sometimes						
 				'gorandleftorright()
 		End Select
 	End Method
-	Method gorandleftorright()
-		If substate="up" Or substate="down"
-			If Rnd() < 0.1
-				Local exitloop:Bool=False
-				Local x1:Int=x
-				Local cnt:Int=0
-				While exitloop = False
-					x1-=1
-					cnt+=1
-					If mymap.mapfinal[x1,y] <> mymap.tileempty Or x1<3
-						exitloop = True
-					End If
-				Wend				
-				If cnt>8 Then substate = "left"
-			End If
-			If Rnd() < 0.1
-				Local exitloop:Bool=False
-				Local x1:Int=x
-				Local cnt:Int=0
-				While exitloop = False
-					x1+=1
-					cnt+=1
-					If mymap.mapfinal[x1,y] <> mymap.tileempty Or x1>mapwidth-3
-						exitloop = True
-					End If
-				Wend				
-				If cnt>8 Then substate = "right"					
-			Endif
-		Endif			
-	End Method	
 	Method laserwall:Bool()
 		For Local i:=Eachin mylaserwall
 			If rectsoverlap((px-w)+(Rnd(-w,w)),py-h,w*2,h*2,i.tx-5,i.ty,10,i.by-i.ty)
@@ -129,6 +96,18 @@ Class walkingmonster
 			x -= 2
 		End If
 	End Method	
+ 	Method draw(canvas:Canvas)
+		    Local x1:Float=screenwidth/Float(mapwidth)*Float(x)
+	    	Local y1:Float=screenheight/Float(mapheight)*Float(y)
+	    	canvas.Color = Color.White
+	    	'SetColor 255,255,255
+			canvas.DrawRect(x1,y1,3+2,3+2)
+			canvas.Color = Color.Red
+	    	'SetColor 255,0,0		
+			canvas.DrawRect(x1+1,y1+1,3,3)
+	
+	End Method
+	     
     Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
         Return Abs(x2-x1)+Abs(y2-y1)
     End Function	
@@ -144,9 +123,9 @@ End Class
 ' Here a stone tile is created
 ' using the generate method
 Class tile
-	Field image:Image[,] = New Image[10,5]
+	Field image:Image[,] = New Image[5,5]
 	
-	Field icanvas:Canvas[,] = New Canvas[10,5]
+	Field icanvas:Canvas[,] = New Canvas[5,5]
 
 	Field width:Int,height:Int
 	Field map:Int[][]
@@ -168,9 +147,9 @@ Class tile
         Next
         
         For Local ii:Int=0 Until 3
-        For Local i:Int=0 Until 10
+        For Local i:Int=0 Until 4
 	        
-		image[i,ii]=New Image( tilewidth,tileheight,TextureFlags.Mipmap)'|TextureFlags.Dynamic )
+		image[i,ii]=New Image( tilewidth,tileheight,TextureFlags.FilterMipmap)'|TextureFlags.Dynamic )
 		image[i,ii].Handle=New Vec2f( 0,0 )
 		icanvas[i,ii]=New Canvas( image[i,ii] )        	
 		Next
@@ -185,7 +164,7 @@ Class tile
 		col[4] = Color.Gold
 		col[5] = Color.SeaGreen
 		For Local ii:Int=0 Until 3
-		For Local i:=0 Until 10
+		For Local i:=0 Until 4
 			draw(icanvas[i,ii],i,0,0,1,1,col[ii])
 			icanvas[i,ii].Flush()
 		Next
@@ -3294,6 +3273,10 @@ Class MyWindow Extends Window
 			For Local i:=Eachin myflyingmonster
 				i.draw(canvas)
 			Next
+			For Local i:=Eachin mywalkingmonster
+				i.draw(canvas)
+			Next
+
 			For Local i:=Eachin mylaserwall
 				i.draw(canvas)
 			Next
