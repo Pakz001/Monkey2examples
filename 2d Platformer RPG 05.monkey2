@@ -33,6 +33,9 @@ Class walkingmonster
 	Field deleteme:Bool
 	Field state:String
 	Field substate:String
+	Field jx:Float
+	Field jy:Float
+	Field oldpy:Float 'old py coordinate
 	Method New(x:Int,y:Int)
 		Self.x = x
 		Self.y = y
@@ -49,32 +52,78 @@ Class walkingmonster
 	Method update()		
 '		If laserwait>0 Then laserwait-=1
 		
-		If px < x*w Then px += sx
-		If px > x*w Then px -= sx
-'		If py < y*h Then py += sy
-'		If py > y*h Then py -= sy
-		If laserwall() Then changedirection()
-		If distance(px,py,x*w,y*h) > 8 Then Return
+		If state<>"attack"
+			'If Rnd(10)<1 Print Millisecs() + "sx : " + sx
+			If px < x*w Then px += sx
+			If px > x*w Then px -= sx
+	'		If py < y*h Then py += sy
+	'		If py > y*h Then py -= sy
+			If laserwall() Then changedirection()
+			If distance(px,py,x*w,y*h) > 8 Then Return
+		Else
+			If substate = "jump"
+			If mymap.mapcollide(px+jx,py,w,h) = False
+				px += jx
+				Else
+				'substate = "finishjump"				
+			End If
+			If mymap.mapcollide(px,py+jy,w,h-1) = False
+				py += jy
+				Else
+				x = myplayer.px / tilewidth
+				y = myplayer.py / tileheight
+				substate = "finishjump"
+				Return
+			End If
+			jy += .1
+			x = px / tilewidth
+			y = py / tileheight
+			End If
+		End If
 		Select state
 			Case "hatched"
 				state="roam"
 				substate="left"
+			Case "attack"
+				Select substate
+					Case "setjump"
+						If myplayer.py < py Then substate="finishjump"
+						If myplayer.py > py+3 Then substate="finishjump"
+						Local d:Int=distance(myplayer.px,myplayer.py,px,py)
+						If px < myplayer.px Then jx = d/35 Else jx = -d/35
+						
+						If distance(px,py,myplayer.px,myplayer.py) > 50 Then jy = -2
+						substate = "jump"
+						Return
+					Case "jump"
+'						
+						Local cnt:Int=0
+						For Local ppy:Int=0 Until 40
+							If mymap.mapcollide(px+(jx*10),py+ppy,w,h) = False Then cnt+=1
+						Next
+						If cnt>30 Then jx=-jx
+					Case "finishjump"
+						state = "roam"
+						x = px / tilewidth
+						y = py / tileheight
+						If Rnd(2)< 1 Then substate = "left" Else substate="right"						
+				End Select					
 			Case "roam"								
-	
+				If canattackplayer() Then state="attack" ; substate="setjump"
 				Select substate
 					Case "left"
 						x-=1
 						'If Rnd(50) < 1 And mymap.mapfinal[x-1,y] = mymap.tileempty And mymap.mapfinal[x-1,y+1] <> mymap.tileempty Then substate="right"						
-						If Rnd(50) < 1 And cannotgohere(x+1,y) = False And cannotgohere(x+1,y+1)=True Then substate="right" 
+						'If Rnd(50) < 1 And cannotgohere(x+1,y) = False And cannotgohere(x+1,y+1)=True Then substate="right" 
 						If cannotgohere(x-1,y) = True Then substate = "right"
 						If cannotgohere(x-1,y+1) = False Then substate = "right"
 						'If mymap.mapfinal[x-1,y]  <> mymap.tileempty Then substate="right"
 						'If mymap.mapfinal[x-1,y+1] = mymap.tileempty Then substate="right"
 						If x<3 Then substate="right"
 						
-					Case "right"
+					Case "right"						
 						x+=1
-						If Rnd(50) < 1 And cannotgohere(x-1,y) =  False And cannotgohere(x-1,y+1)=True Then substate="left"
+						'If Rnd(50) < 1 And cannotgohere(x-1,y) =  False And cannotgohere(x-1,y+1)=True Then substate="left"
 						If cannotgohere(x+1,y) = True Then substate="left"
 						If cannotgohere(x+1,y+1) = False Then substate="left"
 						'If Rnd(50) < 1 And mymap.mapfinal[x+1,y] = mymap.tileempty And mymap.mapfinal[x+1,y+1] <> mymap.tileempty Then substate="left"						
@@ -85,6 +134,32 @@ Class walkingmonster
 				'gorandleftorright()
 		End Select
 	End Method
+	Method canattackplayer:Bool()
+		If distance(px,py,myplayer.px,myplayer.py) > 150 Then Return False
+		If myplayer.px < px
+			For Local xx:Int=px/tilewidth Until px/tilewidth-3 Step -1
+				If mymap.mapfinal[xx,y+1] <> mymap.tilesolid Then Return False
+			Next
+		Else
+			For Local xx:Int=px/tilewidth Until px/tilewidth+3
+				If mymap.mapfinal[xx,y+1] <> mymap.tilesolid Then Return False
+			Next			
+		End if
+		Local angle:Float = getangle(px,py,myplayer.px,myplayer.py)
+		Local clearpath:Bool=False
+		Local mx:Float = Cos(angle)
+		Local my:Float = Sin(angle)
+		Local monx:Float = px
+		Local mony:Float = py
+		For Local i:Int=0 Until 200
+			monx += mx
+			mony += my
+			If distance(monx,mony,myplayer.px,myplayer.py) < 20 Then Return True
+			If mymap.mapcollide(monx,mony,w/2,h/2) = True Then Return False	
+			
+		Next					
+		Return True
+	End Method	
 	' for the walking monster Check if tile on map is blocked
 	Method cannotgohere:Bool(x:Int,y:Int)
 		If mymap.mapfinal[x,y] = mymap.tilesolid Then Return True
@@ -121,7 +196,9 @@ Class walkingmonster
 			canvas.DrawRect(x1+1,y1+1,3,3)
 	
 	End Method
-	     
+	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
+		Return ATan2(y2-y1, x2-x1)
+	End Function  	     
     Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
         Return Abs(x2-x1)+Abs(y2-y1)
     End Function	
@@ -2082,9 +2159,9 @@ Class player
 			canvas.Color = Color.Red
 			canvas.DrawRect(x2,y2,tw,th)
 			
-			'canvas.Color = Color.White
-			'canvas.DrawText(i.state,x2,y2)
-			'canvas.DrawText(i.substate,x2,y2+12)
+			canvas.Color = Color.White
+			canvas.DrawText(i.state,x2,y2)
+			canvas.DrawText(i.substate,x2,y2+12)
 			'canvas.DrawText(i.x*i.w+","+i.y*i.h,x2,y2+22)
 			'canvas.DrawText(i.px+","+i.py,x2,y2+37)
 			
@@ -3485,9 +3562,10 @@ Function resetmap(Width:Int,Height:int)
 
 
 		'mygrowslime.addslime(10,30)
-		For Local i:Int=0 Until 10
-			myflyingmonster.Add(New theflyingmonster(5,5))
-	 	Next
+		'For Local i:Int=0 Until 10
+		'	myflyingmonster.Add(New theflyingmonster(5,5))
+	 	'Next
+	 	mywalkingmonster.Add(New walkingmonster(5,16))
 End Function 
 
 Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
