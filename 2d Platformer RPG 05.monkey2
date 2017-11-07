@@ -64,19 +64,33 @@ Class walkingmonster
 				Select substate
 					Case "left"
 						x-=1
-						If Rnd(50) < 1 And mymap.mapfinal[x-1,y] = mymap.tileempty And mymap.mapfinal[x-1,y+1] <> mymap.tileempty Then substate="right"						
-						If mymap.mapfinal[x-1,y]  <> mymap.tileempty Then substate="right"
-						If mymap.mapfinal[x-1,y+1] = mymap.tileempty Then substate="right"
+						'If Rnd(50) < 1 And mymap.mapfinal[x-1,y] = mymap.tileempty And mymap.mapfinal[x-1,y+1] <> mymap.tileempty Then substate="right"						
+						If Rnd(50) < 1 And cannotgohere(x+1,y) = False And cannotgohere(x+1,y+1)=True Then substate="right" 
+						If cannotgohere(x-1,y) = True Then substate = "right"
+						If cannotgohere(x-1,y+1) = False Then substate = "right"
+						'If mymap.mapfinal[x-1,y]  <> mymap.tileempty Then substate="right"
+						'If mymap.mapfinal[x-1,y+1] = mymap.tileempty Then substate="right"
 						If x<3 Then substate="right"
+						
 					Case "right"
 						x+=1
-						If Rnd(50) < 1 And mymap.mapfinal[x+1,y] = mymap.tileempty And mymap.mapfinal[x+1,y+1] <> mymap.tileempty Then substate="left"						
-						If mymap.mapfinal[x+1,y]  <> mymap.tileempty Then substate="left"
-						If mymap.mapfinal[x+1,y+1] = mymap.tileempty Then substate="left"
+						If Rnd(50) < 1 And cannotgohere(x-1,y) =  False And cannotgohere(x-1,y+1)=True Then substate="left"
+						If cannotgohere(x+1,y) = True Then substate="left"
+						If cannotgohere(x+1,y+1) = False Then substate="left"
+						'If Rnd(50) < 1 And mymap.mapfinal[x+1,y] = mymap.tileempty And mymap.mapfinal[x+1,y+1] <> mymap.tileempty Then substate="left"						
+						'If mymap.mapfinal[x+1,y]  <> mymap.tileempty Then substate="left"
+						'If mymap.mapfinal[x+1,y+1] = mymap.tileempty Then substate="left"
 						If x>mapwidth-3 Then substate="left"
 				End Select
 				'gorandleftorright()
 		End Select
+	End Method
+	' for the walking monster Check if tile on map is blocked
+	Method cannotgohere:Bool(x:Int,y:Int)
+		If mymap.mapfinal[x,y] = mymap.tilesolid Then Return True
+		If mymap.mapfinal[x,y] = mymap.tilemineable Then Return True
+		If mymap.mapfinal[x,y] = mymap.tileturret Then Return True
+		Return False
 	End Method
 	Method laserwall:Bool()
 		For Local i:=Eachin mylaserwall
@@ -2303,6 +2317,9 @@ Class theflyingmonster
 			While exitloop = False
 				If mymap.mapfinal[x,y1] = 3 Then 
 					Return
+				End If
+				If mymap.mapladder[x,y1] = 1
+					Return 
 				End If
 				If mymap.mapfinal[x,y1]  <> mymap.tileempty Then exitloop = True
 				y1+=1
