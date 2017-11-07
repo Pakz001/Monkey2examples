@@ -51,6 +51,14 @@ Class walkingmonster
 	End Method
 	Method update()		
 '		If laserwait>0 Then laserwait-=1
+	
+		' Damage to player
+		If developmode = False
+		If distance(myplayer.px+(myplayer.pw/2),myplayer.py+(myplayer.ph/2),px+(w/2),py+(h/2)) < tilewidth
+			myplayer.hp -= 2
+			If myplayer.hp < 0 Then gamestate = "select"
+		End If
+		End If
 		
 		If state<>"attack"
 			'If Rnd(10)<1 Print Millisecs() + "sx : " + sx
@@ -2284,6 +2292,14 @@ Class theflyingmonster
 	End Method
 	Method update()		
 '		If laserwait>0 Then laserwait-=1
+		' Damage to player
+		If developmode = False
+		If distance(myplayer.px+(myplayer.pw/2),myplayer.py+(myplayer.ph/2),px+(w/2),py+(h/2)) < tilewidth
+			myplayer.hp -= 2
+			If myplayer.hp < 0 Then gamestate = "select"
+		End If
+		End If
+
 		
 		If px < x*w Then px += sx
 		If px > x*w Then px -= sx
