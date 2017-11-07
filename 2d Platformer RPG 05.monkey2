@@ -5,12 +5,13 @@ Using std..
 Using mojo..
 
 Global developmode:Bool=False
-Global theversion:String="Version 6-11-2017"
+Global theversion:String="Version 7-11-2017"
 Global gamestate:String="select"
 Global egghatchspeed:Float = 0.1 'how fast eggs hatch
 Global egglayingfreq:Float = 0.1 ' lay lots of eggs 1 lay less eggs 0 '0 to 1
 Global startingeggfreq:Float = 0.2 '0 to 1 0 is none 1 is full
 Global maxflyingmonsters:Int=30
+Global maxwalkingmonsters:Int=30
 Global mapwidth:Int=320
 Global mapheight:Int=240
 Global screenwidth:Int=800
@@ -18,6 +19,125 @@ Global screenheight:Int=600
 Global tilewidth:Int=20
 Global tileheight:Int=20
 
+'
+' These are the walking monsters that
+' hatch from the eggs. They do not lay eggs
+' themselfs but guard the other nearby eggs.
+'
+Class walkingmonster
+	Field px:float,py:Float 'pixel position (0-width)
+	Field sx:Float,sy:Float 'movement speed
+	Field x:Int,y:Int 'tile x and y position
+	Field w:Float,h:Float
+	Field hp:Int 'hitpoints
+	Field deleteme:Bool
+	Field state:String
+	Field substate:String
+	Method New(x:Int,y:Int)
+		Self.x = x
+		Self.y = y
+		Self.w = tilewidth
+		Self.h = tileheight
+		px = x*w
+		py = y*h
+		hp = Rnd(10,30)
+		'set the movement speed
+		sx = Rnd(0.3,3)
+		sy = sx
+		state="hatched"
+	End Method
+	Method update()		
+'		If laserwait>0 Then laserwait-=1
+		
+		If px < x*w Then px += sx
+		If px > x*w Then px -= sx
+		If py < y*h Then py += sy
+		If py > y*h Then py -= sy
+		If laserwall() Then changedirection()
+		If distance(px,py,x*w,y*h) > 8 Then Return
+		Select state
+			Case "hatched"
+				state="roam"
+				substate="left"
+			Case "roam"								
+	
+				Select substate
+					Case "left"
+						x-=1						
+						If mymap.mapfinal[x-1,y]  <> mymap.tileempty Then substate="right"
+						If mymap.mapfinal[x-1,y+1] = mymap.tileempty Then substate="right"
+						If x<3 Then substate="right"
+						' if flying on the ground level then move up 1 tile
+						If mymap.mapfinal[x,y+1]  <> mymap.tileempty Then y-=1
+						If mymap.mapfinal[x,y-1]  <> mymap.tileempty Then y+=1
+					Case "right"
+						x+=1
+						If mymap.mapfinal[x+1,y]  <> mymap.tileempty Then substate="left"
+						If mymap.mapfinal[x+1,y+1] = mymap.tileempty Then substate="right"
+						If x>mapwidth-3 Then substate="left"
+				End Select
+				' Change direction to up or down if possible
+				' sometimes						
+				'gorandleftorright()
+		End Select
+	End Method
+	Method gorandleftorright()
+		If substate="up" Or substate="down"
+			If Rnd() < 0.1
+				Local exitloop:Bool=False
+				Local x1:Int=x
+				Local cnt:Int=0
+				While exitloop = False
+					x1-=1
+					cnt+=1
+					If mymap.mapfinal[x1,y] <> mymap.tileempty Or x1<3
+						exitloop = True
+					End If
+				Wend				
+				If cnt>8 Then substate = "left"
+			End If
+			If Rnd() < 0.1
+				Local exitloop:Bool=False
+				Local x1:Int=x
+				Local cnt:Int=0
+				While exitloop = False
+					x1+=1
+					cnt+=1
+					If mymap.mapfinal[x1,y] <> mymap.tileempty Or x1>mapwidth-3
+						exitloop = True
+					End If
+				Wend				
+				If cnt>8 Then substate = "right"					
+			Endif
+		Endif			
+	End Method	
+	Method laserwall:Bool()
+		For Local i:=Eachin mylaserwall
+			If rectsoverlap((px-w)+(Rnd(-w,w)),py-h,w*2,h*2,i.tx-5,i.ty,10,i.by-i.ty)
+				Return True
+			End If 
+		Next
+		Return False
+	End Method
+	Method changedirection()
+		state = "roam"
+		If substate = "left" Then 
+			substate="right" 
+			x += 2		
+		Else 
+			substate="left"
+			x -= 2
+		End If
+	End Method	
+    Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
+        Return Abs(x2-x1)+Abs(y2-y1)
+    End Function	
+	Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+	    Return True
+	End	 Function
+End Class
 
 '
 ' This is the tile class.
@@ -1911,9 +2031,28 @@ Class player
 		pmy = (py-(mcy*th))+moy
 		canvas.Color = Color.White
 		canvas.DrawRect(pmx,pmy,pw,ph)
-		'draw monsters
-		
+
+		'draw flying monsters		
 		For Local i:=Eachin myflyingmonster
+			Local x1:Int=i.px
+			Local y1:Int=i.py
+			Local x2:Int=(x1-(mcx*tw))+mox
+			Local y2:Int=(y1-(mcy*th))+moy
+			canvas.Color = Color.Red
+			canvas.DrawRect(x2,y2,tw,th)
+			
+			'canvas.Color = Color.White
+			'canvas.DrawText(i.state,x2,y2)
+			'canvas.DrawText(i.substate,x2,y2+12)
+			'canvas.DrawText(i.x*i.w+","+i.y*i.h,x2,y2+22)
+			'canvas.DrawText(i.px+","+i.py,x2,y2+37)
+			
+			
+			
+		Next
+
+		'draw walking monsters		
+		For Local i:=Eachin mywalkingmonster
 			Local x1:Int=i.px
 			Local y1:Int=i.py
 			Local x2:Int=(x1-(mcx*tw))+mox
@@ -2021,9 +2160,9 @@ Class theflyingmonster
 	Field w:Float,h:Float
 	Field hp:Int 'hitpoints
 	Field deleteme:Bool
-	Field dbx:Int,dby:Int
-	Field dbtime:Int
-	Field laserwait:Int
+'	Field dbx:Int,dby:Int
+'	Field dbtime:Int
+'	Field laserwait:Int
 	' movement between tiles
 	' Field ox:Int,oy:Int
 	' tx and ty are the next tile the flying monster
@@ -2045,7 +2184,7 @@ Class theflyingmonster
 		state="hatched"
 	End Method
 	Method update()		
-		If laserwait>0 Then laserwait-=1
+'		If laserwait>0 Then laserwait-=1
 		
 		If px < x*w Then px += sx
 		If px > x*w Then px -= sx
@@ -2817,12 +2956,12 @@ Class map
 		For Local y:=0 Until mmh
 		For Local x:=0 Until mmw
 			Select mapfinal[x,y]
-				Case 0
+				Case tilesolid
 				canvas.Color = Color.Black
-				Case 1
+				Case tileempty
 				canvas.Color = Color.White
 				canvas.DrawRect(x*tw,y*th,tw,th)
-				Case 3				
+				Case tileegg			
 				canvas.Color = Color.Yellow
 				canvas.DrawRect(x*tw,y*th,tw,th)
 			End Select	
@@ -2836,11 +2975,11 @@ Class map
 		For Local y:=0 Until mmh
 		For Local x:=0 Until mmw
 			Select mapfinal[x,y]
-				Case 0
+				Case tilesolid
 				'canvas.Alpha = 1
 				canvas.Color = Color.Brown
 				canvas.DrawRect(x*tw,y*th,tw,th)
-				Case tilesolid
+				'Case tilesolid
 				'canvas.Alpha = 0.5
 				'canvas.Color = Color.None'New Color(0,0,0,.8)
 				'canvas.DrawRect(x*tw,y*th,tw,th)
@@ -3010,6 +3149,7 @@ Global mygrowslime:growslime
 Global mytentacle:List<tentacle> = New List<tentacle>
 Global mywatermap:watermap
 Global myflyingmonster:List<theflyingmonster> = New List<theflyingmonster>
+Global mywalkingmonster:List<walkingmonster> = New List<walkingmonster>
 Global myturret:List<turret> = New List<turret>
 Global mybullet:List<bullet> = New List<bullet>
 Global mygrenade:List<grenade> = New List<grenade>
@@ -3043,12 +3183,22 @@ Class MyWindow Extends Window
 			gamestate="select"
 		End If  
 		
+		' update the flying monsters
 		For Local i:=Eachin myflyingmonster
 			i.update()
 		Next
 		For Local i:=Eachin myflyingmonster
 			If i.deleteme = True Then myflyingmonster.Remove(i)
 		Next
+
+		' update the walking monsters
+		For Local i:=Eachin mywalkingmonster
+			i.update()
+		Next
+		For Local i:=Eachin mywalkingmonster
+			If i.deleteme = True Then mywalkingmonster.Remove(i)
+		Next
+
 
 		mygrowslime.update("slow")
 
@@ -3154,6 +3304,7 @@ Class MyWindow Extends Window
 			canvas.DrawRect(x1,y1,mymap.tw*myplayer.maptileswidth,mymap.th*myplayer.maptilesheight)
 		End If
 		addflyingmonster()
+		addwalkingmonster()
 		'
 		canvas.Scissor = New Recti(0,0,screenwidth,screenheight)
 		canvas.Color = Color.White
@@ -3165,6 +3316,34 @@ Class MyWindow Extends Window
 	
 End	Class
 
+'
+' This function adds a walking monster to the game
+'
+Function addwalkingmonster() 'hatch
+	Local cnt:Int=0
+	For Local i:=Eachin mywalkingmonster
+		cnt+=1
+	Next
+	If cnt<maxwalkingmonsters
+		'DebugLog (mapwidth+mapheight)/10
+		For Local i:=0 Until (mapwidth+mapheight)/10
+			If Rnd() < egghatchspeed
+				Local x:Int=Rnd(mapwidth)
+				Local y:Int=Rnd(mapheight)
+				If mymap.mapfinal[x,y] = mymap.tileegg
+					mymap.mapfinal[x,y] = mymap.tileempty
+					mywalkingmonster.AddLast(New walkingmonster(x,y))
+					mymap.updateimage(mymap.mapcanvas)
+				End If
+			End If
+		Next
+	End If
+End Function
+
+
+'
+' This function adds a flying monster to the game
+'
 Function addflyingmonster() 'hatch
 	Local cnt:Int=0
 	For Local i:=Eachin myflyingmonster
@@ -3176,8 +3355,8 @@ Function addflyingmonster() 'hatch
 			If Rnd() < egghatchspeed
 				Local x:Int=Rnd(mapwidth)
 				Local y:Int=Rnd(mapheight)
-				If mymap.mapfinal[x,y] = 3
-					mymap.mapfinal[x,y] = 1
+				If mymap.mapfinal[x,y] = mymap.tileegg
+					mymap.mapfinal[x,y] = mymap.tileempty
 					myflyingmonster.AddLast(New theflyingmonster(x,y))
 					mymap.updateimage(mymap.mapcanvas)
 				End If
@@ -3188,6 +3367,7 @@ End Function
 
 Function resetmap(Width:Int,Height:int)
 		myflyingmonster.Clear()
+		mywalkingmonster.Clear()
 		myturret.Clear()
 		myitem.Clear()
 		mybullet.Clear()
