@@ -2220,8 +2220,16 @@ Class theflyingmonster
 '				ty=3 'move distance
 			Case "takeoff"
 				takeoff()
+			Case "attack"
+				If canattackplayer() = False Then state = "roam" ; substate="up"; Return
+				'Local angle:Float = getangle(px,py,myplayer.px,myplayer.py)
+				
+				x = myplayer.px / tilewidth
+				y = myplayer.py / tileheight
 			Case "roam"								
-
+				
+				If canattackplayer() Then state = "attack"
+				
 				Select substate
 					Case "left"
 						x-=1						
@@ -2287,6 +2295,23 @@ Class theflyingmonster
 				End If
 				state="takeoff"
 		End Select
+	End Method
+	Method canattackplayer:Bool()
+		If distance(px,py,myplayer.px,myplayer.py) > 200 Then Return False
+		Local angle:Float = getangle(px,py,myplayer.px,myplayer.py)
+		Local clearpath:Bool=False
+		Local mx:Float = Cos(angle)
+		Local my:Float = Sin(angle)
+		Local monx:Float = px
+		Local mony:Float = py
+		For Local i:Int=0 Until 200
+			monx += mx
+			mony += my
+			If distance(monx,mony,myplayer.px,myplayer.py) < 20 Then Return True
+			If mymap.mapcollide(monx,mony,w,h) = True Then Return False	
+			
+		Next					
+		Return True
 	End Method
 	Method laserwall:Bool()
 		For Local i:=Eachin mylaserwall
@@ -2419,7 +2444,10 @@ Class theflyingmonster
 	End Method
     Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
         Return Abs(x2-x1)+Abs(y2-y1)
-    End Function	
+    End Function
+	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
+		Return ATan2(y2-y1, x2-x1)
+	End Function     	
 	Method rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
 	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
 	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
@@ -3457,9 +3485,9 @@ Function resetmap(Width:Int,Height:int)
 
 
 		'mygrowslime.addslime(10,30)
-		'For Local i:Int=0 Until 20
-		'	myflyingmonster.Add(New theflyingmonster(5,5))
-	 	'Next
+		For Local i:Int=0 Until 10
+			myflyingmonster.Add(New theflyingmonster(5,5))
+	 	Next
 End Function 
 
 Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
