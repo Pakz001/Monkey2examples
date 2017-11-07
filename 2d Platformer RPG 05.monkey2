@@ -700,10 +700,24 @@ Class frag
 		px += mx
 		py += my
 		my+=.005
+
+
+		' frag collision with walking monsters
+		For Local i:=Eachin mywalkingmonster
+			If distance(i.px,i.py,px,py) < 10
+				i.hp -= 5
+				If i.hp<=0
+					i.deleteme = True
+					myitem.Add(New item(i.px,i.py,"gold"))
+				End If
+				deleteme = True
+				Return
+			End If
+		Next
 		
 		' frag collision with flying monsters
 		For Local i:=Eachin myflyingmonster
-			If distance(i.x*tilewidth+tilewidth/2,i.y*tileheight+tileheight/2,px,py) < 10
+			If distance(i.px,i.py,px,py) < 10
 				i.hp -= 5
 				If i.hp<=0
 					i.deleteme = True
@@ -986,6 +1000,20 @@ Class bullet
 			'Print Millisecs()
 		End If		
 		
+		' Collision with bullet and walking monster
+		For Local i:=Eachin mywalkingmonster
+			If distance(px,py,i.px,i.py) < tilewidth Then 
+				i.hp -= 1
+				deleteme = True				
+				If i.hp <= 0
+					i.deleteme = True					
+					myitem.Add(New item(px,py,"gold"))
+					Return
+				End if
+				Return
+			End If
+		Next
+		
 		' Collision with bullet and flying monster
 		For Local i:=Eachin myflyingmonster
 			If distance(px,py,i.px,i.py) < tilewidth Then 
@@ -999,6 +1027,7 @@ Class bullet
 				Return
 			End If
 		Next
+		
 		' Collision with bullet and egg
 		If eggcollide(px,py,w,h) Then 						
 			deleteme = True
@@ -3307,16 +3336,30 @@ Function addwalkingmonster() 'hatch
 	For Local i:=Eachin mywalkingmonster
 		cnt+=1
 	Next
-	If cnt<maxwalkingmonsters
+	Local cnt2:Int=0
+	For Local i:=Eachin myflyingmonster
+		cnt2+=1
+	Next
+	
+	' If there are not to many walking monsters
+	' and still some egg laying monsters left
+	If cnt<maxwalkingmonsters And cnt2>0
 		'DebugLog (mapwidth+mapheight)/10
 		For Local i:=0 Until (mapwidth+mapheight)/10
 			If Rnd() < egghatchspeed
 				Local x:Int=Rnd(mapwidth)
 				Local y:Int=Rnd(mapheight)
 				If mymap.mapfinal[x,y] = mymap.tileegg
-					mymap.mapfinal[x,y] = mymap.tileempty
-					mywalkingmonster.AddLast(New walkingmonster(x,y))
-					mymap.updateimage(mymap.mapcanvas)
+					' If there are no walking monsters nearby
+					Local makemonster:Bool=True
+					For Local ii:= Eachin mywalkingmonster
+						If distance(x,y,ii.x,ii.y) < 6 Then makemonster = False
+					Next					
+					If makemonster = True
+						mymap.mapfinal[x,y] = mymap.tileempty
+						mywalkingmonster.AddLast(New walkingmonster(x,y))
+						mymap.updateimage(mymap.mapcanvas)
+					End if
 				End If
 			End If
 		Next
@@ -3398,9 +3441,13 @@ Function resetmap(Width:Int,Height:int)
 
 		'mygrowslime.addslime(10,30)
 		'For Local i:Int=0 Until 20
-	'		myflyingmonster.Add(New theflyingmonster(5,5))
-	 '	Next
+		'	myflyingmonster.Add(New theflyingmonster(5,5))
+	 	'Next
 End Function 
+
+Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
+	Return Abs(x2-x1)+Abs(y2-y1)
+End Function
 
 Function Main()
 	New AppInstance		
