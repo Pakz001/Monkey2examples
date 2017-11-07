@@ -149,7 +149,7 @@ Class tile
         For Local ii:Int=0 Until 3
         For Local i:Int=0 Until 4
 	        
-		image[i,ii]=New Image( tilewidth,tileheight,TextureFlags.FilterMipmap)'|TextureFlags.Dynamic )
+		image[i,ii]=New Image( tilewidth,tileheight)',TextureFlags.FilterMipmap)'|TextureFlags.Dynamic )
 		image[i,ii].Handle=New Vec2f( 0,0 )
 		icanvas[i,ii]=New Canvas( image[i,ii] )        	
 		Next
@@ -329,7 +329,7 @@ Class tile
 			If t >= 1 Then 'grey base color
 				canvas.Color = New Color(.4,.4,.4).Blend(col,.5)
 			End If
-			If t=100 Then canvas.Color = New Color(.1,.1,.1).Blend(col,.5) 'dark shade color
+			If t=100 Then canvas.Color = New Color(.2,.2,.2).Blend(col,.5) 'dark shade color
 			If t=200 Then canvas.Color = New Color(.7,.7,.7).Blend(col,.5)'light shade color
 			If t>0  ' draw a rect (part of the stone)
 			canvas.DrawRect(x2,y2,tw,th)
@@ -1871,13 +1871,14 @@ Class player
 	Method draw(canvas:Canvas)
 		canvas.Scissor = New Recti(32,32,screenwidth-32,screenheight-64)
 		'draw the map
+		'canvas.BlendMode = BlendMode.Opaque
 		For local y:=0 Until maptilesheight
 		For Local x:=0 Until maptileswidth
 			Local x2:Int=mcx+x
 			Local y2:Int=mcy+y
 			Local x3:Int=(x*tw)+mox
 			Local y3:Int=(y*th)+moy
-			If x2>0 And x2<mapwidth And y2>0 And y2<mapheight
+			If x2<0 Or x2>=mapwidth Or y2<0 Or y2>=mapheight Then Continue				
 			Select mymap.mapfinal[x2,y2]
 				Case mymap.tileempty
 					canvas.Color = Color.White
@@ -1910,7 +1911,6 @@ Class player
 				End If
 			Next
 			Next
-			End If
 		Next
 		Next
 		'draw water
