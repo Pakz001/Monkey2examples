@@ -312,6 +312,70 @@ Class walkingmonster
 	End	 Function
 End Class
 
+Class gradienttile
+	Field image:Image[] = New Image[17]
+	
+	Field icanvas:Canvas[] = New Canvas[17]
+	Field width:Int,height:Int
+	Field tile:Color[][][]
+	Method New(w:Int,h:Int)
+		Self.width = w
+		Self.height = h
+		tile = New Color[width][][]
+        For Local i:Int = 0 Until width
+            tile[i] = New Color[height][]
+            For Local z:Int=0 Until height
+                tile[i][z] = New Color[17]
+            Next
+        Next
+        For Local i:Int=0 Until 17
+	        
+		image[i]=New Image( tilewidth,tileheight)',TextureFlags.FilterMipmap)'|TextureFlags.Dynamic )
+		image[i].Handle=New Vec2f( 0,0 )
+		icanvas[i]=New Canvas( image[i] )        	
+		Next
+
+	End Method	
+	Method generate()
+		Local mc:Color
+		Local r:Float=1,g:Float=1,b:Float=1
+		For Local n:Int=0 Until 17
+			For Local y:Int=0 Until height
+				mc = New Color(r,g,b)
+				tile[0][y][n] = mc
+				r-=1/(17*Float(height))
+				g-=1/(17*Float(height))
+				b-=.3/(17*Float(height))
+			Next
+		Next
+	End Method
+	Method create()
+		For Local i:=0 Until 17
+			draw(icanvas[i],i,0,0,1,1)
+			icanvas[i].Flush()
+		Next
+	End Method
+	' Draw the tile at x and y position and tw=size
+	Method draw(canvas:Canvas,thetile:Int,sx:Int,sy:Int,tw:Int,th:Int)
+		Local x:Int
+		Local y:Int
+		
+		canvas.Clear(Color.Black)
+		For y=0 Until height
+		'For x=0 Until width		
+			Local t:Color
+			t = tile[x][y][thetile]
+			Local x2:Int=0
+			Local y2:Int=y*th			
+			y2+=sy
+			canvas.Color = t			
+			canvas.DrawRect(x2,y2,width,th)			
+		'Next
+		Next
+	
+	End Method
+End Class
+
 '
 ' This is the tile class.
 ' Here a stone tile is created
@@ -2181,23 +2245,41 @@ Class player
 			Local x3:Int=(x*tw)+mox
 			Local y3:Int=(y*th)+moy
 			If x2<0 Or x2>=mapwidth Or y2<0 Or y2>=mapheight Then Continue				
+			
+			If y2<17 Then
+				canvas.Color = Color.White
+				canvas.DrawImage(mygradienttile.image[y2],x3,y3)
+			End If
+			
 			Select mymap.mapfinal[x2,y2]
 				Case mymap.tileempty
+				If y2>16
 					canvas.Color = Color.White
 					canvas.DrawImage(mytile.image[mymap.maptilevariation[x2,y2],0],x3,y3)
+				End if
 				'canvas.Color = Color.Brown
 				'canvas.DrawRect(x3,y3,tw,th)
 				Case mymap.tilesolid
+					If y2>16
 					canvas.Color = Color.White
 					canvas.DrawImage(mytile.image[mymap.maptilevariation[x2,y2],1],x3,y3)
+					End If
 '				canvas.Color = Color.Black
 '				canvas.DrawRect(x3,y3,tw,th)
 				Case mymap.tileegg
+				canvas.OutlineMode=OutlineMode.Solid
+				canvas.OutlineColor = Color.White
+				canvas.OutlineWidth = 1						
 				canvas.Color = Color.Yellow
 				canvas.DrawRect(x3,y3,tw,th)
-				Case mymap.tileturret					
+				canvas.OutlineMode=OutlineMode.None
+				Case mymap.tileturret
+				canvas.OutlineMode=OutlineMode.Solid
+				canvas.OutlineColor = Color.Black
+				canvas.OutlineWidth = 1						
 				canvas.Color = Color.Grey
 				canvas.DrawRect(x3,y3,tw,th)	
+				canvas.OutlineMode=OutlineMode.None
 				Case mymap.tilemineable
 					canvas.Color = Color.White
 					canvas.DrawImage(mytile.image[mymap.maptilevariation[x2,y2],2],x3,y3)
@@ -2213,6 +2295,7 @@ Class player
 				End If
 			Next
 			Next
+
 		Next
 		Next
 		'draw water
@@ -3517,6 +3600,7 @@ Global myitem:List<item> = New List<item>
 Global mylaserwall:List<laserwall> = New List<laserwall>
 Global mynumberfall:List<numberfall> = New List<numberfall>
 Global mytile:tile
+Global mygradienttile:gradienttile
 
 Class MyWindow Extends Window
 	Field time:Int
@@ -3687,7 +3771,7 @@ Class MyWindow Extends Window
 		canvas.Color = Color.White
 		Local fps:String=App.FPS
 		canvas.DrawText(fps.Left(2)+"  Press 1(new level) or Home(selection). Left shift(map view) I(Inventory)",0,0)
-		canvas.DrawText("Cursors(move), s(shotgun), g(grenade), m(mine) space(jump) l(laserwall)..",0,20)
+		canvas.DrawText("Cursors(move), s(shotgun), g(grenade), m(mine) space(jump) l(laserwall)..",0,15)
 		canvas.DrawText(theversion,0,Height-20)	
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
@@ -3776,6 +3860,10 @@ Function resetmap(Width:Int,Height:int)
 		mytile = New tile(tilewidth,tileheight)
 		mytile.generate(3)
 		mytile.create()
+		mygradienttile = New gradienttile(tilewidth,tileheight)
+		mygradienttile.generate()
+		mygradienttile.create()
+
 				
 		myturret.AddFirst(New turret())		
 		myturret.AddFirst(New turret())
