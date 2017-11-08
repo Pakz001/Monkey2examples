@@ -5,6 +5,7 @@
 ' add - player inventory
 ' add - towns people
 
+' Bug - flying monster attacking player can go through laser wall
 ' Bug walking monster standing still
 ' check laser wall ontop of eggs situation
 
@@ -1166,7 +1167,7 @@ Class bullet
 		For Local i:=Eachin mywalkingmonster
 			If distance(px,py,i.px,i.py) < tilewidth Then 
 				i.hp -= 1
-				mynumberfall.Add(New numberfall(i.px+(i.w/2),i.py,1,Color.Red))
+				'mynumberfall.Add(New numberfall(i.px+(i.w/2),i.py,1,Color.Red))
 				deleteme = True				
 				If i.hp <= 0
 					i.deleteme = True					
