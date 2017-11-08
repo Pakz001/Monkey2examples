@@ -1,5 +1,13 @@
 ' short list
+' add - hp damage effect 
+' add - power bar (added)
+' add - town shop
+' add - player inventory
+' add - towns people
+
 ' Bug walking monster standing still
+' check laser wall ontop of eggs situation
+
 
 #Import "<std>"
 #Import "<mojo>"
@@ -8,7 +16,7 @@ Using std..
 Using mojo..
 
 Global developmode:Bool=False
-Global theversion:String="Version 7-11-2017"
+Global theversion:String="Version 8-11-2017"
 Global gamestate:String="select"
 Global egghatchspeed:Float = 0.1 'how fast eggs hatch
 Global egglayingfreq:Float = 0.1 ' lay lots of eggs 1 lay less eggs 0 '0 to 1
@@ -33,6 +41,7 @@ Class walkingmonster
 	Field x:Int,y:Int 'tile x and y position
 	Field w:Float,h:Float
 	Field hp:Int 'hitpoints
+	Field hpmax:Int
 	Field deleteme:Bool
 	Field state:String
 	Field substate:String
@@ -47,6 +56,7 @@ Class walkingmonster
 		px = x*w
 		py = y*h
 		hp = Rnd(10,30)
+		hpmax = hp
 		'set the movement speed
 		sx = Rnd(0.3,3)
 '		sy = sx
@@ -1720,6 +1730,7 @@ End Class
 
 Class player
 	Field hp:Int=100
+	Field hpmax:Int=100
 	Field mineitem:String[] = New String[]("gold","coal","metal","rock")
 	Field regularmode:Bool=True
 	Field jump:Bool=False
@@ -2193,6 +2204,7 @@ Class player
 		pmy = (py-(mcy*th))+moy
 		canvas.Color = Color.White
 		canvas.DrawRect(pmx,pmy,pw,ph)
+		drawpowerbar(canvas,pmx,pmy,hp,hpmax)
 
 		'draw flying monsters		
 		For Local i:=Eachin myflyingmonster
@@ -2202,7 +2214,7 @@ Class player
 			Local y2:Int=(y1-(mcy*th))+moy
 			canvas.Color = Color.Red
 			canvas.DrawRect(x2,y2,tw,th)
-			
+			drawpowerbar(canvas,x2,y2,i.hp,i.hpmax)
 			'canvas.Color = Color.White
 			'canvas.DrawText(i.state,x2,y2)
 			'canvas.DrawText(i.substate,x2,y2+12)
@@ -2221,7 +2233,7 @@ Class player
 			Local y2:Int=(y1-(mcy*th))+moy
 			canvas.Color = Color.Red
 			canvas.DrawRect(x2,y2,tw,th)
-			
+			drawpowerbar(canvas,x2,y2,i.hp,i.hpmax)			
 			canvas.Color = Color.White
 			canvas.DrawText(i.state,x2,y2)
 			canvas.DrawText(i.substate,x2,y2+12)
@@ -2305,6 +2317,21 @@ Class player
 		Next
 		
 	End Method
+	' Powerbar method)
+	Method drawpowerbar(canvas:Canvas,x:Int,y:Int,hp:Float,hpmax:Float)
+		Local powerbarlen:Float=20
+		Local cpos:Float=(powerbarlen/hpmax)*hp
+		canvas.Color = Color.Black
+		canvas.DrawRect(x,y,powerbarlen,5)
+		If hp >= hpmax/2
+			canvas.Color = Color.Green
+		Elseif hp<hpmax/2 And hp>hpmax/4
+			canvas.Color = Color.Yellow
+		Else
+			canvas.Color = Color.Red
+		Endif
+		canvas.DrawRect(x+1,y+1,cpos,3)
+	End Method
 	Method m:Int(x:Int,y:Int,offx:int,offy:int)
 		Return mywatermap.map[x+offx,y+offy]
 	End Method
@@ -2321,6 +2348,7 @@ Class theflyingmonster
 	Field x:Int,y:Int 'tile x and y position
 	Field w:Float,h:Float
 	Field hp:Int 'hitpoints
+	Field hpmax:Int
 	Field deleteme:Bool
 '	Field dbx:Int,dby:Int
 '	Field dbtime:Int
@@ -2340,6 +2368,7 @@ Class theflyingmonster
 		px = x*w
 		py = y*h
 		hp = Rnd(10,30)
+		hpmax = hp
 		'set the movement speed
 		sx = Rnd(0.3,3)
 		sy = sx
