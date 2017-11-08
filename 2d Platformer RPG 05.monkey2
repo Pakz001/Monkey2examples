@@ -1,5 +1,5 @@
 ' short list
-' add - hp damage effect 
+' add - hp damage effect (added - test)
 ' add - power bar (added)
 ' add - town shop
 ' add - player inventory
@@ -30,6 +30,35 @@ Global screenheight:Int=600
 Global tilewidth:Int=20
 Global tileheight:Int=20
 
+
+'
+' Drop a number from a x,y position
+' 
+Class numberfall
+	Field px:Float,py:Float
+	Field number:Int
+	Field col:Color
+	Field mx:Float
+	Field my:Float
+	Field time:Int ' if 0 then remove
+	Field deleteme:Bool
+	Method New(x:Int,y:Int,number:Int,col:Color)
+		Self.px = x
+		Self.py = y
+		Self.number = number
+		Self.col = col
+		Self.time = 50
+		mx = Rnd(-2,2)
+		my = -4
+	End Method
+	Method update()
+		my += .35
+		px += mx
+		py += my
+		time-=1
+		If time<=0 Then deleteme = True
+	End Method
+End Class
 '
 ' These are the walking monsters that
 ' hatch from the eggs. They do not lay eggs
@@ -69,6 +98,7 @@ Class walkingmonster
 		If developmode = False
 		If distance(myplayer.px+(myplayer.pw/2),myplayer.py+(myplayer.ph/2),px+(w/2),py+(h/2)) < tilewidth
 			myplayer.hp -= 2
+			mynumberfall.Add(New numberfall(myplayer.px+(myplayer.pw/2),myplayer.py,2,Color.Red))
 			If myplayer.hp < 0 Then gamestate = "select"
 		End If
 		End If
@@ -619,6 +649,7 @@ Class tentacle
 					my = -my
 					state = "ingoing"
 					myplayer.hp -= 10
+					mynumberfall.Add(New numberfall(myplayer.px+(myplayer.pw/2),myplayer.py,10,Color.Red))
 					If myplayer.hp < 0 Then 
 						gamestate = "select"
 						Return
@@ -835,6 +866,7 @@ Class frag
 		For Local i:=Eachin mywalkingmonster
 			If distance(i.px,i.py,px,py) < 10
 				i.hp -= 5
+				mynumberfall.Add(New numberfall(i.px+(i.w/2),i.py,5,Color.Red))
 				If i.hp<=0
 					i.deleteme = True
 					myitem.Add(New item(i.px,i.py,"gold"))
@@ -848,6 +880,7 @@ Class frag
 		For Local i:=Eachin myflyingmonster
 			If distance(i.px,i.py,px,py) < 10
 				i.hp -= 5
+				mynumberfall.Add(New numberfall(i.px+(i.w/2),i.py,5,Color.Red))
 				If i.hp<=0
 					i.deleteme = True
 					myitem.Add(New item(i.px,i.py,"gold"))
@@ -1133,6 +1166,7 @@ Class bullet
 		For Local i:=Eachin mywalkingmonster
 			If distance(px,py,i.px,i.py) < tilewidth Then 
 				i.hp -= 1
+				mynumberfall.Add(New numberfall(i.px+(i.w/2),i.py,1,Color.Red))
 				deleteme = True				
 				If i.hp <= 0
 					i.deleteme = True					
@@ -1147,6 +1181,7 @@ Class bullet
 		For Local i:=Eachin myflyingmonster
 			If distance(px,py,i.px,i.py) < tilewidth Then 
 				i.hp -= 1
+				mynumberfall.Add(New numberfall(i.px+(i.w/2),i.py,1,Color.Red))
 				deleteme = True				
 				If i.hp <= 0
 					i.deleteme = True					
@@ -2315,6 +2350,16 @@ Class player
 			canvas.DrawRect(x2-4,y2,8,4)
 			canvas.DrawRect(x2-4,y2+h-4,8,4)
 		Next
+
+		'
+		' Draw the falling numbers
+		'
+		For Local i:=Eachin mynumberfall
+			Local x2:Int=i.px-mcx*tw+mox
+			Local y2:Int=i.py-mcy*th+moy
+			canvas.Color = i.col
+			canvas.DrawText(i.number,x2,y2)
+		Next
 		
 	End Method
 	' Powerbar method)
@@ -2380,6 +2425,7 @@ Class theflyingmonster
 		If developmode = False
 		If distance(myplayer.px+(myplayer.pw/2),myplayer.py+(myplayer.ph/2),px+(w/2),py+(h/2)) < tilewidth
 			myplayer.hp -= 2
+			mynumberfall.Add(New numberfall(myplayer.px+(myplayer.pw/2),myplayer.py,2,Color.Red))
 			If myplayer.hp < 0 Then gamestate = "select"
 		End If
 		End If
@@ -3387,6 +3433,7 @@ Global myfrag:List<frag> = New List<frag>
 Global myplayer:player
 Global myitem:List<item> = New List<item>
 Global mylaserwall:List<laserwall> = New List<laserwall>
+Global mynumberfall:List<numberfall> = New List<numberfall>
 Global mytile:tile
 
 Class MyWindow Extends Window
@@ -3482,6 +3529,13 @@ Class MyWindow Extends Window
 			If i.deleteme = True Then mylaserwall.Remove(i)
 		Next
 						
+		For Local i:=Eachin mynumberfall
+			i.update()
+		Next
+		For Local i:=Eachin mynumberfall
+			If i.deleteme = True Then mynumberfall.Remove(i)
+		Next
+
 
 		
 		'debugbullettest
@@ -3668,6 +3722,7 @@ Function resetmap(Width:Int,Height:int)
 	 	'mywalkingmonster.Add(New walkingmonster(5,16))
 	 	'mywalkingmonster.Add(New walkingmonster(15,16))
 	 	'mywalkingmonster.Add(New walkingmonster(16,16))
+	 	'mynumberfall.Add(New numberfall(myplayer.px,myplayer.py,10,Color.Red))
 End Function 
 
 Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
