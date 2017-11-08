@@ -3807,9 +3807,9 @@ Function resetmap(Width:Int,Height:int)
 
 
 		'mygrowslime.addslime(10,30)
-		For Local i:Int=0 Until 10
-			myflyingmonster.Add(New theflyingmonster(5,5))
-	 	Next
+		'For Local i:Int=0 Until 10
+		'	myflyingmonster.Add(New theflyingmonster(5,5))
+	 	'Next
 	 	'mywalkingmonster.Add(New walkingmonster(5,16))
 	 	'mywalkingmonster.Add(New walkingmonster(15,16))
 	 	'mywalkingmonster.Add(New walkingmonster(16,16))
