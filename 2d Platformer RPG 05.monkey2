@@ -5,7 +5,7 @@
 ' add - player inventory (first draft - collected items get added)
 ' add - towns people
 
-' Bug - flying monster attacking player can go through laser wall
+' Bug - flying/walking monster attacking player can go through laser wall (first fix - more testing)
 ' Bug walking monster standing still
 ' check laser wall ontop of eggs situation
 
@@ -91,12 +91,12 @@ Class numberfall
 		Self.py = y
 		Self.number = number
 		Self.col = col
-		Self.time = 50
-		mx = Rnd(-2,2)
-		my = -4
+		Self.time = 80
+		mx = Rnd(-1,1)
+		my = -2
 	End Method
 	Method update()
-		my += .35
+		my += .17
 		px += mx
 		py += my
 		time-=1
@@ -251,7 +251,7 @@ Class walkingmonster
 			mony += my
 			If distance(monx,mony,myplayer.px,myplayer.py) < 20 Then Return True
 			If mymap.mapcollide(monx,mony,w/2,h/2) = True Then Return False	
-			
+			If collidelaserwall(monx,mony,w,h) Then Return False
 		Next					
 		Return True
 	End Method	
@@ -270,6 +270,14 @@ Class walkingmonster
 		Next
 		Return False
 	End Method
+	Method collidelaserwall:Bool(x:Int,y:Int,w1:Int,h1:Int)
+		For Local i:=Eachin mylaserwall
+			If rectsoverlap((x-w1)+(Rnd(-w1,w1)),y-h1,w1*2,h1*2,i.tx-5,i.ty,10,i.by-i.ty)
+				Return True
+			End If 
+		Next
+		Return False
+	End Method	
 	Method changedirection()
 		state = "roam"
 		If substate = "left" Then 
@@ -2597,9 +2605,17 @@ Class theflyingmonster
 			mony += my
 			If distance(monx,mony,myplayer.px,myplayer.py) < 20 Then Return True
 			If mymap.mapcollide(monx,mony,w,h) = True Then Return False	
-			
+			If collidelaserwall(monx,mony,w,h) Then Return False
 		Next					
 		Return True
+	End Method
+	Method collidelaserwall:Bool(x:Int,y:Int,w1:Int,h1:Int)
+		For Local i:=Eachin mylaserwall
+			If rectsoverlap((x-w1)+(Rnd(-w1,w1)),y-h1,w1*2,h1*2,i.tx-5,i.ty,10,i.by-i.ty)
+				Return True
+			End If 
+		Next
+		Return False
 	End Method
 	Method laserwall:Bool()
 		For Local i:=Eachin mylaserwall
@@ -3791,9 +3807,9 @@ Function resetmap(Width:Int,Height:int)
 
 
 		'mygrowslime.addslime(10,30)
-		'For Local i:Int=0 Until 10
-		'	myflyingmonster.Add(New theflyingmonster(5,5))
-	 	'Next
+		For Local i:Int=0 Until 10
+			myflyingmonster.Add(New theflyingmonster(5,5))
+	 	Next
 	 	'mywalkingmonster.Add(New walkingmonster(5,16))
 	 	'mywalkingmonster.Add(New walkingmonster(15,16))
 	 	'mywalkingmonster.Add(New walkingmonster(16,16))
