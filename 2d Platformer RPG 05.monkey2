@@ -2,7 +2,7 @@
 ' add - hp damage effect (added - test)
 ' add - power bar (added)
 ' add - town shop
-' add - player inventory
+' add - player inventory (first draft - collected items get added)
 ' add - towns people
 
 ' Bug - flying monster attacking player can go through laser wall
@@ -30,8 +30,51 @@ Global screenwidth:Int=800
 Global screenheight:Int=600
 Global tilewidth:Int=20
 Global tileheight:Int=20
+Global maxplayeritems:Int=10
 
 
+Class inventory
+	Field px:Int,py:Int
+	Field pw:Int,ph:Int
+	
+	Method New()
+		pw = 450
+		ph = 240
+		px = (screenwidth/2)-(pw/2)
+		py = (screenheight/2)-(ph/2)		
+	End Method
+	Method update()
+		If Keyboard.KeyReleased(Key.I) Or Keyboard.KeyReleased(Key.Escape)
+			gamestate = "play"
+			Return
+		End If
+		
+	End Method
+	Method draw(canvas:Canvas)
+		canvas.Clear(Color.Black)
+		canvas.OutlineMode=OutlineMode.Solid
+		canvas.OutlineColor = Color.White
+		canvas.OutlineWidth = 1	
+		'Draw the main window
+		canvas.Color = Color.Grey
+		canvas.DrawRect(px,py,pw,ph)
+		canvas.OutlineMode=OutlineMode.None
+		'Draw the items and their count
+		Local cnt:Int=0
+		For Local y:Int=0 Until 15
+		For Local x:Int=0 Until 2
+			If cnt>=myplayer.playeritemnames.Length Then Continue
+			Local x2:Int=(x*(pw/2))+px
+			Local y2:Int=y*20+py
+			canvas.Color = Color.White
+			canvas.DrawText(myplayer.playeritem[cnt,1],x2,y2)
+			canvas.DrawText(myplayer.playeritemnames[myplayer.playeritem[cnt,0]],x2+48,y2)
+			cnt+=1
+		Next
+		Next
+		canvas.DrawText("Press I or escape to return to game",px+(pw/2),py+ph-20,.5,.5)
+	End method
+End Class
 '
 ' Drop a number from a x,y position
 ' 
@@ -710,6 +753,7 @@ Class item
 		'if distance closest then add to player inventory		
 		If distance(pcx,pcy,px,py) < 10 Then
 			' code to add to player inventory here...
+			addtoplayerinventory()	
 			deleteme = True
 		End If
 
@@ -753,6 +797,14 @@ Class item
 		' move the item
 		px += mx
 		py += my		
+	End Method
+	Method addtoplayerinventory()
+		For Local i:Int=0 Until myplayer.playeritemnames.Length
+			If kind = myplayer.playeritemnames[i]
+				myplayer.playeritem[i,1] += 1
+				Return
+			End If
+		Next
 	End Method
     Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
         Return Abs(x2-x1)+Abs(y2-y1)
@@ -870,7 +922,7 @@ Class frag
 				mynumberfall.Add(New numberfall(i.px+(i.w/2),i.py,5,Color.Red))
 				If i.hp<=0
 					i.deleteme = True
-					myitem.Add(New item(i.px,i.py,"gold"))
+					myitem.Add(New item(i.px,i.py,"Monster Tail"))
 				End If
 				deleteme = True
 				Return
@@ -884,17 +936,16 @@ Class frag
 				mynumberfall.Add(New numberfall(i.px+(i.w/2),i.py,5,Color.Red))
 				If i.hp<=0
 					i.deleteme = True
-					myitem.Add(New item(i.px,i.py,"gold"))
+					myitem.Add(New item(i.px,i.py,"Monster Tooth"))
 				End If
 				deleteme = True
 				Return
 			End If
-		Next
-		
+		Next		
 		' frag collision with the eggs
 		If eggcollide(px-1,py-1,w+2,h+2)
 			deleteme = True
-			'myitem.Add(New item(px,py,"gold"))
+			myitem.Add(New item(px,py,"Egg Shell"))
 			Return
 		End if
 		Next
@@ -1171,7 +1222,7 @@ Class bullet
 				deleteme = True				
 				If i.hp <= 0
 					i.deleteme = True					
-					myitem.Add(New item(px,py,"gold"))
+					myitem.Add(New item(px,py,"Monster Tail"))
 					Return
 				End if
 				Return
@@ -1186,7 +1237,7 @@ Class bullet
 				deleteme = True				
 				If i.hp <= 0
 					i.deleteme = True					
-					myitem.Add(New item(px,py,"gold"))
+					myitem.Add(New item(px,py,"Monster Tooth"))
 					Return
 				End if
 				Return
@@ -1196,7 +1247,7 @@ Class bullet
 		' Collision with bullet and egg
 		If eggcollide(px,py,w,h) Then 						
 			deleteme = True
-			myitem.Add(New item(px,py,"gold"))
+			myitem.Add(New item(px,py,"Egg Shell"))
 			Return
 		End If
 		px += Cos(angle)*mx
@@ -1767,7 +1818,8 @@ End Class
 Class player
 	Field hp:Int=100
 	Field hpmax:Int=100
-	Field mineitem:String[] = New String[]("gold","coal","metal","rock")
+	Field playeritemnames:String[] = New String[]("Gold","Coal","Metal","Rock","Shotgun Round","Grenade","Sticky Grenade","Monster Tail","Monster Tooth","Egg Shell")
+	Field playeritem:Int[,]
 	Field regularmode:Bool=True
 	Field jump:Bool=False
 	Field incy:Float=0
@@ -1795,7 +1847,15 @@ Class player
 		maptilesheight = screenheight / th
 		mcx=0
 		mcy=0
+		playeritem = New Int[playeritemnames.Length,2]
+		createrandominventory()
 	End Method 
+	Method createrandominventory()
+		For Local i:Int=0 Until playeritemnames.Length
+			playeritem[i,0] = i
+			playeritem[i,1] = Rnd(65)
+		Next
+	End Method
 	Method updateplayercontrols()		
 		'
 		pmx = px-(mcx*tw)
@@ -1926,8 +1986,12 @@ Class player
 		y2 *= th
 		x2 += tw/2
 		y2 += th/2
-		For Local i:Int=0 Until Rnd(3)				
-		myitem.Add(New item(x2+Rnd(-tw/3,th/3),y2+Rnd(th/3,th/3),mineitem[Rnd(mineitem.Length)]))
+		For Local i:Int=0 Until Rnd(3)		
+		Local item:String
+		Local num:Int=Rnd(10)
+		If num>=8 Then item="Gold" 
+		If num<8 Then item="Coal" Else item="Rock"		
+		myitem.Add(New item(x2+Rnd(-tw/3,th/3),y2+Rnd(th/3,th/3),item))
 		Next
 	End Method
 	Method fireshotgun()
@@ -3432,6 +3496,7 @@ Global mybullet:List<bullet> = New List<bullet>
 Global mygrenade:List<grenade> = New List<grenade>
 Global myfrag:List<frag> = New List<frag>
 Global myplayer:player
+Global myinventory:inventory
 Global myitem:List<item> = New List<item>
 Global mylaserwall:List<laserwall> = New List<laserwall>
 Global mynumberfall:List<numberfall> = New List<numberfall>
@@ -3452,6 +3517,10 @@ Class MyWindow Extends Window
 		If gamestate="select" Then 
 			mymenuselect.update()
 			mymenuselect.draw(canvas)
+		End If
+		If gamestate="inventory"
+			myinventory.update()			
+			myinventory.draw(canvas)
 		End If
 		If gamestate<>"play" Then Return
 		If Keyboard.KeyReleased(Key.Key1) Then
@@ -3554,6 +3623,9 @@ Class MyWindow Extends Window
 		'mywatermap.addwater()		
 		
 		'player
+		If Keyboard.KeyReleased(Key.I)
+			gamestate = "inventory"
+		End If
 		If Keyboard.KeyDown(Key.LeftShift) = False
 			Local tp:Bool=False
 			If Keyboard.KeyDown(Key.LeftControl) 
@@ -3597,7 +3669,8 @@ Class MyWindow Extends Window
 		'
 		canvas.Scissor = New Recti(0,0,screenwidth,screenheight)
 		canvas.Color = Color.White
-		canvas.DrawText(App.FPS+"  Press 1(new level) or Home(selection). Left shift(total map view)",0,0)
+		Local fps:String=App.FPS
+		canvas.DrawText(fps.Left(2)+"  Press 1(new level) or Home(selection). Left shift(map view) I(Inventory)",0,0)
 		canvas.DrawText("Cursors(move), s(shotgun), g(grenade), m(mine) space(jump) l(laserwall)..",0,20)
 		canvas.DrawText(theversion,0,Height-20)	
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
@@ -3709,11 +3782,12 @@ Function resetmap(Width:Int,Height:int)
 		mywatermap.findpoorspot()
 		'
 		myplayer = New player()
+		myinventory = New inventory()
 		
-		myitem.Add(New item(100,100,"gold"))
-		myitem.Add(New item(106,105,"gold"))
-		myitem.Add(New item(110,115,"gold"))
-		myitem.Add(New item(115,120,"gold"))
+		myitem.Add(New item(100,100,"Gold"))
+		myitem.Add(New item(106,105,"Gold"))
+		myitem.Add(New item(110,115,"Gold"))
+		myitem.Add(New item(115,120,"Gold"))
 
 
 		'mygrowslime.addslime(10,30)
