@@ -5,6 +5,8 @@ Using std..
 Using mojo..
 
 Class building
+	Field image:Image
+	Field icanvas:Canvas
 	Field px:Int,py:Int
 	Field totalwidth:Int
 	Field blockhouse:Int=1
@@ -32,11 +34,25 @@ Class building
 	Field housesidelayer:Int[] = New Int[2]
 	Field shopsignlayer:Int[] = New Int[3]
 	Field frontlayer:Int[] = New Int[6]
-	Method New(x:Int,y:Int,w:Int,isshop:Bool)
+	Field bw:Float,bh:Float
+	Method New(x:Int,y:Int,w:Int,bw:Int,bh:Int,isshop:Bool)
+		Self.bw = bw
+		Self.bh = bh
+		image = New Image(bw*(w+2),bh*2)
+		image.Handle=New Vec2f( 0,0 )
+		icanvas = New Canvas(image)	
 		px = x
 		py = y
 		totalwidth = w
 		makehouse(w,isshop)
+		Local opx:Int=px
+		Local opy:Int=py
+		px=bw
+		py=bh
+		bufferdraw(icanvas)
+		px = opx
+		py = opy-bh
+		icanvas.Flush()
 	End Method
 	Method makehouse(w:Int,isshop:Bool)
 
@@ -121,9 +137,8 @@ Class building
 		End Select
 	
 	End Method
-	Method draw(canvas:Canvas,w:Int,h:Int)
-		Local bw:Int=w
-		Local bh:Int=h
+	Method bufferdraw(canvas:Canvas)
+		canvas.Clear(New Color(0,0,0,0))
 		' Draw the house blocks
 		For Local i:Int=0 Until 3	
 			If houselayer[i] = blockhouse Then
@@ -367,7 +382,10 @@ Class building
 		'canvas.DrawRect( (x)+totalwidth*w,y+(h/1.5),w/2,h-(h/1.5)
 		End If
 	End Method
-
+	Method draw(canvas:Canvas)	
+		canvas.Color = Color.White
+		canvas.DrawImage(image,px,py)
+	End Method
 End Class
 
 
@@ -403,7 +421,7 @@ Class MyWindow Extends Window
         canvas.DrawRect(0,150+hh,Width,2)
 		
 		For Local i:=Eachin mybuilding
-        	i.draw(canvas,hw,hh)
+        	i.draw(canvas)
         Next
 
 		' if key escape then quit
@@ -422,7 +440,7 @@ Class MyWindow Extends Window
 			Local w:Int = Rnd(1,4)
 			st = hw*(w+2)
 '	        mybuilding = New building(x,150,Rnd(1,4),z1)
-	        mybuilding.AddLast(New building(x,150,w,z1))
+	        mybuilding.AddLast(New building(x,150,w,hw,hh,z1))
 	        x+=st
 		Wend
     End Method
