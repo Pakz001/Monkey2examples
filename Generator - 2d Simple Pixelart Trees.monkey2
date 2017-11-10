@@ -13,29 +13,21 @@ Class tree
 	Field mapone:Color[][]
 	Field nocolor:Color = New Color(0,0,0,0)
 	Field outlcolor:Color = New Color(.01,0.1,0.1)
-	Field treecolor1:Color = New Color(1,Rnd(.8,1),0)
-	Field treecolor2:Color = New Color(1,Rnd(.7,.78),0)
-	Field treecolor3:Color = New Color(1,Rnd(.5,.68),0)
-	Field treecolor4:Color = New Color(1,Rnd(.2,.45),0)
-'	Field treecolor1:Color = New Color(Rnd(.5,.8),Rnd(.8,1),0)
-'	Field treecolor2:Color = New Color(Rnd(.3,.7),Rnd(.7,.78),0)
-'	Field treecolor3:Color = New Color(Rnd(.25,.5),Rnd(.5,.68),0)
-'	Field treecolor4:Color = New Color(Rnd(.1,.20),Rnd(.2,.45),0)
-'
-'	Field treecolor1r:Color = New Color(1,.5,0)
+	Field treecolor1:Color = New Color(Rnd(.5,.8),Rnd(.8,1),0)
+	Field treecolor2:Color = New Color(Rnd(.3,.7),Rnd(.7,.78),0)
+	Field treecolor3:Color = New Color(Rnd(.25,.5),Rnd(.5,.68),0)
+	Field treecolor4:Color = New Color(Rnd(.1,.20),Rnd(.2,.45),0)
+	Field treecolor1r:Color = New Color(Rnd(.1,.5),0,0)
 	Field basecolor1:Color = New Color(.5,.24,0)
 	Field basecolor2:Color = New Color(.8,.4,0)
 	Field basecolor3:Color = New Color(.9,.45,.0)
-	'Field basecolor1:Int=150
-	'Field basecolor2:Int=190
-	'Field basecolor3:Int=220
 	Method New(x:Int,y:Int,w:Int,h:Int)
-		'If Rnd(3)<2 Then 
-'			treecolor1 = New Color(1,Rnd(.8,1),0)
-'			treecolor2 = New Color(1,Rnd(.7,.78),0)
-'			treecolor3 = New Color(1,Rnd(.5,.68),0)
-'			treecolor4 = New Color(1,Rnd(.2,.45),0)
-'		'End If
+		If Rnd(3)<2 Then 
+			treecolor1 = treecolor1.Blend(treecolor1r,.1)
+			treecolor2 = treecolor1.Blend(treecolor1r,.2)
+			treecolor3 = treecolor1.Blend(treecolor1r,.3)
+			treecolor4 = treecolor1.Blend(treecolor1r,.4)
+		End If
 		px = x
 		py = y
 		pw = w
@@ -47,14 +39,16 @@ Class tree
 		maketree()
 		image = New Image(pw,ph,TextureFlags.Dynamic)
 		icanvas = New Canvas(image)
-		Local opx:Int=px
-		Local opy:Int=py
-		px = 0
-		py = 0
+		icanvas.Clear(New Color(0,0,0,0))
+		icanvas.Flush()
+		Local opx:Int=x
+		Local opy:Int=y
+		Self.px = 0
+		Self.py = 0
 		draw(icanvas)
 		icanvas.Flush()
-		px = opx
-		py = opy
+		Self.px = opx
+		Self.py = opy
 	End Method
 	Method maketree()
 		Local mx:Float=0.05
@@ -177,36 +171,11 @@ Class tree
 	End Method
 	
 	Method draw(canvas:Canvas)
-		canvas.Clear(New Color(0,0,0,0))
+		'canvas.Clear(New Color(0,0,0,0))
 		For Local y:Int=0 Until ph
 		For Local x:Int=0 Until pw
 			If mapone[x][y] = nocolor Then Continue
-			canvas.Color = Color.Blue'mapone[x][y]
-'			Select mapone[x][y]
-'				Case Color.Black
-'					canvas.Color = Color.Black
-'				Case treecolor1
-'					canvas.Color = treecolor1
-'					'SetColor treecolor1r/2,treecolor1,0
-'				Case treecolor2
-'					canvas.Color = treecolor2
-'					'SetColor treecolor1r/1.5,treecolor2,0
-'				Case treecolor3
-'					canvas.Color = treecolor3
-'					'SetColor treecolor1r/1.2,treecolor3,0
-'				Case treecolor4
-'					canvas.Color = treecolor4
-'					'SetColor treecolor1r,treecolor4,0
-'				Case basecolor1
-'					canvas.Color = basecolor1
-'					'SetColor basecolor1,basecolor1/2,0
-'				Case basecolor2
-'					canvas.Color = basecolor2
-'					'SetColor basecolor2,basecolor2/2,0
-'				Case basecolor3
-'					canvas.Color = basecolor3
-'					'SetColor basecolor3,basecolor3/2,0					
-'			End Select
+			canvas.Color = mapone[x][y]
 			canvas.DrawRect(px+(x*1),py+(y*1),1,1)
 		Next
 		Next
@@ -242,8 +211,10 @@ Class MyWindow Extends Window
         canvas.Color = New Color(.07,1,.5)
         canvas.DrawRect(0,150+hh,Width,2)
 		
+		canvas.Color = Color.White
 		For Local i:=Eachin mytree
-        	canvas.DrawImage(i.image,i.px,i.py)
+			canvas.DrawImage(i.image,i.px,i.py)
+        	'i.draw(canvas)
         Next		
 				
 		' if key escape then quit
