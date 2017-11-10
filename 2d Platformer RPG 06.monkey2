@@ -1,9 +1,7 @@
 ' short list
-' add - hp damage effect (added - test)
-' add - power bar (added)
 ' add - town shop
 ' add - player inventory (first draft - collected items get added)
-' add - towns people
+' add - towns people(initiated)
 
 ' Bug - flying/walking monster attacking player can go through laser wall (first fix - more testing)
 ' Bug walking monster standing still
