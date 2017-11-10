@@ -32,6 +32,125 @@ Global tilewidth:Int=20
 Global tileheight:Int=20
 Global maxplayeritems:Int=10
 
+'
+' This is the code for the people in the town.
+'
+Class townperson
+	Field px:float,py:Float 'pixel position (0-width)
+	Field sx:Float,sy:Float 'movement speed
+	Field x:Int,y:Int 'tile x and y position
+	Field w:Float,h:Float
+	Field hp:Int 'hitpoints
+	Field hpmax:Int
+	Field deleteme:Bool
+	Field state:String
+	Field substate:String
+	Field jx:Float
+	Field jy:Float
+	Field oldpy:Float 'old py coordinate
+	Method New(x:Int,y:Int)
+		Self.x = x
+		Self.y = y
+		Self.w = tilewidth
+		Self.h = tileheight
+		px = x*w
+		py = y*h
+		hp = Rnd(10,30)
+		hpmax = hp
+		'set the movement speed
+		sx = Rnd(0.3,1)
+'		sy = sx
+		state="roam"
+		If Rnd(10)<2 Then substate="left" Else substate="stand"
+	End Method
+	Method update()		
+'		If laserwait>0 Then laserwait-=1
+		
+		If px < x*w Then px += sx
+		If px > x*w Then px -= sx
+		If distance(px,py,x*w,y*h) > 8 Then Return
+				
+		Select state
+			Case "roam"												
+				Select substate
+					Case "left"
+						If x<3 Then substate="right" ; Return
+						x-=1
+						'If Rnd(50) < 1 And mymap.mapfinal[x-1,y] = mymap.tileempty And mymap.mapfinal[x-1,y+1] <> mymap.tileempty Then substate="right"						
+						'If Rnd(50) < 1 And cannotgohere(x+1,y) = False And cannotgohere(x+1,y+1)=True Then substate="right" 
+						If cannotgohere(x-1,y) = True Then substate = "right"
+						If cannotgohere(x-1,y+1) = False Then substate = "right"
+						'If mymap.mapfinal[x-1,y]  <> mymap.tileempty Then substate="right"
+						'If mymap.mapfinal[x-1,y+1] = mymap.tileempty Then substate="right"
+						
+						
+					Case "right"						
+						If x>mapwidth-3 Then substate="left" ; Return
+						x+=1
+						'If Rnd(50) < 1 And cannotgohere(x-1,y) =  False And cannotgohere(x-1,y+1)=True Then substate="left"
+						If cannotgohere(x+1,y) = True Then substate="left"
+						If cannotgohere(x+1,y+1) = False Then substate="left"
+						'If Rnd(50) < 1 And mymap.mapfinal[x+1,y] = mymap.tileempty And mymap.mapfinal[x+1,y+1] <> mymap.tileempty Then substate="left"						
+						'If mymap.mapfinal[x+1,y]  <> mymap.tileempty Then substate="left"
+						'If mymap.mapfinal[x+1,y+1] = mymap.tileempty Then substate="left"
+						
+				End Select
+				randaction()
+		End Select
+	End Method
+	Method randaction()
+		If substate = "left" And Rnd(600)<2 Then changedirection() ; Return
+		If substate = "right" And Rnd(600)<2 Then changedirection(); Return
+		If substate = "stand" And Rnd(600)<2 Then 
+			If Rnd(2) < 1 Then substate = "left" Else substate="right"
+			Return
+		End If
+		If Rnd(100) < 2 Then substate = "stand"; Return
+	End Method
+	' Check if tile on map is blocked
+	Method cannotgohere:Bool(x:Int,y:Int)
+		If mymap.mapfinal[x,y] = mymap.tilesolid Then Return True
+		If mymap.mapfinal[x,y] = mymap.tilemineable Then Return True
+		If mymap.mapfinal[x,y] = mymap.tileturret Then Return True
+		Return False
+	End Method
+	Method changedirection()
+		state = "roam"
+		If substate = "left" Then 
+			substate="right" 
+			x += 2		
+		Else 
+			substate="left"
+			x -= 2
+		End If
+	End Method	
+ 	Method draw(canvas:Canvas)
+		    Local x1:Float=screenwidth/Float(mapwidth)*Float(x)
+	    	Local y1:Float=screenheight/Float(mapheight)*Float(y)
+	    	canvas.Color = Color.White
+	    	'SetColor 255,255,255
+			canvas.DrawRect(x1,y1,3+2,3+2)
+			canvas.Color = Color.Red
+	    	'SetColor 255,0,0		
+			canvas.DrawRect(x1+1,y1+1,3,3)
+	
+	End Method
+	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
+		Return ATan2(y2-y1, x2-x1)
+	End Function  	     
+    Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
+        Return Abs(x2-x1)+Abs(y2-y1)
+    End Function	
+	Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+	    Return True
+	End	 Function
+End Class
+
+' 
+' Tree sprite generator
+'
 Class tree
 	Field image:Image
 	Field icanvas:Canvas
@@ -2985,6 +3104,28 @@ Class player
 			'canvas.DrawText(i.number,x2,y2)
 		Next
 
+		'draw towns people
+		For Local i:=Eachin mytownperson
+			Local x1:Int=i.px
+			Local y1:Int=i.py
+			Local x2:Int=(x1-(mcx*tw))+mox
+			Local y2:Int=(y1-(mcy*th))+moy
+			canvas.OutlineMode=OutlineMode.Solid
+			canvas.OutlineColor = Color.Black
+			canvas.OutlineWidth = 1				
+			canvas.Color = Color.Green
+			canvas.DrawRect(x2,y2,tw,th)
+			canvas.OutlineMode = OutlineMode.None
+			drawpowerbar(canvas,x2,y2,i.hp,i.hpmax)
+			'canvas.Color = Color.White
+			'canvas.DrawText(i.state,x2,y2)
+			'canvas.DrawText(i.substate,x2,y2+12)
+			'canvas.DrawText(i.x*i.w+","+i.y*i.h,x2,y2+22)
+			'canvas.DrawText(i.px+","+i.py,x2,y2+37)
+			
+			
+			
+		Next
 
 		' Draw the player
 		pmx = (px-(mcx*tw))+mox
@@ -3669,10 +3810,6 @@ Class map
 		updateladderimage(mapladdercanvas)
 		updateimage(mapcanvas)
 		
-		
-		
-	
-		
 	End Method 
 	' Here we create the parts on the mapfinal that can be mined
 	' by the player (like in minecraft/digger) tilemineable
@@ -4207,6 +4344,7 @@ Global mytile:tile
 Global mygradienttile:gradienttile
 Global mybuilding:List<building> = New List<building>
 Global mytree:List<tree> = New List<tree>
+Global mytownperson:List<townperson> = New List<townperson>
 
 Class MyWindow Extends Window
 	Field time:Int
@@ -4277,6 +4415,7 @@ Class MyWindow Extends Window
 			i.update()
 		Next
 		
+		' Update the grenades
 		For Local i:=Eachin mygrenade
 			i.update()
 		Next
@@ -4284,6 +4423,7 @@ Class MyWindow Extends Window
 			If i.deleteme = True Then mygrenade.Remove(i)
 		Next
 
+		' Update the fragments (from grenades)
 		For Local i:=Eachin myfrag
 			i.update()
 		Next
@@ -4291,6 +4431,7 @@ Class MyWindow Extends Window
 			If i.deleteme = True Then myfrag.Remove(i)
 		Next
 
+		' Update the items (drops)
 		For Local i:=Eachin myitem
 			i.update()
 		Next
@@ -4298,13 +4439,15 @@ Class MyWindow Extends Window
 			If i.deleteme = True Then myitem.Remove(i)
 		Next
 						
+		' Update the laser walls
 		For Local i:=Eachin mylaserwall
 			i.update()
 		Next
 		For Local i:=Eachin mylaserwall
 			If i.deleteme = True Then mylaserwall.Remove(i)
 		Next
-						
+		
+		' update the numbers (falling damage)
 		For Local i:=Eachin mynumberfall
 			i.update()
 		Next
@@ -4312,6 +4455,13 @@ Class MyWindow Extends Window
 			If i.deleteme = True Then mynumberfall.Remove(i)
 		Next
 
+		' update the towns people
+		For Local i:=Eachin mytownperson
+			i.update()
+		Next
+		For Local i:=Eachin mytownperson
+			If i.deleteme = True Then mytownperson.Remove(i)
+		Next
 
 		
 		'debugbullettest
@@ -4457,6 +4607,7 @@ Function resetmap(Width:Int,Height:int)
 		mygrenade.Clear()		
 		mybuilding.Clear()
 		mytree.Clear()
+		mytownperson.Clear()
 		SeedRnd(100+Microsecs())
 		'Local s:Int=Rnd(140,150)
 		'mapwidth = 
@@ -4496,6 +4647,9 @@ Function resetmap(Width:Int,Height:int)
 		myplayer = New player()
 		myinventory = New inventory()
 		
+		'
+		' Create the buildings and the trees
+		'
 		If developmode = False Then
 			'
 			' Create the buildings
@@ -4520,7 +4674,16 @@ Function resetmap(Width:Int,Height:int)
 				mytree.Add(New tree(x*tilewidth-(tilewidth),tileheight*14,48,60))
 				x+=st
 			Wend				
-		End if		
+		End If		
+		
+		'
+		' Create the towns people
+		'
+		For Local i:Int=0 Until mapwidth/40
+			mytownperson.Add(New townperson(Rnd(3,mapwidth/2-5),16))
+			mytownperson.Add(New townperson(Rnd(mapwidth/2+5,mapwidth-5),16))
+		Next
+		
 		
 		myitem.Add(New item(100,100,"Gold"))
 		myitem.Add(New item(106,105,"Gold"))
