@@ -6,18 +6,23 @@ Using mojo..
 
 
 Class tree
+	Field image:Image
+	Field icanvas:Canvas
 	Field px:Int,py:Int
 	Field pw:Float,ph:Float
-	Field mapone:Int[][]
-	Field treecolor1:Color = New Color(Rnd(.5,.8),Rnd(.8,1),0)
-	Field treecolor2:Color = New Color(Rnd(.3,.7),Rnd(.7,.8),0)
-	Field treecolor3:Color = New Color(Rnd(.25,.5),Rnd(.5,.7),0)
-	Field treecolor4:Color = New Color(Rnd(),Rnd(),0)
-	Field treecolor1:Int=Rnd(230,255)
-	Field treecolor1r:Int=Rnd(50,200)
-	Field treecolor2:Int=Rnd(190,220)
-	Field treecolor3:Int=Rnd(130,180)
-	Field treecolor4:Int=Rnd(70,120)
+	Field mapone:Color[][]
+	Field nocolor:Color = New Color(0,0,0,0)
+	Field outlcolor:Color = New Color(.01,0.1,0.1)
+	Field treecolor1:Color = New Color(1,Rnd(.8,1),0)
+	Field treecolor2:Color = New Color(1,Rnd(.7,.78),0)
+	Field treecolor3:Color = New Color(1,Rnd(.5,.68),0)
+	Field treecolor4:Color = New Color(1,Rnd(.2,.45),0)
+'	Field treecolor1:Color = New Color(Rnd(.5,.8),Rnd(.8,1),0)
+'	Field treecolor2:Color = New Color(Rnd(.3,.7),Rnd(.7,.78),0)
+'	Field treecolor3:Color = New Color(Rnd(.25,.5),Rnd(.5,.68),0)
+'	Field treecolor4:Color = New Color(Rnd(.1,.20),Rnd(.2,.45),0)
+'
+'	Field treecolor1r:Color = New Color(1,.5,0)
 	Field basecolor1:Color = New Color(.5,.24,0)
 	Field basecolor2:Color = New Color(.8,.4,0)
 	Field basecolor3:Color = New Color(.9,.45,.0)
@@ -25,16 +30,31 @@ Class tree
 	'Field basecolor2:Int=190
 	'Field basecolor3:Int=220
 	Method New(x:Int,y:Int,w:Int,h:Int)
-		If Rnd(3)<2 Then treecolor1r = 0
+		'If Rnd(3)<2 Then 
+'			treecolor1 = New Color(1,Rnd(.8,1),0)
+'			treecolor2 = New Color(1,Rnd(.7,.78),0)
+'			treecolor3 = New Color(1,Rnd(.5,.68),0)
+'			treecolor4 = New Color(1,Rnd(.2,.45),0)
+'		'End If
 		px = x
 		py = y
 		pw = w
 		ph = h
-		mapone = New Int[w][]
+		mapone = New Color[w][]
 		For Local i:Int=0 Until w
-			mapone[i] = New Int[h]
+			mapone[i] = New Color[h]
 		Next
 		maketree()
+		image = New Image(pw,ph,TextureFlags.Dynamic)
+		icanvas = New Canvas(image)
+		Local opx:Int=px
+		Local opy:Int=py
+		px = 0
+		py = 0
+		draw(icanvas)
+		icanvas.Flush()
+		px = opx
+		py = opy
 	End Method
 	Method maketree()
 		Local mx:Float=0.05
@@ -43,14 +63,14 @@ Class tree
 		Local x:Float=pw/2+1
 		Local base:Float=0
 		Local bounce:Float=.1
-		Local col:Int
+		Local col:Color
 		Local num:Float=2
 		Local stap:Float=Rnd(0.001,0.005)
 		Local stap2:Float=Rnd(0.01,0.2)
 		Local stap3:Float=Rnd(0.5,1.5)
 		' Place two black pixels at the top of the tree
-		mapone[x-1][0] = 1
-		mapone[x-2][0] = 1
+		mapone[x-1][0] = outlcolor
+		mapone[x-2][0] = outlcolor
 		' create the tree
 		While (y+5)<=(ph-(ph/20)) 
 			y+=my
@@ -67,8 +87,8 @@ Class tree
 			' fill the current line
 			filltoleft(x,y,pw-x,col)
 			' black pixel to the left and right
-			mapone[x][y] = 1
-			mapone[pw-x][y] = 1				
+			mapone[x][y] = outlcolor
+			mapone[pw-x][y] = outlcolor		
 			' next step in the tree shape
 			mx-=stap
 			If y<ph/1.45 Then 
@@ -82,7 +102,7 @@ Class tree
 			End If
 		Wend
 		' Make sure the bottom of the tree is also drawn
-		filltoleft(x,y,pw-x,1)
+		filltoleft(x,y,pw-x,outlcolor)
 		' Make the tree trunk
 		maketreebase()
 	End Method
@@ -91,7 +111,7 @@ Class tree
 	' We go from right to left and fill the line with 
 	' a number. (tree inside color)
 	'
-	Method filltoleft(x:Int,y:Int,tox:Int,col:Int)		
+	Method filltoleft(x:Int,y:Int,tox:Int,col:Color)		
 		Local ls:Int=(pw/2)
 		Local len1:Int=(x-ls)/2
 		Local len2:Int=(x-ls)/1.7		
@@ -124,15 +144,15 @@ Class tree
 		For Local x:Int=(pw/2)-(pw/8) Until (pw/2)+(pw/8)
 			If x<0 Or y<0 Or x>=pw Or y>= ph Then Continue
 			mapone[x][y] = basecolor1
-			If x=(pw/2)-(pw/8) Then mapone[x][y] = 1
-			If x=(pw/2)+(pw/8)-1 Then mapone[x][y]=1
-			If y=ph-1 Then mapone[x][y]=1
+			If x=(pw/2)-(pw/8) Then mapone[x][y] = outlcolor
+			If x=(pw/2)+(pw/8)-1 Then mapone[x][y]= outlcolor
+			If y=ph-1 Then mapone[x][y]=outlcolor
 		Next
 		Next
 		For Local y:Int=ph-(ph/5) Until ph-(ph/5)
 		For Local x:Int=(pw/2)-(pw/8) Until (pw/2)+(pw/8)
 			If x<0 Or y<0 Or x>=pw Or y>= ph Then Continue
-			mapone[x][y] = 1
+			mapone[x][y] =outlcolor
 		Next
 		Next
 
@@ -150,35 +170,44 @@ Class tree
 		Next
 		Next
 		'Remove two black pixels from the bottom of the treebase
-		mapone[(pw/2)-(pw/8)][ph-1] = 0
-		mapone[(pw/2)+(pw/8)-1][ph-1] = 0
+		mapone[(pw/2)-(pw/8)][ph-1] = nocolor
+		mapone[(pw/2)+(pw/8)-1][ph-1] = nocolor
 
 
 	End Method
 	
 	Method draw(canvas:Canvas)
+		canvas.Clear(New Color(0,0,0,0))
 		For Local y:Int=0 Until ph
 		For Local x:Int=0 Until pw
-			If mapone[x][y] = 0 Then Continue
-			Select mapone[x][y]
-				Case 1
-					SetColor 0,0,0					
-				Case treecolor1
-					SetColor treecolor1r/2,treecolor1,0
-				Case treecolor2
-					SetColor treecolor1r/1.5,treecolor2,0
-				Case treecolor3
-					SetColor treecolor1r/1.2,treecolor3,0
-				Case treecolor4
-					SetColor treecolor1r,treecolor4,0
-				Case basecolor1
-					SetColor basecolor1,basecolor1/2,0
-				Case basecolor2
-					SetColor basecolor2,basecolor2/2,0
-				Case basecolor3
-					SetColor basecolor3,basecolor3/2,0					
-			End Select
-			DrawRect px+(x*1),py+(y*1),1,1
+			If mapone[x][y] = nocolor Then Continue
+			canvas.Color = Color.Blue'mapone[x][y]
+'			Select mapone[x][y]
+'				Case Color.Black
+'					canvas.Color = Color.Black
+'				Case treecolor1
+'					canvas.Color = treecolor1
+'					'SetColor treecolor1r/2,treecolor1,0
+'				Case treecolor2
+'					canvas.Color = treecolor2
+'					'SetColor treecolor1r/1.5,treecolor2,0
+'				Case treecolor3
+'					canvas.Color = treecolor3
+'					'SetColor treecolor1r/1.2,treecolor3,0
+'				Case treecolor4
+'					canvas.Color = treecolor4
+'					'SetColor treecolor1r,treecolor4,0
+'				Case basecolor1
+'					canvas.Color = basecolor1
+'					'SetColor basecolor1,basecolor1/2,0
+'				Case basecolor2
+'					canvas.Color = basecolor2
+'					'SetColor basecolor2,basecolor2/2,0
+'				Case basecolor3
+'					canvas.Color = basecolor3
+'					'SetColor basecolor3,basecolor3/2,0					
+'			End Select
+			canvas.DrawRect(px+(x*1),py+(y*1),1,1)
 		Next
 		Next
 	End Method
@@ -186,16 +215,51 @@ End Class
 
 
 Class MyWindow Extends Window
-
+	Field mytree:List<tree>
+	Field time:Int=Millisecs()
+	Field hw:Int=48,hh:Int=64
+	
 	Method New()
+		maketrees()
 	End method
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
-		' if key escape then quit
-		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
-	End Method	
 	
+		If Keyboard.KeyReleased(Key.Space) Or Millisecs() > time
+			time=Millisecs()+4000
+			maketrees()
+		End If
+		
+        canvas.Clear(Color.Black)
+        canvas.Color = New Color(.2,.7,.9 )
+        canvas.DrawRect(0,0,Width,150+hh)
+		canvas.Color = New Color(.2,.5,1)
+        canvas.DrawRect(0,100,Width,(150+hh)-100)
+
+        canvas.Color = New Color(.04,.95,.03)
+        canvas.DrawRect(0,150+hh,Width,Height-(150+hh))
+        canvas.Color = New Color(.07,1,.5)
+        canvas.DrawRect(0,150+hh,Width,2)
+		
+		For Local i:=Eachin mytree
+        	canvas.DrawImage(i.image,i.px,i.py)
+        Next		
+				
+		' if key escape then quit
+		If Keyboard.KeyDown(Key.Escape) Then App.Terminate()		
+	End Method	
+    Method maketrees()    	
+    	mytree = New List<tree>
+    	For Local x:Int=0 Until Width Step 64
+    		If Rnd(3)<2 Then mytree.AddLast(New tree(x,150,48,64))
+    	Next
+    	Local sy:Int=0
+		For Local i:Int=0 Until 35
+	        mytree.AddLast(New tree(Rnd(Width),150+sy,48,64))
+	        sy+=8
+		Next
+    End Method	
 End	Class
 
 Function Main()
