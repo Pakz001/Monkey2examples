@@ -2957,6 +2957,21 @@ Class player
 			End if
 		Next
 		Next
+
+
+		'
+		''Draw the trees
+		'
+		canvas.Color = Color.White		
+		For Local i:=Eachin mytree
+			'If Rnd(100)<10 Then Print Millisecs()
+			Local x2:Int=i.px-mcx*tw+mox
+			Local y2:Int=i.py-mcy*th+moy
+			'i.draw(canvas,x2,y2)
+			canvas.DrawImage(i.image,x2,y2)
+			'canvas.Color = i.col
+			'canvas.DrawText(i.number,x2,y2)
+		Next
 				
 		'
 		''Draw the buildings
@@ -2970,18 +2985,6 @@ Class player
 			'canvas.DrawText(i.number,x2,y2)
 		Next
 
-		'
-		''Draw the buildings
-		'
-		For Local i:=Eachin mytree
-			'If Rnd(100)<10 Then Print Millisecs()
-			Local x2:Int=i.px-mcx*tw+mox
-			Local y2:Int=i.py-mcy*th+moy
-			'i.draw(canvas,x2,y2)
-			canvas.DrawImage(i.image,x2,y2)
-			'canvas.Color = i.col
-			'canvas.DrawText(i.number,x2,y2)
-		Next
 
 		' Draw the player
 		pmx = (px-(mcx*tw))+mox
@@ -4504,17 +4507,17 @@ Function resetmap(Width:Int,Height:int)
 				If Rnd(10) < 2 And shopmade = False Then makeshop = True ; shopmade=True
 				Local st:Int=Rnd(12,24)
 				mybuilding.Add(New building(x*tilewidth,tileheight*15,Rnd(1,4),tilewidth*3,tileheight*2,makeshop))
-				mytree.Add(New tree(x*tilewidth-(tilewidth*2),tileheight*14,48,60))
+				mytree.Add(New tree(x*tilewidth-(tilewidth),tileheight*14,48,60))
 				x+=st
 			Wend		
-			x=(mapwidth/2)+4
+			x=(mapwidth/2)+5
 			While x<(mapwidth-12)
 				Local makeshop:Bool
 				If Rnd(10) < 5 And shopmade = False Then makeshop = True ; shopmade=True
 				If shopmade = False And x>(mapwidth/2)+(mapwidth/4) Then makeshop=True;shopmade=True
 				Local st:Int=Rnd(12,24)
 				mybuilding.Add(New building(x*tilewidth,tileheight*15,Rnd(1,4),tilewidth*3,tileheight*2,makeshop))
-				mytree.Add(New tree(x*tilewidth-(tilewidth*2),tileheight*14,48,60))
+				mytree.Add(New tree(x*tilewidth-(tilewidth),tileheight*14,48,60))
 				x+=st
 			Wend				
 		End if		
