@@ -10,6 +10,7 @@ Global tilewidth:Int=64
 Global tileheight:Int=64
 
 Class tile
+	'Sand (desert) tiles
 	Field sand1im:Image
 	Field sand1can:Canvas
 	Field sandshadowtopim:Image
@@ -20,8 +21,15 @@ Class tile
 	Field sandshadowrightcan:Canvas
 	Field sandshadowbottomim:Image
 	Field sandshadowbottomcan:Canvas
-
+	'Road tiles
+	Field roadhorim:Image
+	Field roadhorcan:Canvas
+	Field roadverim:Image
+	Field roadvercan:Canvas
+	Field roadtopleftim:Image
+	Field roadtopleftcan:Canvas
 	Method New()
+		' Create sand tiles
 		sand1im = New Image(tilewidth,tileheight)
 		sand1can = New Canvas(sand1im)
 		makesand1(sand1can)		
@@ -37,6 +45,16 @@ Class tile
 		sandshadowbottomim = New Image(tilewidth,tileheight)
 		sandshadowbottomcan = New Canvas(sandshadowbottomim)
 		makesandshadowbottom(sandshadowbottomcan)
+		' Create road tiles
+		roadhorim = New Image(tilewidth,tileheight)
+		roadhorcan = New Canvas(roadhorim)
+		makeroadhor(roadhorcan)
+		roadtopleftim = New Image(tilewidth,tileheight)
+		roadtopleftcan = New Canvas(roadtopleftim)
+		makeroadtopleft(roadtopleftcan)
+		roadverim = New Image(tilewidth,tileheight)
+		roadvercan = New Canvas(roadverim)
+		makeroadver(roadvercan)
 
 	End Method
 	Method makesand1(canvas:Canvas)
@@ -100,8 +118,73 @@ Class tile
 		Next		
 		canvas.Flush()
 	End Method
+	' road section
+	Method makeroadhor(canvas:Canvas)
+		canvas.Clear(Color.Grey)
+		'road noise
+		For Local i:Int=0 Until tilewidth*tileheight/40
+			Local x:Int=Rnd(tilewidth)
+			Local y:Int=Rnd(tileheight)
+			canvas.Color = Color.Grey.Blend(Color.White,Rnd(1))
+			canvas.DrawPoint(x,y)
+		Next
+		'road top side
+		canvas.Color = Color.Grey.Blend(Color.White,.2)
+		canvas.DrawRect(0,0,tilewidth,tileheight/24)
+		canvas.Color = Color.Grey.Blend(Color.Black,.8)
+		canvas.DrawRect(0,tileheight/24,tilewidth,tileheight/24)
+		'road bottom side
+		canvas.Color = Color.Grey.Blend(Color.White,.2)				
+		canvas.DrawRect(0,tileheight-(tileheight/12),tilewidth,tileheight/24)
+		canvas.Color = Color.Grey.Blend(Color.Black,.8)
+		canvas.DrawRect(0,tileheight-tileheight/24,tilewidth,tileheight/24)
+		
+		canvas.Flush()
+	End Method
+	Method makeroadtopleft(canvas:Canvas)
+		canvas.Clear(Color.Grey)
+		'road noise
+		For Local i:Int=0 Until tilewidth*tileheight/40
+			Local x:Int=Rnd(tilewidth)
+			Local y:Int=Rnd(tileheight)
+			canvas.Color = Color.Grey.Blend(Color.White,Rnd(1))
+			canvas.DrawPoint(x,y)
+		Next
+		'road right side
+		canvas.Color = Color.Grey.Blend(Color.Black,.8)
+		canvas.DrawRect(tilewidth-tilewidth/12,0,tilewidth/24,tileheight)
+		canvas.Color = Color.Grey.Blend(Color.White,.2)
+		canvas.DrawRect(tilewidth-tilewidth/24,0,tilewidth/24,tileheight)
+		'road bottom side
+		canvas.Color = Color.Grey.Blend(Color.White,.2)				
+		canvas.DrawRect(0,tileheight-(tileheight/12),tilewidth,tileheight/24)
+		canvas.Color = Color.Grey.Blend(Color.Black,.8)
+		canvas.DrawRect(0,tileheight-tileheight/24,tilewidth,tileheight/24)
+		
+		canvas.Flush()		
+	End Method
+	Method makeroadver(canvas:Canvas)
+		canvas.Clear(Color.Grey)
+		'road noise
+		For Local i:Int=0 Until tilewidth*tileheight/40
+			Local x:Int=Rnd(tilewidth)
+			Local y:Int=Rnd(tileheight)
+			canvas.Color = Color.Grey.Blend(Color.White,Rnd(1))
+			canvas.DrawPoint(x,y)
+		Next
+		'road right side
+		canvas.Color = Color.Grey.Blend(Color.Black,.8)
+		canvas.DrawRect(tilewidth-tilewidth/12,0,tilewidth/24,tileheight)
+		canvas.Color = Color.Grey.Blend(Color.White,.2)
+		canvas.DrawRect(tilewidth-tilewidth/24,0,tilewidth/24,tileheight)
+		'road left side
+		canvas.Color = Color.Grey.Blend(Color.Black,.8)
+		canvas.DrawRect(0,0,tilewidth/24,tileheight)
+		canvas.Color = Color.Grey.Blend(Color.White,.2)
+		canvas.DrawRect(tilewidth/24,0,tilewidth/24,tileheight)
 
-
+		canvas.Flush()
+	End Method
 	Method drawsand1(canvas:Canvas,x:Int,y:Int)
 		canvas.DrawImage(sand1im,x,y)
 	End Method
@@ -116,6 +199,15 @@ Class tile
 	End Method
 	Method drawsandshadowbottom(canvas:Canvas,x:Int,y:Int)
 		canvas.DrawImage(sandshadowbottomim,x,y)
+	End Method
+	Method drawroadhor(canvas:Canvas,x:Int,y:Int)
+		canvas.DrawImage(roadhorim,x,y)
+	End Method
+	Method drawroadtopleft(canvas:Canvas,x:Int,y:Int)
+		canvas.DrawImage(roadtopleftim,x,y)
+	End Method
+	Method drawroadver(canvas:Canvas,x:Int,y:Int)
+		canvas.DrawImage(roadverim,x,y)
 	End Method
 
 End Class
@@ -136,6 +228,10 @@ Class MyWindow Extends Window
 		mytile.drawsandshadowleft(canvas,100-64,100)
 		mytile.drawsandshadowright(canvas,100+64,100)
 		mytile.drawsandshadowbottom(canvas,100,100+64)
+		
+		mytile.drawroadhor(canvas,400,100)
+		mytile.drawroadtopleft(canvas,400+64,100)
+		mytile.drawroadver(canvas,400+64,100-64)
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
