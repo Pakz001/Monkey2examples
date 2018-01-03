@@ -6,8 +6,8 @@
 Using std..
 Using mojo..
 
-Global tilewidth:Int=48
-Global tileheight:Int=48
+Global tilewidth:Int=64
+Global tileheight:Int=64
 
 Class tile
 	'Sand (desert) tiles
@@ -52,6 +52,14 @@ Class tile
 	Field roadtopleftrightcan:Canvas
 	Field roadbottomtopleftrightim:Image
 	Field roadbottomtopleftrightcan:Canvas
+	
+	' 
+	' Walls
+	Field wallgatebottomim:Image
+	Field wallgatebottomcan:Canvas
+	Field wallgatetopim:Image
+	Field wallgatetopcan:Canvas
+	
 	Method New()
 		' Create sand tiles
 		sand1im = New Image(tilewidth,tileheight)
@@ -69,14 +77,12 @@ Class tile
 		sandshadowbottomim = New Image(tilewidth,tileheight)
 		sandshadowbottomcan = New Canvas(sandshadowbottomim)
 		makesandshadowbottom(sandshadowbottomcan)
-
 		sandshadowbottomleftim = New Image(tilewidth,tileheight)
 		sandshadowbottomleftcan = New Canvas(sandshadowbottomleftim)
 		makesandshadowbottomleft(sandshadowbottomleftcan)
 		sandshadowbottomrightim = New Image(tilewidth,tileheight)
 		sandshadowbottomrightcan = New Canvas(sandshadowbottomrightim)
 		makesandshadowbottomright(sandshadowbottomrightcan)
-
 		sandshadowtopleftim = New Image(tilewidth,tileheight)
 		sandshadowtopleftcan = New Canvas(sandshadowtopleftim)
 		makesandshadowtopleft(sandshadowtopleftcan)
@@ -120,12 +126,19 @@ Class tile
 		roadbottomtopleftrightcan = New Canvas(roadbottomtopleftrightim)
 		makeroadbottomtopleftright(roadbottomtopleftrightcan)
 
-
+		'Create wall tiles
+		wallgatebottomim = New Image(tilewidth,tileheight)
+		wallgatebottomcan = New Canvas(wallgatebottomim)
+		makewallgatebottom(wallgatebottomcan)
+		wallgatetopim = New Image(tilewidth,tileheight)
+		wallgatetopcan = New Canvas(wallgatetopim)
+		makewallgatetop(wallgatetopcan)
+		
 	End Method
 	Method makesand1(canvas:Canvas)
 		canvas.Color = Color.White
 		' background color
-		canvas.Clear(Color.Yellow.Blend(Color.Red,.3))
+		canvas.Clear(Color.Yellow.Blend(Color.Red,.25))
 		' Noise
 		For Local i:Int=0 Until tilewidth*tileheight/10
 			Local x:Int=Rnd(tilewidth)
@@ -429,8 +442,108 @@ Class tile
 	End Method
 
 	'
+	' Make Wall graphics
+	'
+	Method makewallgatebottom(canvas:Canvas)
+		makesandshadowtop(canvas)
+		makewallrectbottom(canvas,0,tileheight/8,tilewidth,tileheight/3)
+		makewallrecttop(canvas,tilewidth/6,0,tilewidth/1.5,tileheight)
+		canvas.Flush()
+	End Method
+	Method makewallgatetop(canvas:Canvas)
+		makesandshadowbottom(canvas)
+		makewallrectbottom(canvas,0,tileheight-tileheight/2,tilewidth,tileheight/3)
+		makewallrecttop(canvas,tilewidth/6,0,tilewidth/1.5,tileheight)
+		canvas.Flush()
+	End Method
+
+	'
 	' Graphics methods	
 	'
+	Method makewallrectbottom(canvas:Canvas,x1:Int,y1:Int,w1:Int,h1:Int)		
+		'solid block
+		wallsurface(canvas,x1,y1,w1,h1)		
+		'top
+		canvas.Color = Color.Grey.Blend(Color.White,.2)
+		canvas.DrawLine(x1,y1,x1+w1,y1)
+		canvas.DrawLine(x1,y1+1,x1+w1,y1+1)
+		canvas.DrawLine(x1,y1+2,x1+w1,y1+2)
+		canvas.DrawLine(x1,y1+3,x1+w1,y1+3)
+		'left
+		canvas.Color = Color.Black
+		canvas.DrawLine(x1,y1,x1,y1+h1)
+		canvas.DrawLine(x1+1,y1,x1+1,y1+h1)
+		canvas.DrawLine(x1+2,y1+1,x1+2,y1+h1)
+		canvas.DrawLine(x1+3,y1+2,x1+3,y1+h1)
+		'right
+		canvas.Color = Color.Grey.Blend(Color.White,.2)
+		canvas.DrawLine(x1+w1-1,y1,x1+w1-1,y1+h1)
+		canvas.DrawLine(x1+w1-2,y1,x1+w1-2,y1+h1)
+		canvas.DrawLine(x1+w1-3,y1,x1+w1-3,y1+h1)
+		canvas.DrawLine(x1+w1-4,y1,x1+w1-4,y1+h1)				
+		'bottom
+		canvas.Color = Color.Black	
+		canvas.DrawLine(x1,y1+h1,x1+w1-1,y1+h1)
+		canvas.DrawLine(x1,y1+h1-1,x1+w1-2,y1+h1-1)		
+		canvas.DrawLine(x1,y1+h1-2,x1+w1-3,y1+h1-2)
+		canvas.DrawLine(x1,y1+h1-3,x1+w1-4,y1+h1-3)
+		
+	End Method
+	Method makewallrecttop(canvas:Canvas,x1:Int,y1:Int,w1:Int,h1:Int)		
+		'solid block
+		wallsurface(canvas,x1,y1,w1,h1)		
+		'top
+		canvas.Color = Color.Grey.Blend(Color.White,.2)
+		canvas.DrawLine(x1,y1,x1+w1,y1)
+		canvas.DrawLine(x1,y1+1,x1+w1,y1+1)
+		canvas.Color = Color.Grey
+		canvas.DrawLine(x1,y1+2,x1+w1,y1+2)
+		canvas.DrawLine(x1,y1+3,x1+w1,y1+3)
+		canvas.Color = Color.Black
+		canvas.DrawLine(x1,y1+4,x1+w1,y1+4)
+		canvas.DrawLine(x1,y1+5,x1+w1,y1+5)
+		'left
+		canvas.Color = Color.Black
+		canvas.DrawLine(x1,y1,x1,y1+h1)
+		canvas.DrawLine(x1+1,y1,x1+1,y1+h1)
+		canvas.Color = Color.Grey
+		canvas.DrawLine(x1+2,y1+2,x1+2,y1+h1)
+		canvas.DrawLine(x1+3,y1+2,x1+3,y1+h1)
+		canvas.Color = Color.Grey.Blend(Color.White,.2)
+		canvas.DrawLine(x1+4,y1+2,x1+4,y1+h1)
+		canvas.DrawLine(x1+5,y1+2,x1+5,y1+h1)
+		'right
+		canvas.Color = Color.Grey.Blend(Color.White,.2)
+		canvas.DrawLine(x1+w1-1,y1,x1+w1-1,y1+h1)
+		canvas.DrawLine(x1+w1-2,y1,x1+w1-2,y1+h1)
+		canvas.Color = Color.Grey
+		canvas.DrawLine(x1+w1-3,y1+2,x1+w1-3,y1+h1)
+		canvas.DrawLine(x1+w1-4,y1+2,x1+w1-4,y1+h1)
+		canvas.Color = Color.Black
+		canvas.DrawLine(x1+w1-5,y1+4,x1+w1-5,y1+h1)
+		canvas.DrawLine(x1+w1-6,y1+4,x1+w1-6,y1+h1)
+		'bottom
+		canvas.Color = Color.Grey.Blend(Color.White,.2)
+		canvas.DrawLine(x1+4,y1+h1-5,x1+w1-2,y1+h1-5)
+		canvas.DrawLine(x1+4,y1+h1-4,x1+w1-2,y1+h1-4)
+		canvas.Color = Color.Grey
+		canvas.DrawLine(x1+2,y1+h1-3,x1+w1,y1+h1-3)
+		canvas.DrawLine(x1+2,y1+h1-2,x1+w1,y1+h1-2)
+		canvas.Color = Color.Black
+		canvas.DrawLine(x1,y1+h1-1,x1+w1,y1+h1-1)
+		canvas.DrawLine(x1,y1+h1,x1+w1,y1+h1)
+	End Method
+
+	Method wallsurface(canvas:Canvas,x1:Int,y1:Int,w1:Int,h1:Int)
+		canvas.Color = Color.Grey
+		canvas.DrawRect(x1,y1,w1,h1)
+		For Local i:Int=0 Until w1*h1/20
+			Local x:Int=Rnd(w1)+x1
+			Local y:Int=Rnd(h1)+y1			
+			canvas.Color = Color.Grey.Blend(Color.Green,Rnd(.5))
+			canvas.DrawPoint(x,y)
+		Next
+	End Method
 	Method roadnoise(canvas:Canvas)
 		'road noise
 		For Local i:Int=0 Until tilewidth*tileheight/30
@@ -509,6 +622,13 @@ Class tile
 	Method drawroadbottomtopleftright(canvas:Canvas,x:Int,y:Int)
 		canvas.DrawImage(roadbottomtopleftrightim,x,y)
 	End Method
+	' Draw walls
+	Method drawgatebottom(canvas:Canvas,x:Int,y:Int)
+		canvas.DrawImage(wallgatebottomim,x,y)
+	End Method
+	Method drawgatetop(canvas:Canvas,x:Int,y:Int)
+		canvas.DrawImage(wallgatetopim,x,y)
+	End Method
 
 End Class
 
@@ -523,31 +643,68 @@ Class MyWindow Extends Window
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
 		
-		mytile.drawsand1(canvas,100,100)
-		mytile.drawsandshadowtop(canvas,100,100-64)
-		mytile.drawsandshadowleft(canvas,100-64,100)
-		mytile.drawsandshadowright(canvas,100+64,100)
-		mytile.drawsandshadowbottom(canvas,100,100+64)
+		For Local y:Int=0 Until Height Step tileheight
+		For Local x:Int=0 Until Width Step tilewidth
+			mytile.drawsand1(canvas,x,y)
+		Next
+		Next
 		
-		mytile.drawsandshadowbottomleft(canvas,100-64,100+64)
-		mytile.drawsandshadowbottomright(canvas,100+64,100+64)
-		mytile.drawsandshadowtopleft(canvas,100-64,100-64)
-		mytile.drawsandshadowtopright(canvas,100+64,100-64)
-
+		'Line of sand above the road
+		mytile.drawsandshadowbottom(canvas,200-128,200-64)
+		mytile.drawsandshadowbottom(canvas,200-64,200-64)
+		mytile.drawsandshadowbottom(canvas,200,200-64)
+		mytile.drawsandshadowbottom(canvas,200+64,200-64)
+		mytile.drawsandshadowbottom(canvas,200+64*2,200-64)
+		mytile.drawsandshadowbottom(canvas,200+64*3,200-64)
+		mytile.drawsandshadowbottom(canvas,200+64*4,200-64)
+		'line of roads
+		mytile.drawroadhor(canvas,200-128,200)
+		mytile.drawroadhor(canvas,200-64,200)
+		mytile.drawroadhor(canvas,200,200)
+		mytile.drawroadhor(canvas,200+64,200)
+		mytile.drawroadhor(canvas,200+64*2,200)
+		mytile.drawroadhor(canvas,200+64*3,200)
+		mytile.drawroadbottomleft(canvas,200+64*4,200)
+		'Line of sand below the road
+		mytile.drawsandshadowtop(canvas,200-128,200+64)
+		mytile.drawsandshadowtop(canvas,200-64,200+64)
+		mytile.drawsandshadowtop(canvas,200,200+64)
+		mytile.drawsandshadowtop(canvas,200+64,200+64)
+		mytile.drawsandshadowtop(canvas,200+64*2,200+64)
+		mytile.drawsandshadowtopright(canvas,200+64*3,200+64)
+		'and road besides it
+		mytile.drawroadver(canvas,200+64*4,200+64)
 		
-		mytile.drawroadhor(canvas,400,200)
-		mytile.drawroadtopleft(canvas,400+64,200)
-		mytile.drawroadver(canvas,400+64,200-64)
-		mytile.drawroadbottomright(canvas,400-64,200)
-		mytile.drawroadver(canvas,400-64,200+64)
-		mytile.drawroadtopright(canvas,400-64,200+128)
-		mytile.drawroadbottomleft(canvas,400+64,200-128)
-		mytile.drawroadbottomtopleftright(canvas,100,400)
-		mytile.drawroadbottomleftright(canvas,200,400)
-		mytile.drawroadbottomtopright(canvas,200+64,400)
-		mytile.drawroadbottomtopleft(canvas,200+128,400)
-		mytile.drawroadtopleftright(canvas,200+256,400)
-
+		'The gate at the bottom and top
+		mytile.drawgatetop(canvas,200+64*2,200-64)
+		mytile.drawgatebottom(canvas,200+64*2,200+64)
+		
+		If Keyboard.KeyDown(Key.Key1)
+			mytile.drawsand1(canvas,100,100)
+			mytile.drawsandshadowtop(canvas,100,100-64)
+			mytile.drawsandshadowleft(canvas,100-64,100)
+			mytile.drawsandshadowright(canvas,100+64,100)
+			mytile.drawsandshadowbottom(canvas,100,100+64)
+			
+			mytile.drawsandshadowbottomleft(canvas,100-64,100+64)
+			mytile.drawsandshadowbottomright(canvas,100+64,100+64)
+			mytile.drawsandshadowtopleft(canvas,100-64,100-64)
+			mytile.drawsandshadowtopright(canvas,100+64,100-64)
+	
+			
+			mytile.drawroadhor(canvas,400,200)
+			mytile.drawroadtopleft(canvas,400+64,200)
+			mytile.drawroadver(canvas,400+64,200-64)
+			mytile.drawroadbottomright(canvas,400-64,200)
+			mytile.drawroadver(canvas,400-64,200+64)
+			mytile.drawroadtopright(canvas,400-64,200+128)
+			mytile.drawroadbottomleft(canvas,400+64,200-128)
+			mytile.drawroadbottomtopleftright(canvas,100,400)
+			mytile.drawroadbottomleftright(canvas,200,400)
+			mytile.drawroadbottomtopright(canvas,200+64,400)
+			mytile.drawroadbottomtopleft(canvas,200+128,400)
+			mytile.drawroadtopleftright(canvas,200+256,400)
+		End if
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
