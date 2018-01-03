@@ -6,8 +6,8 @@
 Using std..
 Using mojo..
 
-Global tilewidth:Int=64
-Global tileheight:Int=64
+Global tilewidth:Int=48
+Global tileheight:Int=48
 
 Class tile
 	'Sand (desert) tiles
@@ -21,6 +21,14 @@ Class tile
 	Field sandshadowrightcan:Canvas
 	Field sandshadowbottomim:Image
 	Field sandshadowbottomcan:Canvas
+	Field sandshadowbottomleftim:Image
+	Field sandshadowbottomleftcan:Canvas
+	Field sandshadowbottomrightim:Image
+	Field sandshadowbottomrightcan:Canvas
+	Field sandshadowtopleftim:Image
+	Field sandshadowtopleftcan:Canvas
+	Field sandshadowtoprightim:Image
+	Field sandshadowtoprightcan:Canvas
 	'Road tiles
 	Field roadhorim:Image
 	Field roadhorcan:Canvas
@@ -61,6 +69,22 @@ Class tile
 		sandshadowbottomim = New Image(tilewidth,tileheight)
 		sandshadowbottomcan = New Canvas(sandshadowbottomim)
 		makesandshadowbottom(sandshadowbottomcan)
+
+		sandshadowbottomleftim = New Image(tilewidth,tileheight)
+		sandshadowbottomleftcan = New Canvas(sandshadowbottomleftim)
+		makesandshadowbottomleft(sandshadowbottomleftcan)
+		sandshadowbottomrightim = New Image(tilewidth,tileheight)
+		sandshadowbottomrightcan = New Canvas(sandshadowbottomrightim)
+		makesandshadowbottomright(sandshadowbottomrightcan)
+
+		sandshadowtopleftim = New Image(tilewidth,tileheight)
+		sandshadowtopleftcan = New Canvas(sandshadowtopleftim)
+		makesandshadowtopleft(sandshadowtopleftcan)
+		sandshadowtoprightim = New Image(tilewidth,tileheight)
+		sandshadowtoprightcan = New Canvas(sandshadowtoprightim)
+		makesandshadowtopright(sandshadowtoprightcan)
+
+
 		' Create road tiles
 		roadhorim = New Image(tilewidth,tileheight)
 		roadhorcan = New Canvas(roadhorim)
@@ -159,6 +183,92 @@ Class tile
 		Next		
 		canvas.Flush()
 	End Method
+	Method makesandshadowbottomleft(canvas:Canvas)
+		' make standard sand tile
+		makesand1(canvas)
+		' add noise bottom
+		For Local i:Int=0 Until tilewidth*tileheight/10
+			Local x:Int=Rnd(tilewidth)
+			Local y:Int=tileheight-Rnd(tileheight/4)
+			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.DrawPoint(x,y)
+		Next		
+		' add noise left
+		For Local i:Int=0 Until tilewidth*tileheight/10
+			Local x:Int=Rnd(Rnd(tilewidth/4))
+			Local y:Int=Rnd(tileheight-tileheight/4)
+			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.DrawPoint(x,y)
+		Next		
+
+		canvas.Flush()
+	End Method
+
+	Method makesandshadowbottomright(canvas:Canvas)
+		' make standard sand tile
+		makesand1(canvas)
+		' add noise bottom
+		For Local i:Int=0 Until tilewidth*tileheight/10
+			Local x:Int=Rnd(tilewidth)
+			Local y:Int=tileheight-Rnd(tileheight/4)
+			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.DrawPoint(x,y)
+		Next		
+		' add noise right
+		For Local i:Int=0 Until tilewidth*tileheight/10
+			Local x:Int=tilewidth-Rnd(Rnd(tilewidth/4))
+			Local y:Int=Rnd(tileheight-tileheight/4)
+			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.DrawPoint(x,y)
+		Next		
+
+		canvas.Flush()
+	End Method
+
+	Method makesandshadowtopleft(canvas:Canvas)
+		' make standard sand tile
+		makesand1(canvas)
+		' add noise top top
+		For Local i:Int=0 Until tilewidth*tileheight/10
+			Local x:Int=Rnd(tilewidth)
+			Local y:Int=Rnd(Rnd(tileheight/4))
+			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.DrawPoint(x,y)
+		Next		
+
+		' add noise left
+		For Local i:Int=0 Until tilewidth*tileheight/10
+			Local x:Int=Rnd(Rnd(tilewidth/4))
+			Local y:Int=Rnd(tileheight/4,tileheight)
+			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.DrawPoint(x,y)
+		Next		
+
+		canvas.Flush()
+	End Method
+
+	Method makesandshadowtopright(canvas:Canvas)
+		' make standard sand tile
+		makesand1(canvas)
+		' add noise top top
+		For Local i:Int=0 Until tilewidth*tileheight/10
+			Local x:Int=Rnd(tilewidth)
+			Local y:Int=Rnd(Rnd(tileheight/4))
+			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.DrawPoint(x,y)
+		Next		
+		' add noise right
+		For Local i:Int=0 Until tilewidth*tileheight/10
+			Local x:Int=tilewidth-Rnd(Rnd(tilewidth/4))
+			Local y:Int=Rnd(tileheight/4,tileheight)
+			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.DrawPoint(x,y)
+		Next		
+
+		canvas.Flush()
+	End Method
+
+
 	' road section
 	Method makeroadhor(canvas:Canvas)
 		canvas.Clear(Color.Grey)
@@ -389,6 +499,18 @@ Class tile
 	Method drawsandshadowbottom(canvas:Canvas,x:Int,y:Int)
 		canvas.DrawImage(sandshadowbottomim,x,y)
 	End Method
+	Method drawsandshadowbottomleft(canvas:Canvas,x:Int,y:Int)
+		canvas.DrawImage(sandshadowbottomleftim,x,y)		
+	End Method
+	Method drawsandshadowbottomright(canvas:Canvas,x:Int,y:Int)
+		canvas.DrawImage(sandshadowbottomrightim,x,y)		
+	End Method
+	Method drawsandshadowtopleft(canvas:Canvas,x:Int,y:Int)
+		canvas.DrawImage(sandshadowtopleftim,x,y)		
+	End Method
+	Method drawsandshadowtopright(canvas:Canvas,x:Int,y:Int)
+		canvas.DrawImage(sandshadowtoprightim,x,y)		
+	End Method
 	Method drawroadhor(canvas:Canvas,x:Int,y:Int)
 		canvas.DrawImage(roadhorim,x,y)
 	End Method
@@ -441,6 +563,12 @@ Class MyWindow Extends Window
 		mytile.drawsandshadowleft(canvas,100-64,100)
 		mytile.drawsandshadowright(canvas,100+64,100)
 		mytile.drawsandshadowbottom(canvas,100,100+64)
+		
+		mytile.drawsandshadowbottomleft(canvas,100-64,100+64)
+		mytile.drawsandshadowbottomright(canvas,100+64,100+64)
+		mytile.drawsandshadowtopleft(canvas,100-64,100-64)
+		mytile.drawsandshadowtopright(canvas,100+64,100-64)
+
 		
 		mytile.drawroadhor(canvas,400,200)
 		mytile.drawroadtopleft(canvas,400+64,200)
