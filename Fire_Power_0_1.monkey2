@@ -446,12 +446,29 @@ Class tile
 	'
 	Method makewallgatebottom(canvas:Canvas)
 		makesandshadowtop(canvas)
+		'sand shadow on the left side of the wall gate
+		' add noise right
+		For Local i:Int=0 Until tilewidth*tileheight/10
+			Local x:Int=tilewidth/6-Rnd(Rnd(tilewidth/4))
+			Local y:Int=Rnd(tileheight)
+			canvas.Color = Color.Brown * Rnd()
+			canvas.DrawPoint(x,y)
+		Next
 		makewallrectbottom(canvas,0,tileheight/8,tilewidth,tileheight/3)
 		makewallrecttop(canvas,tilewidth/6,0,tilewidth/1.5,tileheight)
 		canvas.Flush()
 	End Method
 	Method makewallgatetop(canvas:Canvas)
 		makesandshadowbottom(canvas)
+		' sand shadow on the left side of the wall gate
+		' add noise right
+		For Local i:Int=0 Until tilewidth*tileheight/10
+			Local x:Int=tilewidth/6-Rnd(Rnd(tilewidth/4))
+			Local y:Int=Rnd(tileheight)
+			canvas.Color = Color.Brown * Rnd()
+			canvas.DrawPoint(x,y)
+		Next
+
 		makewallrectbottom(canvas,0,tileheight-tileheight/2,tilewidth,tileheight/3)
 		makewallrecttop(canvas,tilewidth/6,0,tilewidth/1.5,tileheight)
 		canvas.Flush()
