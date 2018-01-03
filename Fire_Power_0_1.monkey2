@@ -130,7 +130,7 @@ Class tile
 		For Local i:Int=0 Until tilewidth*tileheight/10
 			Local x:Int=Rnd(tilewidth)
 			Local y:Int=Rnd(tileheight)
-			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.Color = Color.Yellow * Rnd()
 			canvas.DrawPoint(x,y)
 		Next
 		canvas.Flush()
@@ -142,7 +142,7 @@ Class tile
 		For Local i:Int=0 Until tilewidth*tileheight/10
 			Local x:Int=Rnd(tilewidth)
 			Local y:Int=Rnd(Rnd(tileheight/4))
-			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.Color = Color.Brown * Rnd()
 			canvas.DrawPoint(x,y)
 		Next		
 		canvas.Flush()
@@ -154,7 +154,7 @@ Class tile
 		For Local i:Int=0 Until tilewidth*tileheight/10
 			Local x:Int=Rnd(Rnd(tilewidth/4))
 			Local y:Int=Rnd(tileheight)
-			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.Color = Color.Brown * Rnd()
 			canvas.DrawPoint(x,y)
 		Next		
 		canvas.Flush()
@@ -166,7 +166,7 @@ Class tile
 		For Local i:Int=0 Until tilewidth*tileheight/10
 			Local x:Int=tilewidth-Rnd(Rnd(tilewidth/4))
 			Local y:Int=Rnd(tileheight)
-			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.Color = Color.Brown * Rnd()
 			canvas.DrawPoint(x,y)
 		Next		
 		canvas.Flush()
@@ -177,8 +177,8 @@ Class tile
 		' add noise bottom
 		For Local i:Int=0 Until tilewidth*tileheight/10
 			Local x:Int=Rnd(tilewidth)
-			Local y:Int=tileheight-Rnd(tileheight/4)
-			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			Local y:Int=tileheight-Rnd(Rnd(tileheight/4))
+			canvas.Color = Color.Brown * Rnd()
 			canvas.DrawPoint(x,y)
 		Next		
 		canvas.Flush()
@@ -189,15 +189,15 @@ Class tile
 		' add noise bottom
 		For Local i:Int=0 Until tilewidth*tileheight/10
 			Local x:Int=Rnd(tilewidth)
-			Local y:Int=tileheight-Rnd(tileheight/4)
-			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			Local y:Int=tileheight-Rnd(Rnd(tileheight/4))
+			canvas.Color = Color.Brown * Rnd()
 			canvas.DrawPoint(x,y)
 		Next		
 		' add noise left
 		For Local i:Int=0 Until tilewidth*tileheight/10
 			Local x:Int=Rnd(Rnd(tilewidth/4))
 			Local y:Int=Rnd(tileheight-tileheight/4)
-			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.Color = Color.Brown * Rnd()
 			canvas.DrawPoint(x,y)
 		Next		
 
@@ -210,15 +210,15 @@ Class tile
 		' add noise bottom
 		For Local i:Int=0 Until tilewidth*tileheight/10
 			Local x:Int=Rnd(tilewidth)
-			Local y:Int=tileheight-Rnd(tileheight/4)
-			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			Local y:Int=tileheight-Rnd(Rnd(tileheight/4))
+			canvas.Color = Color.Brown * Rnd()
 			canvas.DrawPoint(x,y)
 		Next		
 		' add noise right
 		For Local i:Int=0 Until tilewidth*tileheight/10
 			Local x:Int=tilewidth-Rnd(Rnd(tilewidth/4))
 			Local y:Int=Rnd(tileheight-tileheight/4)
-			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.Color = Color.Brown * Rnd()
 			canvas.DrawPoint(x,y)
 		Next		
 
@@ -232,7 +232,7 @@ Class tile
 		For Local i:Int=0 Until tilewidth*tileheight/10
 			Local x:Int=Rnd(tilewidth)
 			Local y:Int=Rnd(Rnd(tileheight/4))
-			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.Color = Color.Brown * Rnd()
 			canvas.DrawPoint(x,y)
 		Next		
 
@@ -240,7 +240,7 @@ Class tile
 		For Local i:Int=0 Until tilewidth*tileheight/10
 			Local x:Int=Rnd(Rnd(tilewidth/4))
 			Local y:Int=Rnd(tileheight/4,tileheight)
-			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.Color = Color.Brown * Rnd()
 			canvas.DrawPoint(x,y)
 		Next		
 
@@ -254,14 +254,14 @@ Class tile
 		For Local i:Int=0 Until tilewidth*tileheight/10
 			Local x:Int=Rnd(tilewidth)
 			Local y:Int=Rnd(Rnd(tileheight/4))
-			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.Color = Color.Brown * Rnd()
 			canvas.DrawPoint(x,y)
 		Next		
 		' add noise right
 		For Local i:Int=0 Until tilewidth*tileheight/10
 			Local x:Int=tilewidth-Rnd(Rnd(tilewidth/4))
 			Local y:Int=Rnd(tileheight/4,tileheight)
-			canvas.Color = Color.Yellow.Blend(Color.Black,Rnd(0.3,0.5))
+			canvas.Color = Color.Brown * Rnd()
 			canvas.DrawPoint(x,y)
 		Next		
 
