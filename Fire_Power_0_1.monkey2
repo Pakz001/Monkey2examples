@@ -1,4 +1,4 @@
-' Fire Power Remake Project (Based on the Amiga Game from 1987)
+' (Firepower) 'Fire Power' Remake Project (Based on the Amiga Game from 1987)
 
 #Import "<std>"
 #Import "<mojo>"
@@ -273,12 +273,7 @@ Class tile
 	Method makeroadhor(canvas:Canvas)
 		canvas.Clear(Color.Grey)
 		'road noise
-		For Local i:Int=0 Until tilewidth*tileheight/40
-			Local x:Int=Rnd(tilewidth)
-			Local y:Int=Rnd(tileheight)
-			canvas.Color = Color.Grey.Blend(Color.White,Rnd(1))
-			canvas.DrawPoint(x,y)
-		Next
+		roadnoise(canvas)
 		'road top side
 		canvas.Color = Color.Grey.Blend(Color.White,.2)
 		canvas.DrawRect(0,0,tilewidth,tileheight/24)
@@ -295,12 +290,7 @@ Class tile
 	Method makeroadtopleft(canvas:Canvas)
 		canvas.Clear(Color.Grey)
 		'road noise
-		For Local i:Int=0 Until tilewidth*tileheight/40
-			Local x:Int=Rnd(tilewidth)
-			Local y:Int=Rnd(tileheight)
-			canvas.Color = Color.Grey.Blend(Color.White,Rnd(1))
-			canvas.DrawPoint(x,y)
-		Next
+		roadnoise(canvas)
 		'road right side
 		canvas.Color = Color.Grey.Blend(Color.Black,.8)
 		canvas.DrawRect(tilewidth-tilewidth/12,0,tilewidth/24,tileheight)
@@ -317,12 +307,7 @@ Class tile
 	Method makeroadver(canvas:Canvas)
 		canvas.Clear(Color.Grey)
 		'road noise
-		For Local i:Int=0 Until tilewidth*tileheight/40
-			Local x:Int=Rnd(tilewidth)
-			Local y:Int=Rnd(tileheight)
-			canvas.Color = Color.Grey.Blend(Color.White,Rnd(1))
-			canvas.DrawPoint(x,y)
-		Next
+		roadnoise(canvas)
 		'road right side
 		canvas.Color = Color.Grey.Blend(Color.Black,.8)
 		canvas.DrawRect(tilewidth-tilewidth/12,0,tilewidth/24,tileheight)
@@ -340,12 +325,7 @@ Class tile
 	Method makeroadbottomright(canvas:Canvas)
 		canvas.Clear(Color.Grey)
 		'road noise
-		For Local i:Int=0 Until tilewidth*tileheight/40
-			Local x:Int=Rnd(tilewidth)
-			Local y:Int=Rnd(tileheight)
-			canvas.Color = Color.Grey.Blend(Color.White,Rnd(1))
-			canvas.DrawPoint(x,y)
-		Next
+		roadnoise(canvas)
 		'road left side
 		canvas.Color = Color.Grey.Blend(Color.Black,.8)
 		canvas.DrawRect(0,0,tilewidth/24,tileheight)
@@ -362,12 +342,7 @@ Class tile
 	Method makeroadtopright(canvas:Canvas)
 		canvas.Clear(Color.Grey)
 		'road noise
-		For Local i:Int=0 Until tilewidth*tileheight/40
-			Local x:Int=Rnd(tilewidth)
-			Local y:Int=Rnd(tileheight)
-			canvas.Color = Color.Grey.Blend(Color.White,Rnd(1))
-			canvas.DrawPoint(x,y)
-		Next
+		roadnoise(canvas)
 		'road left side
 		canvas.Color = Color.Grey.Blend(Color.Black,.8)
 		canvas.DrawRect(0,0,tilewidth/24,tileheight)
@@ -384,12 +359,7 @@ Class tile
 	Method makeroadbottomleft(canvas:Canvas)
 		canvas.Clear(Color.Grey)
 		'road noise
-		For Local i:Int=0 Until tilewidth*tileheight/40
-			Local x:Int=Rnd(tilewidth)
-			Local y:Int=Rnd(tileheight)
-			canvas.Color = Color.Grey.Blend(Color.White,Rnd(1))
-			canvas.DrawPoint(x,y)
-		Next
+		roadnoise(canvas)
 		'road right side
 		canvas.Color = Color.Grey.Blend(Color.Black,.8)
 		canvas.DrawRect(tilewidth-tilewidth/12,0,tilewidth/24,tileheight)
@@ -406,12 +376,7 @@ Class tile
 	Method makeroadbottomleftright(canvas:Canvas)
 		canvas.Clear(Color.Grey)
 		'road noise
-		For Local i:Int=0 Until tilewidth*tileheight/40
-			Local x:Int=Rnd(tilewidth)
-			Local y:Int=Rnd(tileheight)
-			canvas.Color = Color.Grey.Blend(Color.White,Rnd(1))
-			canvas.DrawPoint(x,y)
-		Next
+		roadnoise(canvas)
 		'road top side
 		canvas.Color = Color.Grey.Blend(Color.White,.2)				
 		canvas.DrawRect(0,0,tilewidth,tileheight/24)
@@ -423,12 +388,7 @@ Class tile
 	Method makeroadbottomtopright(canvas:Canvas)
 		canvas.Clear(Color.Grey)
 		'road noise
-		For Local i:Int=0 Until tilewidth*tileheight/40
-			Local x:Int=Rnd(tilewidth)
-			Local y:Int=Rnd(tileheight)
-			canvas.Color = Color.Grey.Blend(Color.White,Rnd(1))
-			canvas.DrawPoint(x,y)
-		Next
+		roadnoise(canvas)
 		'road left side
 		canvas.Color = Color.Grey.Blend(Color.Black,.8)
 		canvas.DrawRect(0,0,tilewidth/24,tileheight)
@@ -440,12 +400,7 @@ Class tile
 	Method makeroadbottomtopleft(canvas:Canvas)
 		canvas.Clear(Color.Grey)
 		'road noise
-		For Local i:Int=0 Until tilewidth*tileheight/40
-			Local x:Int=Rnd(tilewidth)
-			Local y:Int=Rnd(tileheight)
-			canvas.Color = Color.Grey.Blend(Color.White,Rnd(1))
-			canvas.DrawPoint(x,y)
-		Next
+		roadnoise(canvas)
 		'road right side
 		canvas.Color = Color.Grey.Blend(Color.Black,.8)
 		canvas.DrawRect(tilewidth-tilewidth/12,0,tilewidth/24,tileheight)
@@ -457,12 +412,7 @@ Class tile
 	Method makeroadtopleftright(canvas:Canvas)
 		canvas.Clear(Color.Grey)
 		'road noise
-		For Local i:Int=0 Until tilewidth*tileheight/40
-			Local x:Int=Rnd(tilewidth)
-			Local y:Int=Rnd(tileheight)
-			canvas.Color = Color.Grey.Blend(Color.White,Rnd(1))
-			canvas.DrawPoint(x,y)
-		Next
+		roadnoise(canvas)
 		'road bottom side
 		canvas.Color = Color.Grey.Blend(Color.White,.2)				
 		canvas.DrawRect(0,tileheight-(tileheight/12),tilewidth,tileheight/24)
@@ -474,15 +424,30 @@ Class tile
 	Method makeroadbottomtopleftright(canvas:Canvas)
 		canvas.Clear(Color.Grey)
 		'road noise
-		For Local i:Int=0 Until tilewidth*tileheight/40
-			Local x:Int=Rnd(tilewidth)
-			Local y:Int=Rnd(tileheight)
-			canvas.Color = Color.Grey.Blend(Color.White,Rnd(1))
-			canvas.DrawPoint(x,y)
-		Next
+		roadnoise(canvas)
 		canvas.Flush()		
 	End Method
 
+	'
+	' Graphics methods	
+	'
+	Method roadnoise(canvas:Canvas)
+		'road noise
+		For Local i:Int=0 Until tilewidth*tileheight/30
+			Local x:Int=Rnd(tilewidth)
+			Local y:Int=Rnd(tileheight)
+			If Rnd()<.5 Then
+				canvas.Color = Color.Grey.Blend(Color.Green,Rnd(.5))
+			Else
+				canvas.Color = Color.Grey.Blend(Color.White,Rnd(.5))
+			End If
+			canvas.DrawPoint(x,y)
+		Next		
+	End Method
+
+	'
+	' Draw methods
+	'
 
 	Method drawsand1(canvas:Canvas,x:Int,y:Int)
 		canvas.DrawImage(sand1im,x,y)
