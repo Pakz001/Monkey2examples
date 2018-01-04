@@ -61,12 +61,22 @@ Class tile
 	Field wallgatetopcan:Canvas
 	Field wallhorim:Image
 	Field wallhorcan:Canvas
+	Field wallverim:Image
+	Field wallvercan:Canvas
 	Field wallbottomleftim:Image
 	Field wallbottomleftcan:Canvas
 	Field wallbottomleftrightim:Image
 	Field wallbottomleftrightcan:Canvas
 	Field wallbottomrightim:Image
 	Field wallbottomrightcan:Canvas
+	Field wallbottomtopleftrightim:Image
+	Field wallbottomtopleftrightcan:Canvas
+	Field walltopleftim:Image
+	Field walltopleftcan:Canvas
+	Field walltoprightim:Image
+	Field walltoprightcan:Canvas
+	Field walltopleftrightim:Image
+	Field walltopleftrightcan:Canvas
 		
 	Method New()
 		' Create sand tiles
@@ -153,6 +163,21 @@ Class tile
 		wallbottomrightim = New Image(tilewidth,tileheight)
 		wallbottomrightcan = New Canvas(wallbottomrightim)
 		makewallbottomright(wallbottomrightcan)
+		wallbottomtopleftrightim = New Image(tilewidth,tileheight)
+		wallbottomtopleftrightcan = New Canvas(wallbottomtopleftrightim)
+		makewallbottomtopleftright(wallbottomtopleftrightcan)
+		wallverim = New Image(tilewidth,tileheight)
+		wallvercan = New Canvas(wallverim)
+		makewallver(wallvercan)
+		walltoprightim = New Image(tilewidth,tileheight)
+		walltoprightcan = New Canvas(walltoprightim)
+		makewalltopright(walltoprightcan)
+		walltopleftim = New Image(tilewidth,tileheight)
+		walltopleftcan = New Canvas(walltopleftim)
+		makewalltopleft(walltopleftcan)
+		walltopleftrightim = New Image(tilewidth,tileheight)
+		walltopleftrightcan = New Canvas(walltopleftrightim)
+		makewalltopleftright(walltopleftrightcan)
 
 		
 	End Method
@@ -513,6 +538,22 @@ Class tile
 		canvas.Flush()
 	End Method
 
+	Method makewallver(canvas:Canvas)
+		makesand1(canvas)
+		' shadow sand of the left side of the wall
+		' add noise right
+		For Local i:Int=0 Until tilewidth*tileheight/10
+			Local x:Int=tilewidth/6-Rnd(Rnd(tilewidth/4))
+			Local y:Int=Rnd(tileheight)
+			canvas.Color = Color.Brown * Rnd()
+			canvas.DrawPoint(x,y)
+		Next
+		wallsurface(canvas,tilewidth/6,0,tilewidth/1.5,tileheight)
+		wallleftline(canvas,tilewidth/6,0,tileheight)
+		wallrightline(canvas,tilewidth-tilewidth/6,0,tileheight)
+		canvas.Flush()
+	End Method
+
 	Method makewallbottomleft(canvas:Canvas)
 		makesand1(canvas)
 		wallsurface(canvas,0,tileheight/6,tilewidth/1.28,tileheight/1.5)
@@ -559,6 +600,112 @@ Class tile
 		
 		canvas.Flush()
 		
+		
+	End Method
+
+	Method makewallbottomtopleftright(canvas:Canvas)
+		makesand1(canvas)
+		wallsurface(canvas,0,tileheight/6,tilewidth,tileheight/1.5)
+		wallsurface(canvas,tilewidth/6,0,tilewidth/1.5,tileheight)
+
+		'makewallrecttop(canvas,0,tileheight/6,tilewidth/1.28,tileheight/1.5)
+		'makewallrecttop(canvas,tilewidth/6,tileheight/6,tilewidth/1.5,tileheight)
+		'walltopline(canvas,0,tileheight/6,tilewidth)
+		 'top side
+		wallleftline(canvas,tilewidth/6,0,tileheight/5)
+		wallrightline(canvas,tilewidth-tilewidth/6,0,tileheight/5)
+		walltopline(canvas,0,tileheight/6,tilewidth/5) 'left
+		walltopline(canvas,tilewidth-tilewidth/5,tileheight/6,tilewidth)'right
+		'bottom side
+		wallleftline(canvas,tilewidth/6,tileheight-tileheight/5,tileheight)
+		wallrightline(canvas,tilewidth-tilewidth/6,tileheight-tileheight/5,tileheight)
+		wallbottomline(canvas,0,tileheight-tileheight/6,tilewidth/5) 'left
+		wallbottomline(canvas,tilewidth-tilewidth/5,tileheight-tileheight/6,tilewidth)'right
+
+		canvas.Flush()
+		
+		
+	End Method
+
+	Method makewalltopright(canvas:Canvas)
+		makesand1(canvas)
+		
+		' add shadow on the bottom of the wall		
+		' add noise top top
+		For Local i:Int=0 Until tilewidth*tileheight/10
+			Local x:Int=Rnd(tilewidth)+tilewidth/6
+			Local y:Int=tileheight/1.2+(Rnd(Rnd(tileheight/4)))
+			canvas.Color = Color.Brown * Rnd()
+			canvas.DrawPoint(x,y)
+		Next	
+		' shadow sand of the left side of the wall
+		' add noise right
+		For Local i:Int=0 Until tilewidth*tileheight/10
+			Local x:Int=tilewidth/6-Rnd(Rnd(tilewidth/4))
+			Local y:Int=Rnd(tileheight)
+			canvas.Color = Color.Brown * Rnd()
+			canvas.DrawPoint(x,y)
+		Next			
+		
+		wallsurface(canvas,tilewidth/6,tileheight/6,tilewidth,tileheight/1.5)
+		wallsurface(canvas,tilewidth/6,0,tilewidth/1.5,tileheight/1.5)
+
+		wallleftline(canvas,tilewidth/6,0,tileheight/1.2)
+		wallbottomline(canvas,tilewidth/6,tileheight-tileheight/6,tilewidth)
+		wallrightline(canvas,tilewidth-tilewidth/6,0,tileheight/6)
+		walltopline(canvas,tilewidth-tilewidth/5,tileheight/6,tilewidth)
+		canvas.Flush()
+		
+	End Method
+
+
+	Method makewalltopleft(canvas:Canvas)
+		makesand1(canvas)
+		
+		' add shadow on the bottom of the wall		
+		' add noise top top
+		For Local i:Int=0 Until tilewidth*tileheight/10
+			Local x:Int=Rnd(tilewidth)+tilewidth/6
+			Local y:Int=tileheight/1.2+(Rnd(Rnd(tileheight/4)))
+			canvas.Color = Color.Brown * Rnd()
+			canvas.DrawPoint(x,y)
+		Next	
+
+		'toptobottom		
+		wallsurface(canvas,0,tileheight/6,tilewidth-tilewidth/5,tileheight/1.5)
+	
+		wallsurface(canvas,tilewidth/6,0,tilewidth/1.5,tileheight/1.5)
+
+		wallleftline(canvas,tilewidth/6,0,tileheight/6)
+		wallbottomline(canvas,0,tileheight-tileheight/6,tilewidth-tilewidth/5)
+		wallrightline(canvas,tilewidth-tilewidth/6,0,tileheight/1.3)
+		walltopline(canvas,0,tileheight/6,tilewidth/6)
+		canvas.Flush()
+		
+	End Method
+	
+	Method makewalltopleftright(canvas:Canvas)
+		makesand1(canvas)
+		' add shadow on the bottom of the wall		
+		' add noise top top
+		For Local i:Int=0 Until tilewidth*tileheight/10
+			Local x:Int=Rnd(tilewidth)+tilewidth/6
+			Local y:Int=tileheight/1.2+(Rnd(Rnd(tileheight/4)))
+			canvas.Color = Color.Brown * Rnd()
+			canvas.DrawPoint(x,y)
+		Next	
+
+		'toptobottom		
+		wallsurface(canvas,0,tileheight/6,tilewidth,tileheight/1.5)
+	
+		wallsurface(canvas,tilewidth/6,0,tilewidth/1.5,tileheight/1.5)
+
+		wallleftline(canvas,tilewidth/6,0,tileheight/6)
+		wallbottomline(canvas,0,tileheight-tileheight/6,tilewidth)
+		wallrightline(canvas,tilewidth-tilewidth/6,0,tileheight/5)
+		walltopline(canvas,0,tileheight/6,tilewidth/6)
+		walltopline(canvas,tilewidth-tilewidth/6,tileheight/6,tilewidth/6)
+		canvas.Flush()
 		
 	End Method
 
@@ -799,7 +946,22 @@ Class tile
 	Method drawwallbottomright(canvas:Canvas,x:Int,y:Int)
 		canvas.DrawImage(wallbottomrightim,x,y)
 	End Method
-	
+	Method drawwallbottomtopleftright(canvas:Canvas,x:Int,y:Int)
+		canvas.DrawImage(wallbottomtopleftrightim,x,y)
+	End Method
+	Method drawwallver(canvas:Canvas,x:Int,y:Int)
+		canvas.DrawImage(wallverim,x,y)
+	End Method
+	Method drawwalltopright(canvas:Canvas,x:Int,y:Int)
+		canvas.DrawImage(walltoprightim,x,y)
+	End Method
+	Method drawwalltopleft(canvas:Canvas,x:Int,y:Int)
+		canvas.DrawImage(walltopleftim,x,y)
+	End Method
+	Method drawwalltopleftright(canvas:Canvas,x:Int,y:Int)
+		canvas.DrawImage(walltopleftrightim,x,y)
+	End Method
+
 End Class
 
 Global mytile:tile
@@ -847,10 +1009,16 @@ Class MyWindow Extends Window
 		
 		'The gate at the bottom and top
 		mytile.drawgatetop(canvas,200+64*2,200-64)
-		mytile.drawgatebottom(canvas,200+64*2,200+64)
+		
 		mytile.drawwallhor(canvas,200+64,200-128)
-		mytile.drawwallbottomright(canvas,200+128,200-128)
+		mytile.drawwallver(canvas,200+128,200-192)
+		mytile.drawwallbottomtopleftright(canvas,200+128,200-128)
 		mytile.drawwallhor(canvas,200+64*3,200-128)
+		
+		mytile.drawgatebottom(canvas,200+64*2,200+64)
+		mytile.drawwallhor(canvas,200+64*3,200+128)
+		mytile.drawwalltopleftright(canvas,200+64*2,200+128)
+		mytile.drawwallhor(canvas,200+64*1,200+128)
 		
 		If Keyboard.KeyDown(Key.Key1)
 			mytile.drawsand1(canvas,100,100)
