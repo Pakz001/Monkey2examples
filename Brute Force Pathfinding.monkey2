@@ -34,7 +34,10 @@ Class MyWindow Extends Window
 		If pathed = True Then drawpath(canvas)
 
 		If Keyboard.KeyReleased(Key.Space)
-			path = New Int[maxpathlen]
+			path = New Int[maxpathlen]	
+			For Local i:Int=0 Until maxpathlen
+				path[i]=-1
+			Next		
 			ms = Millisecs()
 			
 			Repeat
@@ -93,7 +96,7 @@ Class MyWindow Extends Window
 	Method pathfound:Bool()
 		Local cx:Int=sx
 		Local cy:Int=sy
-		For Local i:Int=maxpathlen-1 Until 0 Step -1
+		For Local i:Int=maxpathlen-1 Until 0 Step -1			
 			Select path[i]
 				Case 0'up
 					cy-=1
@@ -103,6 +106,8 @@ Class MyWindow Extends Window
 					cy+=1
 				Case 3'left
 					cx-=1					
+				Default'exit
+					Return False
 			End Select
 			If cx<0 Or cx>=mapwidth Or cy<0 Or cy>=mapheight Then Return False
 			If map[cx,cy] = 1 Then Return False
@@ -117,8 +122,8 @@ Class MyWindow Extends Window
 		path[maxpathlen-1]+=1
 		For Local i:Int=maxpathlen-1 Until 1 Step-1
 			If path[i] > 3 Then 
-				path[i] = 0
-				path[i-1] += 1
+				path[i] = 0				
+				path[i-1] += 1				
 			Endif
 		Next
 	End Method
