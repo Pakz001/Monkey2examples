@@ -62,7 +62,7 @@ Class MyWindow Extends Window
 		Local ty:Int=Mouse.Y/tileheight
 				
 		If Mouse.ButtonReleased(MouseButton.Middle)
-			If tx=sx And ty=sy Or tx=ex And ty=sy
+			If (tx=sx And ty=sy) Or (tx=ex And ty=ey)
 			Else
 			If map[tx,ty] = 1
 				map[tx,ty] = 0
