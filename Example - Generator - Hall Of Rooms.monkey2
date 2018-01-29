@@ -25,14 +25,20 @@ Class tile
 		createfloor(floorcan)
 		createwalls()
 	End Method
+	' Here we create the wall images (uses bitwise)
 	Method createwalls()
+		' Paste 16 floorimages inside wall canvasses
 		For Local i:Int=0 Until 17
 			wallcan[i].DrawImage(floorim,0,0)
 		Next
+		' Create our bitwise counter
 		Local bitwise:Int[] = New Int[4]
 		Local exitloop:Bool=False
 		Local cnt:Int=1
+		' Here we create every wall image
 		While exitloop = False
+			' We add up a binary number 4 in length
+			' Each bit is one direction of the wall
 			For Local i:Int=3 to 0 Step -1
 				If bitwise[i] = 0 Then
 					bitwise[i] = 1
@@ -40,43 +46,47 @@ Class tile
 				End If
 				bitwise[i] = 0
 			Next
+			' Top=1,right=2,bottom=4,left=8
+			' If one bit is flagged then we draw the wall there
 			If bitwise[3] = 1 Then addtopwall(wallcan[cnt])
 			If bitwise[2] = 1 Then addrightwall(wallcan[cnt])
 			If bitwise[1] = 1 Then addbottomwall(wallcan[cnt])
 			If bitwise[0] = 1 Then addleftwall(wallcan[cnt])
 			wallcan[cnt].Flush()
 			cnt+=1
+			' If we are done then exit
 			If cnt>16 Then exitloop=True
-		Wend
-		
+		Wend		
 	End Method
+	' Draw our walls
 	Method addtopwall(canvas:Canvas)
 		canvas.Color = Color.White
-		drawnoiserect(canvas,0,0,tilewidth,tileheight/4)
+		drawnoiserect(canvas,0,0,tilewidth,tileheight/8,Color.Copper)
 		canvas.Flush()
 	End Method
 	Method addbottomwall(canvas:Canvas)
 		canvas.Color = Color.White
-		drawnoiserect(canvas,0,tileheight-tileheight/4,tilewidth,tileheight/4)
+		drawnoiserect(canvas,0,tileheight-tileheight/8,tilewidth,tileheight/8,Color.Copper)
 		canvas.Flush()
 	End Method
 	Method addleftwall(canvas:Canvas)
 		canvas.Color = Color.White
-		drawnoiserect(canvas,0,0,tilewidth/4,tileheight)
+		drawnoiserect(canvas,0,0,tilewidth/8,tileheight,Color.Copper)
 		canvas.Flush()
 	End Method
 	Method addrightwall(canvas:Canvas)
 		canvas.Color = Color.White
-		drawnoiserect(canvas,tilewidth-tilewidth/4,0,tilewidth/4,tileheight)
+		drawnoiserect(canvas,tilewidth-tilewidth/8,0,tilewidth/8,tileheight,Color.Copper)
 		canvas.Flush()		
 	End Method
-	Method drawnoiserect(canvas:Canvas,x1:Int,y1:Int,w:Int,h:Int)
+	' This draws a noisy rectangle
+	Method drawnoiserect(canvas:Canvas,x1:Int,y1:Int,w:Int,h:Int,col:Color)
 		For Local x:Int=x1 Until x1+w
 		For Local y:Int=y1 Until y1+h
-			If Rnd()<.4
-				canvas.Color = Color.Grey.Blend(Color.Black,Rnd(.5))
+			If Rnd()<.8
+				canvas.Color = col.Blend(Color.Black,Rnd(.5))
 			Else
-				canvas.Color = Color.Grey.Blend(Color.White,Rnd(.5,1))
+				canvas.Color = col.Blend(Color.White,Rnd(1))
 			End If
 			canvas.DrawPoint(x,y)
 		Next
@@ -123,6 +133,11 @@ Class tile
 				canvas.DrawPoint(x,y)
 			End If
 		Next
+		Next
+		' Create noise
+		For Local i:Int = 0 Until tilewidth*tileheight/2
+			canvas.Color = New Color(0,0,0,Rnd(0,0.5))
+			canvas.DrawPoint(Rnd(tilewidth),Rnd(tileheight))
 		Next
 		canvas.Flush()
 	End Method
@@ -173,24 +188,34 @@ Class map
 		createrooms("down")
 		mapfindwalls()
 	End Method
-	' TUrn tile 1(floor) into walls 
+	' Create using the bitwise system the tiles for the walls
 	Method mapfindwalls()
+		' We use a temp map
 		Local tempmap:Int[,] = New Int[mapwidth,mapheight]		
+		' Loop through the entire map
 		For Local y:Int=1 Until mapheight-1
 		For Local x:Int=1 Until mapwidth-1
+			' If we find a floor tile
 			If map[x,y] = 1
+				' Create a variable that will hold the wall tile
 				Local n:Int=0
+				' If top/right/bottom/left then add bitwise
 				If map[x,y-1] = 0 Then n+=1
 				If map[x+1,y] = 0 Then n+=2
 				If map[x,y+1] = 0 Then n+=4
 				If map[x-1,y] = 0 Then n+=8
+				' If we have a wall here
 				If n>0 Then 
+					' The walls start at 2 so add 1
 					n+=1
+					' Put this value in the tempmap array
 					tempmap[x,y] = n
 				End If
 			End If
 		Next
 		Next
+		' Copy the values from the tempmap into the main map that
+		' hold our tiles
 		For Local y:Int=0 Until mapheight
 		For Local x:Int=0 Until mapwidth
 			If tempmap[x,y] > 1 Then map[x,y] = tempmap[x,y]
@@ -284,11 +309,13 @@ Class map
 		
 		Return cnt
 	End Method
+	' Create the center of the map (One line of tiles (1)
 	Method createmidsection()
 		For Local x:Int=1 Until mapwidth-1
 			map[x,mapheight/2] = 1
 		Next
 	End Method
+	' Draw the entire map
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.Black
 		Local cnt:Int=0
@@ -296,12 +323,15 @@ Class map
 		For Local x:Int=0 Until mapwidth
 			Local x2:Int=x*tilewidth
 			Local y2:Int=y*tileheight
+			' Draw the background
 			If map[x,y] = 0
 				mytile.drawback(canvas,x2,y2)
 			End If
+			'Draw the floors
 			If map[x,y] = 1
 				mytile.drawfloor(canvas,x2,y2)
 			End If
+			' Draw the walls
 			If map[x,y] > 1 And map[x,y] < 17
 				mytile.drawwall(canvas,x2,y2,map[x,y]-1)
 			End If
@@ -314,7 +344,7 @@ Global mymap:map
 Global mytile:tile
 
 Class MyWindow Extends Window
-
+	Field ms:Int = Millisecs()+2000
 	Method New()
 		mymap = New map(Width,Height,20,20)
 		mytile = New tile(Width/20,Height/20)
@@ -324,10 +354,12 @@ Class MyWindow Extends Window
 		App.RequestRender() ' Activate this method 
 		canvas.Clear(Color.Black)				
 		mymap.draw(canvas)
-		If Keyboard.KeyReleased(Key.Space) Then 
+		If Keyboard.KeyReleased(Key.Space) Or ms<Millisecs() Then 
+			ms = Millisecs()+2000
 			SeedRnd(Millisecs())
-			mymap = New map(Width,Height,20,20)
-			mytile = New tile(Width/20,Height/20)
+			Local ts:Int=Rnd(10,20)
+			mymap = New map(Width,Height,ts,ts)
+			mytile = New tile(Width/ts,Height/ts)
 		End If
 		canvas.Color = Color.Red
 		canvas.DrawText("Press space to create new map",0,0)
