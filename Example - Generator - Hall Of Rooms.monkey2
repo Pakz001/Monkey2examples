@@ -5,16 +5,82 @@ Using std..
 Using mojo..
 
 Class tile
-	Field floorim:Image
-	Field floorcan:Canvas
 	Field tilewidth:Int
 	Field tileheight:Int
+	Field wallim:Image[]
+	Field wallcan:Canvas[]
+	Field floorim:Image
+	Field floorcan:Canvas
 	Method New(tw:Int,th:Int)
 		floorim = New Image(tw,th)
-		floorcan = New Canvas(floorim)		
+		floorcan = New Canvas(floorim)
+		wallim = New Image[17]
+		wallcan = New Canvas[17]
+		For Local i:Int=0 Until 17
+			wallim[i] = New Image(tw,th)
+			wallcan[i] = New Canvas(wallim[i])
+		Next
 		tilewidth = tw
 		tileheight = th
 		createfloor(floorcan)
+		createwalls()
+	End Method
+	Method createwalls()
+		For Local i:Int=0 Until 17
+			wallcan[i].DrawImage(floorim,0,0)
+		Next
+		Local bitwise:Int[] = New Int[4]
+		Local exitloop:Bool=False
+		Local cnt:Int=1
+		While exitloop = False
+			For Local i:Int=3 to 0 Step -1
+				If bitwise[i] = 0 Then
+					bitwise[i] = 1
+					Exit
+				End If
+				bitwise[i] = 0
+			Next
+			If bitwise[3] = 1 Then addtopwall(wallcan[cnt])
+			If bitwise[2] = 1 Then addrightwall(wallcan[cnt])
+			If bitwise[1] = 1 Then addbottomwall(wallcan[cnt])
+			If bitwise[0] = 1 Then addleftwall(wallcan[cnt])
+			wallcan[cnt].Flush()
+			cnt+=1
+			If cnt>16 Then exitloop=True
+		Wend
+		
+	End Method
+	Method addtopwall(canvas:Canvas)
+		canvas.Color = Color.White
+		drawnoiserect(canvas,0,0,tilewidth,tileheight/4)
+		canvas.Flush()
+	End Method
+	Method addbottomwall(canvas:Canvas)
+		canvas.Color = Color.White
+		drawnoiserect(canvas,0,tileheight-tileheight/4,tilewidth,tileheight/4)
+		canvas.Flush()
+	End Method
+	Method addleftwall(canvas:Canvas)
+		canvas.Color = Color.White
+		drawnoiserect(canvas,0,0,tilewidth/4,tileheight)
+		canvas.Flush()
+	End Method
+	Method addrightwall(canvas:Canvas)
+		canvas.Color = Color.White
+		drawnoiserect(canvas,tilewidth-tilewidth/4,0,tilewidth/4,tileheight)
+		canvas.Flush()		
+	End Method
+	Method drawnoiserect(canvas:Canvas,x1:Int,y1:Int,w:Int,h:Int)
+		For Local x:Int=x1 Until x1+w
+		For Local y:Int=y1 Until y1+h
+			If Rnd()<.4
+				canvas.Color = Color.Grey.Blend(Color.Black,Rnd(.5))
+			Else
+				canvas.Color = Color.Grey.Blend(Color.White,Rnd(.5,1))
+			End If
+			canvas.DrawPoint(x,y)
+		Next
+		Next
 	End Method
 	' Here we create a procedural floor tile
 	Method createfloor(canvas:Canvas)
@@ -65,11 +131,18 @@ Class tile
 		canvas.Color=Color.White.Blend(Color.Black,1.0-v1)
 		canvas.DrawImage(floorim,x,y)
 	End Method
-
+	'Draw the walls 0-top clockwise 1=topandtoprightdown
+	Method drawwall(canvas:Canvas,x:Int,y:Int,n:Int)
+		'Local v1:Float=(1.0/240.0)*distance(0,240,0,y)		
+		'canvas.Color = Color.White.Blend(Color.Black,v1)
+		canvas.Color = Color.White
+		canvas.DrawImage(wallim[n],x,y)
+	End Method
 	' Draw the floor
 	Method drawfloor(canvas:Canvas,x:Int,y:Int)
-		Local v1:Float=(1.0/240.0)*distance(0,240,0,y)		
-		canvas.Color=Color.White.Blend(Color.Black,v1)
+		'Local v1:Float=(1.0/240.0)*distance(0,240,0,y)		
+		'canvas.Color=Color.White.Blend(Color.Black,v1)
+		canvas.Color = Color.White
 		canvas.DrawImage(floorim,x,y)
 	End Method
     Function distance:Float(x1:Int,y1:Int,x2:Int,y2:Int)   
@@ -98,6 +171,31 @@ Class map
 		createmidsection()
 		createrooms("up")
 		createrooms("down")
+		mapfindwalls()
+	End Method
+	' TUrn tile 1(floor) into walls 
+	Method mapfindwalls()
+		Local tempmap:Int[,] = New Int[mapwidth,mapheight]		
+		For Local y:Int=1 Until mapheight-1
+		For Local x:Int=1 Until mapwidth-1
+			If map[x,y] = 1
+				Local n:Int=0
+				If map[x,y-1] = 0 Then n+=1
+				If map[x+1,y] = 0 Then n+=2
+				If map[x,y+1] = 0 Then n+=4
+				If map[x-1,y] = 0 Then n+=8
+				If n>0 Then 
+					n+=1
+					tempmap[x,y] = n
+				End If
+			End If
+		Next
+		Next
+		For Local y:Int=0 Until mapheight
+		For Local x:Int=0 Until mapwidth
+			If tempmap[x,y] > 1 Then map[x,y] = tempmap[x,y]
+		Next
+		Next
 	End Method
 	Method createrooms(sec:String)
 			
@@ -193,6 +291,7 @@ Class map
 	End Method
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.Black
+		Local cnt:Int=0
 		For Local y:Int=0 Until mapheight
 		For Local x:Int=0 Until mapwidth
 			Local x2:Int=x*tilewidth
@@ -202,6 +301,9 @@ Class map
 			End If
 			If map[x,y] = 1
 				mytile.drawfloor(canvas,x2,y2)
+			End If
+			If map[x,y] > 1 And map[x,y] < 17
+				mytile.drawwall(canvas,x2,y2,map[x,y]-1)
 			End If
 		Next
 		Next
