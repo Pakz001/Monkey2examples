@@ -4,7 +4,81 @@
 Using std..
 Using mojo..
 
+Class tile
+	Field floorim:Image
+	Field floorcan:Canvas
+	Field tilewidth:Int
+	Field tileheight:Int
+	Method New(tw:Int,th:Int)
+		floorim = New Image(tw,th)
+		floorcan = New Canvas(floorim)		
+		tilewidth = tw
+		tileheight = th
+		createfloor(floorcan)
+	End Method
+	' Here we create a procedural floor tile
+	Method createfloor(canvas:Canvas)
+		canvas.Clear(Color.Gold.Blend(Color.Black,.6))
+		' Create a array
+		Local t:Int[,] = New Int[tilewidth,tileheight]		
+		' Create a set of numbers in the floor array
+		For Local i:Int=0 Until tilewidth/2
+			t[Rnd(tilewidth),Rnd(tileheight)] = 1
+		Next
+		' Loop a number of times
+		For Local i:Int=0 Until tilewidth*tileheight*5
+			' Get a random x and y position
+			Local x:Int=Rnd(tilewidth)
+			Local y:Int=Rnd(tileheight)
+			' If this position is a number
+			If t[x,y] = 1
+				' next to this location pick a location
+				Local x2:Int=x+Rnd(-1,2)
+				Local y2:Int=y+Rnd(-1,2)
+				' Is it outside of the tile then skip
+				If x2<0 Or y2<0 Or x2>=tilewidth Or y2>=tileheight Then Continue
+				' New position is now also a number
+				t[x2,y2] = 1
+				' If the location is top or left of the tile
+				' then copy it to the other side of the tile
+				' to create a tileable effect
+				If y2=0 Then t[x2,tileheight-1] = 1
+				If x2=0 Then t[tilewidth-1,y2] = 1
+				If y2=tileheight-1 Then t[x2,0] = 1
+				If x2=tilewidth-1 Then t[0,y2] = 1
+			End If
+		Next
+		' Draw the array into the tile
+		For Local y:Int=0 Until tileheight
+		For Local x:Int=0 Until tilewidth		
+			If t[x,y] = 1 Then 
+				' Create a color from brown with a random black blend
+				canvas.Color = Color.Gold.Blend(Color.Black,Rnd(.3,.8))
+				canvas.DrawPoint(x,y)
+			End If
+		Next
+		Next
+		canvas.Flush()
+	End Method
+	Method drawback(canvas:Canvas,x:Int,y:Int)
+		Local v1:Float=(1.0/1000.0)*distance(0,240,0,y)		
+		canvas.Color=Color.White.Blend(Color.Black,1.0-v1)
+		canvas.DrawImage(floorim,x,y)
+	End Method
 
+	' Draw the floor
+	Method drawfloor(canvas:Canvas,x:Int,y:Int)
+		Local v1:Float=(1.0/240.0)*distance(0,240,0,y)		
+		canvas.Color=Color.White.Blend(Color.Black,v1)
+		canvas.DrawImage(floorim,x,y)
+	End Method
+    Function distance:Float(x1:Int,y1:Int,x2:Int,y2:Int)   
+    	Return Abs(x2-x1)+Abs(y2-y1)   
+    End Function	
+End Class
+
+' Here we have the map class, this generates a new map
+' when (re)created and holds the data in map[]
 Class map
 	Field map:Int[,]
 	Field width:Int,height:Int
@@ -123,8 +197,11 @@ Class map
 		For Local x:Int=0 Until mapwidth
 			Local x2:Int=x*tilewidth
 			Local y2:Int=y*tileheight
+			If map[x,y] = 0
+				mytile.drawback(canvas,x2,y2)
+			End If
 			If map[x,y] = 1
-				canvas.DrawRect(x2,y2,tilewidth+1,tileheight+1)
+				mytile.drawfloor(canvas,x2,y2)
 			End If
 		Next
 		Next
@@ -132,19 +209,23 @@ Class map
 End Class
 
 Global mymap:map
+Global mytile:tile
 
 Class MyWindow Extends Window
 
 	Method New()
 		mymap = New map(Width,Height,20,20)
+		mytile = New tile(Width/20,Height/20)
 	End method
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
-		canvas.Clear(New Color(.2,.2,.2))
+		canvas.Clear(Color.Black)				
 		mymap.draw(canvas)
 		If Keyboard.KeyReleased(Key.Space) Then 
+			SeedRnd(Millisecs())
 			mymap = New map(Width,Height,20,20)
+			mytile = New tile(Width/20,Height/20)
 		End If
 		canvas.Color = Color.Red
 		canvas.DrawText("Press space to create new map",0,0)
