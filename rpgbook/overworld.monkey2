@@ -5,6 +5,19 @@ Using std..
 Using mojo..
 
 Class overworld
+	'map layers
+	'dirt, grass, stone etc
+	Field background:Int[,]
+	'buildings, mountains, trees, villages
+	Field ground:Int[,]
+	'rocks, weeds, flowers, skulls etc
+	Field decoration:Int[,]
+	'shapes where player can and can not move to
+	Field collision:Int[,]
+	'player and non player character spawns
+	Field spawn:Int[,]
+	'trigger events (move from one map to another)
+	Field portal:Int[,]
 	
 End Class
 
