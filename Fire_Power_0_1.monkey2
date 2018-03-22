@@ -77,6 +77,10 @@ Class tile
 	Field walltoprightcan:Canvas
 	Field walltopleftrightim:Image
 	Field walltopleftrightcan:Canvas
+	
+	Field towertopim:Image
+	Field towertopcan:Canvas
+	
 		
 	Method New()
 		' Create sand tiles
@@ -178,6 +182,10 @@ Class tile
 		walltopleftrightim = New Image(tilewidth,tileheight)
 		walltopleftrightcan = New Canvas(walltopleftrightim)
 		makewalltopleftright(walltopleftrightcan)
+
+		towertopim = New Image(tilewidth,tileheight)
+		towertopcan = New Canvas(towertopim)
+		maketowertopim(towertopcan)
 
 		
 	End Method
@@ -709,6 +717,50 @@ Class tile
 		
 	End Method
 
+	Method maketowertopim(canvas:Canvas)
+		'canvas.Color = Color.Grey
+		'canvas.DrawRect(0,0,tilewidth,tileheight)
+		makesand1(canvas)
+		' shadow sand of the left side of the wall
+		' add noise right
+		For Local i:Int=0 Until tilewidth*tileheight/15
+			Local x:Int=tilewidth/6-Rnd(Rnd(tilewidth/4))
+			Local y:Int=Rnd(tileheight-tileheight/3)
+			canvas.Color = Color.Brown * Rnd()
+			canvas.DrawPoint(x,y+tileheight/3)
+		Next
+		wallsurface(canvas,tilewidth/6,tileheight/3,tilewidth/1.5,tileheight/1.4)
+		wallleftline(canvas,tilewidth/6,tileheight/3,tileheight/1.4)
+		wallrightline(canvas,tilewidth-tilewidth/6,tileheight/3,tileheight/1.4)
+		
+		
+		canvas.Color = Color.Grey.Blend(Color.Yellow,.2)
+		canvas.DrawRect(tilewidth/6+2,tileheight/3,tilewidth/1.5-4,2)
+		
+		canvas.Color = Color.Brown.Blend(Color.Yellow,.2)
+		canvas.DrawRect(tilewidth/6+2,tileheight/3+2,tilewidth/1.5-4,10)		
+		
+		
+		canvas.Color = Color.Brown.Blend(Color.Black,.2)
+		canvas.DrawRect(tilewidth/6+4,tileheight/3+5,tilewidth/1.5-8,12)
+
+
+
+		canvas.Color = Color.Black
+		canvas.DrawRect(tilewidth/1.8,tileheight/3+2,2,17)
+		canvas.DrawRect(tilewidth/6,tileheight/3+17,tilewidth/1.6,2)
+
+		canvas.Color = Color.Grey.Blend(Color.Black,.2)
+		canvas.DrawRect(tilewidth/2-tilewidth/8,tileheight/3,tilewidth/5,19)
+
+
+		'wallarmortop(canvas,tileheight/3)		
+'		wallsurface(canvas,tilewidth/6,tileheight/3,tilewidth-tilewidth/3,tileheight-tileheight/6)
+'		canvas.Color = Color.Black
+'		canvas.DrawRect(tilewidth/6-tilewidth/12,tileheight/3),tilewidth/12,tileheight-tileheight/6)
+		canvas.Flush()
+	End Method
+
 	'
 	' Graphics methods	
 	'
@@ -961,7 +1013,9 @@ Class tile
 	Method drawwalltopleftright(canvas:Canvas,x:Int,y:Int)
 		canvas.DrawImage(walltopleftrightim,x,y)
 	End Method
-
+	Method drawtowertop(canvas:Canvas,x:Int,y:Int)
+		canvas.DrawImage(towertopim,x,y)
+	End Method
 End Class
 
 Global mytile:tile
@@ -1020,6 +1074,15 @@ Class MyWindow Extends Window
 		mytile.drawwalltopleftright(canvas,200+64*2,200+128)
 		mytile.drawwallhor(canvas,200+64*1,200+128)
 		
+		
+		mytile.drawtowertop(canvas,100,300)
+		mytile.drawwallbottomtopleftright(canvas,100,364)
+		mytile.drawtowertop(canvas,100-64,364)
+		mytile.drawtowertop(canvas,164,364)
+		mytile.drawtowertop(canvas,100,300+128)
+		
+		
+		
 		If Keyboard.KeyDown(Key.Key1)
 			mytile.drawsand1(canvas,100,100)
 			mytile.drawsandshadowtop(canvas,100,100-64)
@@ -1045,6 +1108,8 @@ Class MyWindow Extends Window
 			mytile.drawroadbottomtopright(canvas,200+64,400)
 			mytile.drawroadbottomtopleft(canvas,200+128,400)
 			mytile.drawroadtopleftright(canvas,200+256,400)
+			
+			
 		End if
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
