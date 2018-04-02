@@ -62,7 +62,34 @@ Class MyWindow Extends Window
 			If my_x[i,0] >0
 				If my_x[i,0] = my_x[i,1] Then my_x[i,1]+=Rnd(20)
 			End If			
-		Next		
+		Next
+		
+		' handle between y values
+		'find topmost y
+		Local t:Int=0
+		For t = 0 Until 1000
+			If my_x[t,0] > 0 Then Exit
+		Next
+		For Local i:Int=t Until 999
+			Local a:Int=my_x[i,0]
+			Local b:Int=my_x[i,1]
+			Local ly:Int=i
+			i+=1			
+			Local con:Bool=False
+			For Local ii:Int=i Until 1000
+				If my_x[ii,0] > 0 Then
+					con=True 
+				End If
+			Next
+			If con=False Then Exit
+			While my_x[i,0] = 0
+				If i>=999 Then Exit
+				my_x[i,0] = a
+				my_x[i,1] = b
+				i+=1
+			Wend
+		Next
+				
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -73,7 +100,7 @@ Class MyWindow Extends Window
 			If my_x[i,0] = 0 Then Continue
 			If my_x[i,1] = 0 Then Continue
 
-			canvas.DrawRect(my_x[i,0]+50,50+i,my_x[i,1]-my_x[i,0],10)
+			canvas.DrawRect(my_x[i,0]*2+50,i*2,my_x[i,1]-my_x[i,0]*2,20)
 		Next
 '		' If key pace then new map
 		If Keyboard.KeyReleased(Key.Space) Then make()		
