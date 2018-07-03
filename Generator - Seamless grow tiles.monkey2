@@ -20,7 +20,7 @@ Class tile
 	Field tileim:Image
 	Field tilecan:Canvas
 	' number of different colors on the tile
-	Field numzones:Int (0..x)
+	Field numzones:Int' (0..x)
 	' our base color
 	Field col:Color
 	' how dense(much) should the added zones be (0.1)
