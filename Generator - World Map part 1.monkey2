@@ -24,7 +24,28 @@ Class world
 		'2 coast right side
 		'3 coast bottom side
 		'4 coast top side
+		'  coast corners
 		'9 snow tile
+		'10 snow coast left
+		'11 snow coast right
+		'12 snow coast bottom
+		'13 snow coast top
+		'14  snow coast corners
+		'15
+		'16
+		'17
+		'18 snow edge grass left
+		'19 snow edge grass right
+		'20 snow edge grass bottom
+		'21 snow edge grass top
+		'22
+		'23
+		'24
+		'25
+		'26 grass edge snow left
+		'27 grass edge snow right
+		'28 grass edge snow bottom
+		'29 grass edge snow top
 		
 		'grass and shores
 		canvas.DrawImage(tileim[0],320,64,0,2,2)
@@ -47,6 +68,21 @@ Class world
 			canvas.DrawImage(tileim[9],0+x*tilewidth*2,200+y*tileheight*2,0,2,2)
 		Next
 		Next
+		
+		'snow edges
+		canvas.DrawImage(tileim[9],tilewidth*2,64,0,2,2)
+		canvas.DrawImage(tileim[18],tilewidth*2+tilewidth*2,64,0,2,2)
+		canvas.DrawImage(tileim[19],tilewidth*2-tilewidth*2,64,0,2,2)
+		canvas.DrawImage(tileim[20],tilewidth*2,64-tilewidth*2,0,2,2)
+		canvas.DrawImage(tileim[21],tilewidth*2,64+tilewidth*2,0,2,2)
+		
+		'grass inside snow edges
+		canvas.DrawImage(tileim[0],tilewidth*2,264,0,2,2)
+		canvas.DrawImage(tileim[26],tilewidth*2+tilewidth*2,264,0,2,2)
+		canvas.DrawImage(tileim[27],tilewidth*2-tilewidth*2,264,0,2,2)
+		canvas.DrawImage(tileim[28],tilewidth*2,264-tilewidth*2,0,2,2)
+		canvas.DrawImage(tileim[29],tilewidth*2,264+tilewidth*2,0,2,2)
+
 	End Method
 	Method generatetiles()
 		For Local i:Int=0 Until 100
@@ -61,6 +97,465 @@ Class world
 		generategrass()
 		generatesnow()
 		generatesnowshores()
+		generatesnowedgegrass()
+		generategrassedgesnow()
+	End Method
+	Method generategrassedgesnow()
+		'26
+		'copy grass tiles into snow edge grass tiles
+		For Local i:Int=26 Until 26+8
+			tilecan[i].DrawImage(tileim[9],0,0)
+			tilecan[i].Flush()
+		Next
+
+
+		' grass left side of snow
+	
+		Local m:Int[,] = New Int[tilewidth,tileheight]
+		Local t:Int=26
+		' Create initial snow grows
+		For Local i:Int=0 Until tilewidth+tileheight/4
+			m[0,Rnd(tileheight)] = 1
+		Next		
+	
+		' Grow the snow
+		For Local i:Int=0 Until tilewidth*tileheight*4
+			Local x:Int=Rnd(0,tilewidth)
+			Local y:Int=Rnd(0,tileheight)
+			Local nx:Int=x+Rnd(-2,2)
+			Local ny:Int=y+Rnd(-2,2)
+			If m[x,y] = 1
+				If nx<0 Or ny<0 Or nx>=tilewidth Or ny>=tileheight Then Continue
+					m[nx,ny] = 1
+			End If
+		Next
+	
+		' create the shade
+		For Local y:Int=0 Until tileheight
+		For Local x:Int=0 Until tilewidth-1
+			If m[x,y] = 1 And m[x+1,y] = 0
+				m[x,y] = 2
+				m[x+1,y] = 3
+			End If
+		Next
+		Next		
+	
+		' create the image		
+		For Local y:Int=0 Until tileheight
+		For Local x:Int=0 Until tilewidth
+			If m[x,y] = 0 Then Continue
+			If m[x,y] = 1 Then 
+				If Rnd()<.2 Then
+					tilecan[t].Color = Color.Green.Blend(Color.Black,.8)
+				Else
+					tilecan[t].Color = Color.Green.Blend(Color.Black,.4)
+				End If
+			End If
+			If m[x,y] = 2 Then 				
+				tilecan[t].Color = Color.Green.Blend(Color.Black,.5)
+			End If
+			If m[x,y] = 3 Then 				
+				tilecan[t].Color = New Color(0,.5,0,.5)
+			End If
+	
+				tilecan[t].DrawPoint(x,y)
+		Next
+		Next
+	
+		tilecan[t].Flush()
+
+
+		' grass right side of snow
+	
+		m= New Int[tilewidth,tileheight]
+		t=27
+		' Create initial snow grows
+		For Local i:Int=0 Until tilewidth+tileheight/4
+			m[tilewidth-1,Rnd(tileheight)] = 1
+		Next		
+	
+		' Grow the grass
+		For Local i:Int=0 Until tilewidth*tileheight*4
+			Local x:Int=Rnd(0,tilewidth)
+			Local y:Int=Rnd(0,tileheight)
+			Local nx:Int=x+Rnd(-2,2)
+			Local ny:Int=y+Rnd(-2,2)
+			If m[x,y] = 1
+				If nx<0 Or ny<0 Or nx>=tilewidth Or ny>=tileheight Then Continue
+					m[nx,ny] = 1
+			End If
+		Next
+	
+		' create the shade
+		For Local y:Int=0 Until tileheight
+		For Local x:Int=1 Until tilewidth
+			If m[x,y] = 1 And m[x-1,y] = 0
+				m[x,y] = 2
+				m[x-1,y] = 3
+			End If
+		Next
+		Next		
+	
+		' create the image		
+		For Local y:Int=0 Until tileheight
+		For Local x:Int=0 Until tilewidth
+			If m[x,y] = 0 Then Continue
+			If m[x,y] = 1 Then 
+				If Rnd()<.2 Then
+					tilecan[t].Color = Color.Green.Blend(Color.Black,.8)
+				Else
+					tilecan[t].Color = Color.Green.Blend(Color.Black,.4)
+				End If
+			End If
+			If m[x,y] = 2 Then 				
+				tilecan[t].Color = Color.Green.Blend(Color.Black,.5)
+			End If
+			If m[x,y] = 3 Then 				
+				tilecan[t].Color = New Color(0,.5,0,.5)
+			End If
+	
+				tilecan[t].DrawPoint(x,y)
+		Next
+		Next
+	
+		tilecan[t].Flush()
+
+
+		' grass bottom side of snow
+	
+		m= New Int[tilewidth,tileheight]
+		t=28
+		' Create initial snow grows
+		For Local i:Int=0 Until tilewidth+tileheight/4
+			m[Rnd(tilewidth),tileheight-1] = 1
+		Next		
+	
+		' Grow the grass
+		For Local i:Int=0 Until tilewidth*tileheight*4
+			Local x:Int=Rnd(0,tilewidth)
+			Local y:Int=Rnd(0,tileheight)
+			Local nx:Int=x+Rnd(-2,2)
+			Local ny:Int=y+Rnd(-2,2)
+			If m[x,y] = 1
+				If nx<0 Or ny<0 Or nx>=tilewidth Or ny>=tileheight Then Continue
+					m[nx,ny] = 1
+			End If
+		Next
+	
+		' create the shade
+		For Local y:Int=1 Until tileheight
+		For Local x:Int=0 Until tilewidth
+			If m[x,y] = 1 And m[x,y-1] = 0
+				m[x,y] = 2
+				m[x,y-1] = 3
+			End If
+		Next
+		Next		
+	
+		' create the image		
+		For Local y:Int=0 Until tileheight
+		For Local x:Int=0 Until tilewidth
+			If m[x,y] = 0 Then Continue
+			If m[x,y] = 1 Then 
+				If Rnd()<.2 Then
+					tilecan[t].Color = Color.Green.Blend(Color.Black,.8)
+				Else
+					tilecan[t].Color = Color.Green.Blend(Color.Black,.4)
+				End If
+			End If
+			If m[x,y] = 2 Then 				
+				tilecan[t].Color = Color.Green.Blend(Color.Black,.5)
+			End If
+			If m[x,y] = 3 Then 				
+				tilecan[t].Color = New Color(0,.5,0,.5)
+			End If
+	
+				tilecan[t].DrawPoint(x,y)
+		Next
+		Next
+	
+		tilecan[t].Flush()
+
+
+
+		' grass top side of snow
+	
+		m= New Int[tilewidth,tileheight]
+		t=29
+		' Create initial snow grows
+		For Local i:Int=0 Until tilewidth+tileheight/4
+			m[Rnd(tilewidth),0] = 1
+		Next		
+	
+		' Grow the grass
+		For Local i:Int=0 Until tilewidth*tileheight*4
+			Local x:Int=Rnd(0,tilewidth)
+			Local y:Int=Rnd(0,tileheight)
+			Local nx:Int=x+Rnd(-2,2)
+			Local ny:Int=y+Rnd(-2,2)
+			If m[x,y] = 1
+				If nx<0 Or ny<0 Or nx>=tilewidth Or ny>=tileheight Then Continue
+					m[nx,ny] = 1
+			End If
+		Next
+	
+		' create the shade
+		For Local y:Int=0 Until tileheight-1
+		For Local x:Int=0 Until tilewidth
+			If m[x,y] = 1 And m[x,y+1] = 0
+				m[x,y] = 2
+				m[x,y+1] = 3
+			End If
+		Next
+		Next		
+	
+		' create the image		
+		For Local y:Int=0 Until tileheight
+		For Local x:Int=0 Until tilewidth
+			If m[x,y] = 0 Then Continue
+			If m[x,y] = 1 Then 
+				If Rnd()<.2 Then
+					tilecan[t].Color = Color.Green.Blend(Color.Black,.8)
+				Else
+					tilecan[t].Color = Color.Green.Blend(Color.Black,.4)
+				End If
+			End If
+			If m[x,y] = 2 Then 				
+				tilecan[t].Color = Color.Green.Blend(Color.Black,.5)
+			End If
+			If m[x,y] = 3 Then 				
+				tilecan[t].Color = New Color(0,.5,0,.5)
+			End If
+	
+				tilecan[t].DrawPoint(x,y)
+		Next
+		Next
+	
+		tilecan[t].Flush()
+
+
+	End Method
+	Method generatesnowedgegrass()
+		'18
+		'copy grass tiles into snow edge grass tiles
+		For Local i:Int=18 Until 18+8
+			tilecan[i].DrawImage(tileim[0],0,0)
+			tilecan[i].Flush()
+		Next
+		'
+		
+		' SNow left side of
+		
+		Local m:Int[,] = New Int[tilewidth,tileheight]
+		Local t:Int=18
+		' Create initial snow grows
+		For Local i:Int=0 Until tilewidth+tileheight/5
+			m[0,Rnd(tileheight)] = 1
+		Next		
+		
+		' Grow the snow
+		For Local i:Int=0 Until tilewidth*tileheight*5
+			Local x:Int=Rnd(0,tilewidth)
+			Local y:Int=Rnd(0,tileheight)
+			Local nx:Int=x+Rnd(-2,2)
+			Local ny:Int=y+Rnd(-2,2)
+			If m[x,y] = 1
+				If nx<0 Or ny<0 Or nx>=tilewidth Or ny>=tileheight Then Continue
+					m[nx,ny] = 1
+			End If
+		Next
+		
+		' create the shade
+		For Local y:Int=0 Until tileheight
+		For Local x:Int=0 Until tilewidth-1
+			If m[x,y] = 1 And m[x+1,y] = 0
+				m[x,y] = 2
+				m[x+1,y] = 3
+			End If
+		Next
+		Next		
+		
+		' create the image		
+		For Local y:Int=0 Until tileheight
+		For Local x:Int=0 Until tilewidth
+			If m[x,y] = 0 Then Continue
+			If m[x,y] = 1 Then 
+				tilecan[t].Color = Color.White
+			End If
+			If m[x,y] = 2 Then 				
+				tilecan[t].Color = Color.White.Blend(Color.Black,.5)
+			End If
+			If m[x,y] = 3 Then 				
+				tilecan[t].Color = New Color(0,.5,0,.5)
+			End If
+
+				tilecan[t].DrawPoint(x,y)
+		Next
+		Next
+		
+		tilecan[t].Flush()
+
+
+
+
+		' SNow Right side of
+		
+		m = New Int[tilewidth,tileheight]
+		t=19
+		' Create initial snow grows
+		For Local i:Int=0 Until tilewidth+tileheight/5
+			m[tilewidth-1,Rnd(tileheight)] = 1
+		Next		
+		
+		' Grow the snow
+		For Local i:Int=0 Until tilewidth*tileheight*5
+			Local x:Int=Rnd(0,tilewidth)
+			Local y:Int=Rnd(0,tileheight)
+			Local nx:Int=x+Rnd(-1,2)
+			Local ny:Int=y+Rnd(-1,2)
+			If m[x,y] = 1
+				If nx<0 Or ny<0 Or nx>=tilewidth Or ny>=tileheight Then Continue
+					m[nx,ny] = 1
+			End If
+		Next
+		
+		' create the shade
+		For Local y:Int=0 Until tileheight-1
+		For Local x:Int=tilewidth-1 To 1 Step -1
+			If m[x,y] = 1 And m[x-1,y] = 0
+				m[x,y] = 2
+				m[x-1,y] = 3
+			End If
+		Next
+		Next		
+		
+		' create the image		
+		For Local y:Int=0 Until tileheight
+		For Local x:Int=0 Until tilewidth
+			If m[x,y] = 0 Then Continue
+			If m[x,y] = 1 Then 
+				tilecan[t].Color = Color.White
+			End If
+			If m[x,y] = 2 Then 				
+				tilecan[t].Color = Color.White.Blend(Color.Black,.5)
+			End If
+			If m[x,y] = 3 Then 				
+				tilecan[t].Color = New Color(0,.5,0,.5)
+			End If
+
+				tilecan[t].DrawPoint(x,y)
+		Next
+		Next
+		
+		tilecan[t].Flush()
+
+
+
+		' SNow Bottom side of
+		
+		m = New Int[tilewidth,tileheight]
+		t=20
+		' Create initial snow grows
+		For Local i:Int=0 Until tilewidth+tileheight/5
+			m[Rnd(tilewidth),tileheight-1] = 1
+		Next		
+		
+		' Grow the snow
+		For Local i:Int=0 Until tilewidth*tileheight*5
+			Local x:Int=Rnd(0,tilewidth)
+			Local y:Int=Rnd(0,tileheight)
+			Local nx:Int=x+Rnd(-1,2)
+			Local ny:Int=y+Rnd(-1,2)
+			If m[x,y] = 1
+				If nx<0 Or ny<0 Or nx>=tilewidth Or ny>=tileheight Then Continue
+					m[nx,ny] = 1
+			End If
+		Next
+		
+		' create the shade
+		For Local y:Int=0 Until tileheight-1
+		For Local x:Int=0 Until tilewidth
+			If m[x,y] = 1 And m[x,y+1] = 0
+				m[x,y] = 2
+				m[x,y+1] = 3
+			End If
+		Next
+		Next		
+		
+		' create the image		
+		For Local y:Int=0 Until tileheight
+		For Local x:Int=0 Until tilewidth
+			If m[x,y] = 0 Then Continue
+			If m[x,y] = 1 Then 
+				tilecan[t].Color = Color.White
+			End If
+			If m[x,y] = 2 Then 				
+				tilecan[t].Color = Color.White.Blend(Color.Black,.5)
+			End If
+			If m[x,y] = 3 Then 				
+				tilecan[t].Color = New Color(0,.5,0,.5)
+			End If
+
+				tilecan[t].DrawPoint(x,y)
+		Next
+		Next
+		
+		tilecan[t].Flush()
+
+
+		' SNow top side of
+		
+		m = New Int[tilewidth,tileheight]
+		t=21
+		' Create initial snow grows
+		For Local i:Int=0 Until tilewidth+tileheight/5
+			m[Rnd(tilewidth),0] = 1
+		Next		
+		
+		' Grow the snow
+		For Local i:Int=0 Until tilewidth*tileheight*5
+			Local x:Int=Rnd(0,tilewidth)
+			Local y:Int=Rnd(0,tileheight)
+			Local nx:Int=x+Rnd(-2,2)
+			Local ny:Int=y+Rnd(-2,2)
+			If m[x,y] = 1
+				If nx<0 Or ny<0 Or nx>=tilewidth Or ny>=tileheight Then Continue
+					m[nx,ny] = 1
+			End If
+		Next
+		
+		' create the shade
+		For Local y:Int=tileheight-1 Until 1 Step -1
+		For Local x:Int=0 Until tilewidth
+			If m[x,y] = 1 And m[x,y-1] = 0
+				m[x,y] = 2
+				m[x,y-1] = 3
+			End If
+		Next
+		Next		
+		
+		' create the image		
+		For Local y:Int=0 Until tileheight
+		For Local x:Int=0 Until tilewidth
+			If m[x,y] = 0 Then Continue
+			If m[x,y] = 1 Then 
+				tilecan[t].Color = Color.White
+			End If
+			If m[x,y] = 2 Then 				
+				tilecan[t].Color = Color.White.Blend(Color.Black,.5)
+			End If
+			If m[x,y] = 3 Then 				
+				tilecan[t].Color = New Color(0,.5,0,.5)
+			End If
+			
+			tilecan[t].DrawPoint(x,y)
+		Next
+		Next
+		
+		tilecan[t].Flush()
+
+
+
 	End Method
 	Method generatesnowshores()
 		Local left:Int=0
