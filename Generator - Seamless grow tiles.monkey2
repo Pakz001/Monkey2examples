@@ -51,6 +51,17 @@ Class tile
 			m[Rnd(0,tilewidth),Rnd(0,tileheight)] = Rnd(1,numzones+1)			
 		Next
 		'
+		' Put on edges also
+		'
+		For Local i:Int=0 To 2
+			m[Rnd(tilewidth),0] = Rnd(1,numzones+1)
+			m[Rnd(tilewidth),tileheight-1] = Rnd(1,numzones+1)
+			m[0,Rnd(tileheight)] = Rnd(1,numzones+1)
+			m[tilewidth-1,Rnd(tileheight)] = Rnd(1,numzones+1)
+		Next
+
+		'
+		'
 		' Here we grow the zones. We exit if the desired density is reached
 		Local maxdensity:Int=(tilewidth*tileheight)*(density/1.5)
 		Local curdensity:Int=0
