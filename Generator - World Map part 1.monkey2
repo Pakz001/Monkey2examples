@@ -8,8 +8,8 @@ Class world
 	Field mapwidth:Int,mapheight:Int
 	Field map:Int[,]
 	Field tilewidth:Float,tileheight:Float
-	Field tileim:Image[] = New Image[10]
-	Field tilecan:Canvas[] = New Canvas[10]
+	Field tileim:Image[] = New Image[100]
+	Field tilecan:Canvas[] = New Canvas[100]
 	Method New(mapwidth:Int,mapheight:Int,tilewidth:Float,tileheight:Float)
 		Self.mapwidth = mapwidth
 		Self.mapheight = mapheight
@@ -19,20 +19,37 @@ Class world
 		generatetiles()
 	End Method
 	Method draw(canvas:Canvas)
-		canvas.DrawImage(tileim[0],320,200,0,2,2)
-		canvas.DrawImage(tileim[1],320+tilewidth*2,200,0,2,2)
-		canvas.DrawImage(tileim[2],320-tilewidth*2,200,0,2,2)
-		canvas.DrawImage(tileim[3],320,200-tileheight*2,0,2,2)
-		canvas.DrawImage(tileim[4],320,200+tileheight*2,0,2,2)
+		'0 grass tile
+		'1 coast left side
+		'2 coast right side
+		'3 coast bottom side
+		'4 coast top side
+		'9 snow tile
 		
+		'grass and shores
+		canvas.DrawImage(tileim[0],320,64,0,2,2)
+		canvas.DrawImage(tileim[1],320+tilewidth*2,64,0,2,2)
+		canvas.DrawImage(tileim[2],320-tilewidth*2,64,0,2,2)
+		canvas.DrawImage(tileim[3],320,64-tileheight*2,0,2,2)
+		canvas.DrawImage(tileim[4],320,64+tileheight*2,0,2,2)
+
+		'snow and shores
+		canvas.DrawImage(tileim[9],320,264,0,2,2)
+		canvas.DrawImage(tileim[10],320+tilewidth*2,264,0,2,2)
+		canvas.DrawImage(tileim[11],320-tilewidth*2,264,0,2,2)
+		canvas.DrawImage(tileim[12],320,264-tileheight*2,0,2,2)
+		canvas.DrawImage(tileim[13],320,264+tileheight*2,0,2,2)
+		
+
 		For Local y:Int=0 To 2
 		For Local x:Int=0 To 2
 			canvas.DrawImage(tileim[0],0+x*tilewidth*2,0+y*tileheight*2,0,2,2)
+			canvas.DrawImage(tileim[9],0+x*tilewidth*2,200+y*tileheight*2,0,2,2)
 		Next
 		Next
 	End Method
 	Method generatetiles()
-		For Local i:Int=0 Until 10
+		For Local i:Int=0 Until 100
 			tileim[i] = New Image(tilewidth,tileheight)
 			tileim[i].Handle = New Vec2f(0,0)
 			tilecan[i] = New Canvas(tileim[i])
@@ -42,6 +59,215 @@ Class world
 		tilecan[0].Clear(Color.Green.Blend(Color.Black,.5))
 		generateshores()
 		generategrass()
+		generatesnow()
+		generatesnowshores()
+	End Method
+	Method generatesnowshores()
+		Local left:Int=0
+		Local right:Int=tilewidth
+		Local top:Int=0
+		Local bottom:Int=tileheight
+		Local y:Float=0
+		Local x:Float=0
+		Local a:Float=Pi/2
+		Local c:Float=0
+		Local t:Int=10'tile
+		While y<bottom
+			' draw the shore
+			For Local z:Int=0 To x
+				tilecan[t].Color = Color.White
+				tilecan[t].DrawPoint(z,y)
+			Next
+			'Left to right sand up not including sea
+			tilecan[t].Color = Color.White.Blend(Color.Black,.3)
+			tilecan[t].DrawPoint(x,y)
+			tilecan[t].Color = Color.Brown.Blend(Color.White,Rnd(.1,.4))
+			tilecan[t].DrawPoint(x+1,y)
+			tilecan[t].Color = Color.Brown.Blend(Color.White,Rnd(.6,1))
+			tilecan[t].DrawPoint(x+2,y)
+			If Rnd()<.5 Then 
+				tilecan[t].Color = Color.Brown.Blend(Color.Black,.5)
+			Else 
+				tilecan[t].Color = Color.Brown.Blend(Color.White,.5)
+			End If
+			tilecan[t].DrawPoint(x+3,y)
+			'sea
+			tilecan[t].Color = Color.Blue.Blend(Color.White,.6)
+			tilecan[t].DrawPoint(x+4,y)
+			tilecan[t].Color = Color.Blue.Blend(Color.White,.5)
+			tilecan[t].DrawPoint(x+5,y)
+			' move the point
+			c+=Rnd(-2,2)
+			If c<-Pi/2 Or c>Pi/2 Then c=0
+			If y<7 Or y>bottom-7 Then c=0
+			x+=Cos(a+c)
+			y+=Sin(a+c)
+			If y<7 Or y>bottom-7
+				If x<left Then x+=1
+				If x>left Then x-=1
+			endif
+			If x<0 Then x=0
+		Wend
+		tilecan[t].Flush()
+
+		'shore on the right side 		
+		left=0
+		right=tilewidth
+		top=0
+		bottom=tileheight
+		y=0
+		x=right
+		a=Pi/2
+		c=0
+		t=11'tile
+		While y<bottom
+			' draw the shore
+			For Local z:Int=right To x Step -1
+				tilecan[t].Color = Color.White
+				tilecan[t].DrawPoint(z,y)
+			Next
+			'right to left
+			tilecan[t].Color = Color.White.Blend(Color.Black,.3)
+			tilecan[t].DrawPoint(x,y)
+			tilecan[t].Color = Color.Brown.Blend(Color.White,Rnd(.1,.4))
+			tilecan[t].DrawPoint(x-1,y)
+			tilecan[t].Color = Color.Brown.Blend(Color.White,Rnd(.6,1))
+			tilecan[t].DrawPoint(x-2,y)
+			If Rnd()<.5 Then 
+				tilecan[t].Color = Color.Brown.Blend(Color.Black,.5)
+			Else 
+				tilecan[t].Color = Color.Brown.Blend(Color.White,.5)
+			End If
+			tilecan[t].DrawPoint(x-3,y)
+			'sea
+			tilecan[t].Color = Color.Blue.Blend(Color.White,.6)
+			tilecan[t].DrawPoint(x-4,y)
+			tilecan[t].Color = Color.Blue.Blend(Color.White,.5)
+			tilecan[t].DrawPoint(x-5,y)
+			' move the point
+			c+=Rnd(-2,2)
+			If c<-Pi/2 Or c>Pi/2 Then c=0
+			If y<7 Or y>bottom-7 Then c=0
+			x+=Cos(a+c)
+			y+=Sin(a+c)
+			If y<7 Or y>bottom-7
+				If x<right Then x+=1
+				If x>right Then x-=1
+			endif
+			If x>right Then x=right
+		Wend
+		tilecan[t].Flush()
+
+		'shore on the bottom side 		
+		left=0
+		right=tilewidth
+		top=0
+		bottom=tileheight
+		y=bottom
+		x=0
+		a=0
+		c=0
+		t=12'tile
+		Local cnt:Int=0
+		While x<right
+			cnt+=1
+			If cnt>10000 Then Exit
+			' draw the shore
+			For Local z:Int=bottom To y Step -1
+				tilecan[t].Color = Color.White
+				tilecan[t].DrawPoint(x,z)
+			Next
+			'bottom to top
+			tilecan[t].Color = Color.White.Blend(Color.Black,.3)
+			tilecan[t].DrawPoint(x,y)
+			tilecan[t].Color = Color.Brown.Blend(Color.White,Rnd(.1,.4))
+			tilecan[t].DrawPoint(x,y-1)
+			tilecan[t].Color = Color.Brown.Blend(Color.White,Rnd(.6,1))
+			tilecan[t].DrawPoint(x,y-2)
+			If Rnd()<.5 Then 
+				tilecan[t].Color = Color.Brown.Blend(Color.Black,.5)
+			Else 
+				tilecan[t].Color = Color.Brown.Blend(Color.White,.5)
+			End If
+			tilecan[t].DrawPoint(x,y-3)
+			'sea
+			tilecan[t].Color = Color.Blue.Blend(Color.White,.6)
+			tilecan[t].DrawPoint(x,y-4)
+			tilecan[t].Color = Color.Blue.Blend(Color.White,.5)
+			tilecan[t].DrawPoint(x,y-5)
+			' move the point
+			c+=Rnd(-2,2)
+			If c<-Pi/2 Or c>Pi/2 Then c=0
+			If x<7 Or x>right-7 Then c=0
+			x+=Cos(a+c)
+			y+=Sin(a+c)
+			If x<7 Or x>right-7
+				If y>bottom Then y-=1
+				If y<bottom Then y+=1
+			endif
+			If y>bottom Then y=bottom
+		Wend
+		tilecan[t].Flush()
+
+
+		'shore on the top side 		
+		left=0
+		right=tilewidth
+		top=0
+		bottom=tileheight
+		y=top
+		x=0
+		a=0
+		c=0
+		t=13'tile
+		cnt=0
+		While x<right
+			cnt+=1
+			If cnt>10000 Then Exit
+			' draw the shore
+			For Local z:Int=0 To y
+				tilecan[t].Color = Color.White
+				tilecan[t].DrawPoint(x,z)
+			Next
+			'Top to bottom
+			tilecan[t].Color = Color.White.Blend(Color.Black,.3)
+			tilecan[t].DrawPoint(x,y)
+			tilecan[t].Color = Color.Brown.Blend(Color.White,Rnd(.1,.4))
+			tilecan[t].DrawPoint(x,y+1)
+			tilecan[t].Color = Color.Brown.Blend(Color.White,Rnd(.6,1))
+			tilecan[t].DrawPoint(x,y+2)
+			If Rnd()<.5 Then 
+				tilecan[t].Color = Color.Brown.Blend(Color.Black,.5)
+			Else 
+				tilecan[t].Color = Color.Brown.Blend(Color.White,.5)
+			End If
+			tilecan[t].DrawPoint(x,y+3)
+			'sea
+			tilecan[t].Color = Color.Blue.Blend(Color.White,.6)
+			tilecan[t].DrawPoint(x,y+4)
+			tilecan[t].Color = Color.Blue.Blend(Color.White,.5)
+			tilecan[t].DrawPoint(x,y+5)
+			' move the point
+			c+=Rnd(-2,2)
+			If c<-Pi/2 Or c>Pi/2 Then c=0
+			If x<7 Or x>right-7 Then c=0
+			x+=Cos(a+c)
+			y+=Sin(a+c)
+			If x<7 Or x>right-7
+				If y>top Then y-=1
+				If y<top Then y+=1
+			endif
+			If y<0 Then y=0
+		Wend
+		tilecan[t].Flush()
+
+
+
+
+	End Method
+	Method generatesnow()
+		tilecan[9].Clear(Color.White)
+		tilecan[9].Flush()
 	End Method
 	Method generategrass()
 		Local m:Int[,] = New Int[tilewidth,tileheight]
@@ -332,11 +558,17 @@ Global myworld:world
 Class MyWindow Extends Window
 		
 	Method New()
+		
 		myworld = New world(100,100,32,32)
 	End method
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
+		'
+		If Keyboard.KeyReleased(Key.Space) Then 
+			SeedRnd(Microsecs())
+			myworld = New world(100,100,32,32)
+		End If
 		'
 		myworld.draw(canvas)
 		' if key escape then quit
