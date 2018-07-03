@@ -24,6 +24,12 @@ Class world
 		canvas.DrawImage(tileim[2],320-tilewidth*2,200,0,2,2)
 		canvas.DrawImage(tileim[3],320,200-tileheight*2,0,2,2)
 		canvas.DrawImage(tileim[4],320,200+tileheight*2,0,2,2)
+		
+		For Local y:Int=0 To 2
+		For Local x:Int=0 To 2
+			canvas.DrawImage(tileim[0],0+x*tilewidth*2,0+y*tileheight*2,0,2,2)
+		Next
+		Next
 	End Method
 	Method generatetiles()
 		For Local i:Int=0 Until 10
@@ -33,8 +39,84 @@ Class world
 			tilecan[i].Clear(Color.Blue)
 			tilecan[i].Flush()
 		Next
-		tilecan[0].Clear(Color.Green)
+		tilecan[0].Clear(Color.Green.Blend(Color.Black,.5))
 		generateshores()
+		generategrass()
+	End Method
+	Method generategrass()
+		Local m:Int[,] = New Int[tilewidth,tileheight]
+		Local maxgrow:Int=tilewidth*tileheight/1.5
+		Local cg:Int=0
+		For Local i:Int=0 Until tilewidth+tileheight/10
+			m[Rnd(1,tilewidth-1),Rnd(1,tileheight-1)]=Rnd(1,3)
+		Next
+		m[0,Rnd(1,tileheight-2)] = 1
+		m[tilewidth-1,Rnd(1,tileheight-2)] = 1
+		m[Rnd(1,tilewidth-2),0] = 1
+		m[Rnd(1,tilewidth-2),tileheight-1] = 1
+
+		While cg<maxgrow
+			' add grow
+			Local x:Int=Rnd(1,tilewidth-1)
+			Local y:Int=Rnd(1,tileheight-1)
+			If m[x,y] > 0
+				m[x+Rnd(-2,2),y+Rnd(-2,2)] = m[x,y]
+			End If
+			' how much grow is there
+			cg=0
+			For Local a:Int=0 Until tileheight
+			For Local b:Int=0 Until tilewidth
+				If m[a,b] <> 0 Then cg+=1
+			Next
+			Next
+		Wend
+		
+		'make seamless
+		'
+		' Loop the edges and on random copy pixels to the other side
+		' color 1 and 2
+		'
+		For Local x:Int=0 Until tilewidth
+		For Local y:Int=0 Until 5
+			If m[x,y] > 0
+				If Rnd()<.3
+					m[x,tileheight-y-1] = m[x,y]
+				End If
+			End if
+			If m[tilewidth-1-x,y] > 0
+				If Rnd()<.3
+					m[tilewidth-1-x,tileheight-y-1] = m[tilewidth-1-x,y]
+				End If
+			End if			
+		Next
+		Next
+		For Local x:Int=0 Until 5
+		For Local y:Int=0 Until tileheight
+			If m[x,y] > 0
+				If Rnd()<.3					
+					m[tilewidth-x-1,y] = m[x,y]
+				End If
+			End If
+			If m[x,tileheight-1-y] > 0
+				If Rnd()<.3
+					m[tilewidth-x-1,y] = m[x,tileheight-1-y]
+				End If
+			End If
+		Next
+		Next		
+		
+		
+		For Local a:Int=0 Until tileheight
+		For Local b:Int=0 Until tilewidth			
+			If m[a,b] = 1 Then 
+				tilecan[0].Color = Color.Green.Blend(Color.Black,.3)
+			Else
+				tilecan[0].Color = Color.Green.Blend(Color.Black,.4)
+			Endif
+			If m[a,b] <> 0 Then tilecan[0].DrawPoint(a,b)
+		Next
+		Next
+		tilecan[0].Flush()
 	End Method
 	'tile 
 	'1-shore on left side of tile
@@ -55,7 +137,7 @@ Class world
 		While y<bottom
 			' draw the shore
 			For Local z:Int=0 To x
-				tilecan[t].Color = Color.Green
+				tilecan[t].Color = Color.Green.Blend(Color.Black,.5)
 				tilecan[t].DrawPoint(z,y)
 			Next
 			'Left to right sand up not including sea
@@ -103,7 +185,7 @@ Class world
 		While y<bottom
 			' draw the shore
 			For Local z:Int=right To x Step -1
-				tilecan[t].Color = Color.Green
+				tilecan[t].Color = Color.Green.Blend(Color.Black,.5)
 				tilecan[t].DrawPoint(z,y)
 			Next
 			'Left to right sand up not including sea
@@ -154,7 +236,7 @@ Class world
 			If cnt>10000 Then Exit
 			' draw the shore
 			For Local z:Int=bottom To y Step -1
-				tilecan[t].Color = Color.Green
+				tilecan[t].Color = Color.Green.Blend(Color.Black,.5)
 				tilecan[t].DrawPoint(x,z)
 			Next
 			'Left to right sand up not including sea
@@ -206,7 +288,7 @@ Class world
 			If cnt>10000 Then Exit
 			' draw the shore
 			For Local z:Int=0 To y
-				tilecan[t].Color = Color.Green
+				tilecan[t].Color = Color.Green.Blend(Color.Black,.5)
 				tilecan[t].DrawPoint(x,z)
 			Next
 			'Left to right sand up not including sea
