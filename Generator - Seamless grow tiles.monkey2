@@ -139,7 +139,8 @@ Class MyWindow Extends Window
 			maps[x,y].draw(canvas,x*96,y*96,3,3)
 		Next
 		Next
-				
+		canvas.Color = Color.White
+		canvas.DrawText("Press Space to generate new tiles",0,0)
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
@@ -149,7 +150,7 @@ Class MyWindow Extends Window
 		For Local y:Int=0 Until 5
 		For Local x:Int=0 Until 6			
 			'Method New(tilewidth:Float,tileheight:Float,numzones:Int,density:Float,spread:Float,col:Color)
-			maps[x,y] = New tile(32,32,Rnd(1,10),Rnd(),Rnd(),New Color(Rnd(.3,.7),Rnd(.3,.7),Rnd(.3,.7)))
+			maps[x,y] = New tile(32,32,Rnd(1,20),Rnd(.2,1),Rnd(.2,1),New Color(Rnd(.3,.7),Rnd(.3,.7),Rnd(.3,.7)))
 		Next
 		Next	
 	End Method
