@@ -74,11 +74,11 @@ Class world
 		'make seamless
 		'
 		' Loop the edges and on random copy pixels to the other side
-		' color 1 and 2
+		'
 		'
 		For Local x:Int=0 Until tilewidth
 		For Local y:Int=0 Until 5
-			If m[x,y] > 0
+			If m[x,y] >= 0
 				If Rnd()<.3
 					m[x,tileheight-y-1] = m[x,y]
 				End If
@@ -92,7 +92,7 @@ Class world
 		Next
 		For Local x:Int=0 Until 5
 		For Local y:Int=0 Until tileheight
-			If m[x,y] > 0
+			If m[x,y] >= 0
 				If Rnd()<.3					
 					m[tilewidth-x-1,y] = m[x,y]
 				End If
@@ -109,9 +109,9 @@ Class world
 		For Local a:Int=0 Until tileheight
 		For Local b:Int=0 Until tilewidth			
 			If m[a,b] = 1 Then 
-				tilecan[0].Color = Color.Green.Blend(Color.Black,.3)
-			Else
 				tilecan[0].Color = Color.Green.Blend(Color.Black,.4)
+			Else
+				tilecan[0].Color = Color.Green.Blend(Color.Black,.6)
 			Endif
 			If m[a,b] <> 0 Then tilecan[0].DrawPoint(a,b)
 		Next
