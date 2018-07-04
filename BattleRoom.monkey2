@@ -10,6 +10,10 @@
 '
 '
 '
+' In the stoners class I actually was able to create a movement
+' system that makes a group of units move as a group. They do 
+' not get in each other.
+'
 
 #Import "<std>"
 #Import "<mojo>"
@@ -48,8 +52,8 @@ Class stoners
 						End If						
 					Next
 					If dont=True Then Return
-					px += Float(x)/15
-					py += Float(y)/15
+					px += Float(x)/5
+					py += Float(y)/5
 
 				End If
 			End If
@@ -64,8 +68,9 @@ Class stoners
 				Local x2:Int=mystoners.Get(j).px
 				Local y2:Int=mystoners.Get(j).py
 				If distance(x1,y1,x2,y2) < 20 Then
-					mystoners.Get(i).px += Rnd(-.1,.1)
-					mystoners.Get(i).py += Rnd(-.1,.1)
+					Local a:Float=getangle(x2,y2,x1,y1) 
+					mystoners.Get(i).px += Cos(a)/10
+					mystoners.Get(i).py += Sin(a)/10
 				End if
 			End If
 		Next
@@ -78,6 +83,9 @@ Class stoners
 	Method distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
 		Return Abs(x2-x1)+Abs(y2-y1)
 	End Method
+	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
+		Return ATan2(y2-y1, x2-x1)
+	End Function 	
 End Class
 
 Class player
