@@ -75,7 +75,12 @@ Class units
 		If moving=False Then Return
 		Local tx:Int=px/myworld.tilewidth
 		Local ty:Int=py/myworld.tileheight
-		Local v:Int=myworld.pathto[tx,ty]
+		Local v:Int
+		If tx<0 Or ty<0 Or tx>=myworld.mapwidth Or ty>=myworld.mapheight Then 			
+			v=100
+			Else
+			v=myworld.pathto[tx,ty]
+		End if
 		For Local y:Int=-1 To 1
 		For Local x:Int=-1 To 1
 			If tx+x<0 Or ty+y<0 Or tx+x>=myworld.mapwidth Or ty+y>=myworld.mapheight Then Continue
@@ -109,8 +114,8 @@ Class units
 				
 				If distance(x1,y1,x2,y2) < 20 Then
 					Local a:Float=getangle(x2,y2,x1,y1) 
-					myunits.Get(i).px += Cos(a)/10
-					myunits.Get(i).py += Sin(a)/10
+					myunits.Get(i).px += Cos(a+Rnd(-Pi/2,Pi/2))/10
+					myunits.Get(i).py += Sin(a+Rnd(-Pi/2,Pi/2))/10
 				End if
 			End If
 		Next
@@ -138,7 +143,7 @@ Class MyWindow Extends Window
 		SeedRnd(Microsecs())
 		myworld = New world(Width,Height,50,50)
 		myunits = New Stack<units>
-		For Local i:Int=0 Until 10
+		For Local i:Int=0 Until 15
 			myunits.Push(New units(Rnd(myworld.mapwidth)*myworld.tilewidth,Rnd(myworld.mapheight)*myworld.tileheight))
 		Next
 	End method
