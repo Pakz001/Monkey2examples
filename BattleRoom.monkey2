@@ -28,8 +28,12 @@ Class stoners
 	Method update()
 		Local tx:Int=px/myworld.tilewidth
 		Local ty:Int=py/myworld.tileheight
-		If tx<0 Or tx>=myworld.mapwidth Or ty>=myworld.mapheight Or ty<0 Then return
+		If tx<0 Or tx>=myworld.mapwidth Or ty>=myworld.mapheight Or ty<0 Then 
+			deleteme = True
+			return
+		End if
 		Local v:Int=myplayer.pathto[tx,ty]
+		If v=1 Then v=99
 		For Local y:Int=-1 To 1
 		For Local x:Int=-1 To 1
 			If tx+x<0 Or ty+y<0 Or tx+x>=myworld.mapwidth Or ty+y>=myworld.mapheight Then Continue
@@ -44,8 +48,8 @@ Class stoners
 						End If						
 					Next
 					If dont=True Then Return
-					px += Float(x)/5
-					py += Float(y)/5
+					px += Float(x)/15
+					py += Float(y)/15
 
 				End If
 			End If
@@ -380,11 +384,12 @@ Class MyWindow Extends Window
 			mycloud = New Stack<cloud>
 			myworld = New world(Width,Height,30,30)
 			myplayer = New player(320,240,16,16)
+			mystoners = New Stack<stoners>
 		End If		
 		'
 		' Update the stoners
 		'
-		If Rnd()<.3
+		If Rnd()<.3 And mystoners.Length<25
 			Local x:Int=Rnd(2,myworld.mapwidth-2)
 			Local y:Int=Rnd(2,myworld.mapheight-2)
 			If myworld.map[x,y] = 0
@@ -397,12 +402,12 @@ Class MyWindow Extends Window
 							e=True
 							Local dont:Bool=False
 							For Local i:Int= 0 Until mystoners.Length
-								If distance(x2*myworld.tilewidth,y2*myworld.tileheight,mystoners.Get(i).px,mystoners.Get(i).py)<20
+								If distance(x*myworld.tilewidth,y*myworld.tileheight,mystoners.Get(i).px,mystoners.Get(i).py)<20
 									dont=True									
 								End If
 							Next
 							If dont=False
-								mystoners.Push(New stoners(x2*myworld.tilewidth,y2*myworld.tileheight))
+								mystoners.Push(New stoners(x*myworld.tilewidth,y*myworld.tileheight))
 							End If
 						End If
 					End if
@@ -453,6 +458,8 @@ Class MyWindow Extends Window
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 		canvas.Color = Color.White
 		canvas.DrawText("Press space/F/Left,Right,Up,Down.",0,0)
+		canvas.DrawText(mystoners.Length,0,20)
+		
 	End Method	
 	Method distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
 		Return Abs(x2-x1)+Abs(y2-y1)
