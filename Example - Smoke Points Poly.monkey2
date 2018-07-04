@@ -17,7 +17,92 @@
 Using std..
 Using mojo..
 
-
+Class player
+	Field myrpg:Stack<rpg>
+	Class rpg
+		Field px:Int,py:Int
+		Field lastpx:Int,lastpy:Int
+		Field mx:Float,my:Float
+		Field deleteme:Bool		
+		Method New(x:Int,y:Int,mx:Float,my:Float)
+			Self.px = x
+			Self.py = y
+			Self.mx = mx
+			Self.my = my
+		End Method
+		Method update()
+			For Local i:Int=0 Until 3
+				lastpx = px
+				lastpy = py
+				px += mx
+				py += my
+				If myworld.map[(px)/myworld.tilewidth,(py)/myworld.tileheight] = 1
+					deleteme = True
+					mycloud.Push(New cloud(lastpx,lastpy))
+				End if
+			Next
+		End Method
+		Method draw(canvas:Canvas)
+			canvas.Color = Color.Blue
+			canvas.DrawCircle(px,py,3)
+		End Method
+	End Class
+	' x y width height
+	Field px:Int,py:Int
+	Field pw:Int,ph:Int
+	Field shootdelay:Int
+	Method New(x:Int,y:Int,w:Int,h:Int)
+		Self.px = x
+		Self.py = y
+		Self.pw = w
+		Self.ph = h
+		myrpg = New Stack<rpg>
+	End Method
+	Method update()
+		shootdelay+=1
+		Local oldx:Int=px
+		Local oldy:Int=py
+		Local l:Bool=False,u:Bool=False,d:Bool=False,r:Bool=False
+		If Keyboard.KeyDown(Key.Right) Then r=True
+		If Keyboard.KeyDown(Key.Left) Then l=True
+		If Keyboard.KeyDown(Key.Up)Then u=True
+		If Keyboard.KeyDown(Key.Down) Then d=True
+		
+		If Keyboard.KeyDown(Key.Right) Then px+=1
+		If Keyboard.KeyDown(Key.Left) Then px-=1
+		If Keyboard.KeyDown(Key.Up)Then py-=1
+		If Keyboard.KeyDown(Key.Down) Then py+=1
+		If myworld.map[(px+pw/2)/myworld.tilewidth,(py+ph/2)/myworld.tileheight] = 1
+			px = oldx
+			py = oldy
+		End If
+		If shootdelay>10
+			If r=True And Keyboard.KeyDown(Key.F) Then myrpg.Push(New rpg(px,py,1,0));shootdelay=0
+			If l=True And Keyboard.KeyDown(Key.F) Then myrpg.Push(New rpg(px,py,-1,0));shootdelay=0
+			If u=True And Keyboard.KeyDown(Key.F) Then myrpg.Push(New rpg(px,py,0,-1));shootdelay=0
+			If d=True And Keyboard.KeyDown(Key.F) Then myrpg.Push(New rpg(px,py,0,1));shootdelay=0
+			If r=True And u=True And Keyboard.KeyDown(Key.F) Then myrpg.Push(New rpg(px,py,1,-1));shootdelay=0
+			If r=True And d=True And Keyboard.KeyDown(Key.F) Then myrpg.Push(New rpg(px,py,1,1));shootdelay=0
+			If l=True And u=True And Keyboard.KeyDown(Key.F) Then myrpg.Push(New rpg(px,py,-1,-1));shootdelay=0
+			If l=True And d=True And Keyboard.KeyDown(Key.F) Then myrpg.Push(New rpg(px,py,-1,1));shootdelay=0
+		End if
+		For Local i:Int=0 Until myrpg.Length
+			myrpg.Get(i).update()
+		Next
+		For Local i:Int=0 Until myrpg.Length
+			If myrpg.Get(i).deleteme = True Then
+				myrpg.Erase(i)
+			End If
+		Next
+	End Method
+	Method draw(canvas:Canvas)
+		canvas.Color = Color.Pine
+		canvas.DrawOval(px,py,pw,ph)
+		For Local i:Int=0 Until myrpg.Length
+			myrpg.Get(i).draw(canvas)
+		Next
+	End Method
+End Class
 
 Class world
 	Field map:Int[,]
@@ -172,6 +257,7 @@ End Class
 
 Global mycloud:Stack<cloud>
 Global myworld:world
+Global myplayer:player
 
 Class MyWindow Extends Window
 	
@@ -179,20 +265,26 @@ Class MyWindow Extends Window
 		SeedRnd(Microsecs())
 		mycloud = New Stack<cloud>
 		myworld = New world(Width,Height,30,30)
+		myplayer = New player(320,240,16,16)
 	End method
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
-		'
+		' New map
 		If Keyboard.KeyReleased(Key.Space)
 			mycloud = New Stack<cloud>
 			myworld = New world(Width,Height,30,30)
+			myplayer = New player(320,240,16,16)
 		End If		
 		'
 		myworld.draw(canvas)
+		' Draw the player
+		myplayer.draw(canvas)
+		myplayer.update()
 		' Update the clouds
-		'
-		If Rnd()<.1 Then
+		
+		' Sometimes create a random one
+		If Rnd()<0.02 Then
 			Local x:Int=Rnd(Width)
 			Local y:Int=Rnd(Height)
 			If myworld.map[x/myworld.tilewidth,y/myworld.tileheight] = 0
@@ -213,6 +305,8 @@ Class MyWindow Extends Window
 		Next
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
+		canvas.Color = Color.White
+		canvas.DrawText("Press space/F/Left,Right,Up,Down.",0,0)
 	End Method	
 	
 End	Class
