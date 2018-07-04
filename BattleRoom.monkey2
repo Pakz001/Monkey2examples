@@ -38,6 +38,7 @@ Class stoners
 		End if
 		Local v:Int=myplayer.pathto[tx,ty]
 		If v=1 Then v=99
+		If v>6 Then Return
 		For Local y:Int=-1 To 1
 		For Local x:Int=-1 To 1
 			If tx+x<0 Or ty+y<0 Or tx+x>=myworld.mapwidth Or ty+y>=myworld.mapheight Then Continue
@@ -400,7 +401,7 @@ Class MyWindow Extends Window
 		If Rnd()<.3 And mystoners.Length<25
 			Local x:Int=Rnd(2,myworld.mapwidth-2)
 			Local y:Int=Rnd(2,myworld.mapheight-2)
-			If myworld.map[x,y] = 0
+			If myworld.map[x,y] = 0 And myplayer.pathto[x,y] > 1
 				Local e:Bool=False
 				For Local y2:Int=y-1 To y+1
 				For Local x2:Int=x-1 To x+1
@@ -415,7 +416,7 @@ Class MyWindow Extends Window
 								End If
 							Next
 							If dont=False
-								mystoners.Push(New stoners(x*myworld.tilewidth,y*myworld.tileheight))
+								mystoners.Push(New stoners(x*myworld.tilewidth+myworld.tilewidth/2,y*myworld.tileheight+myworld.tileheight/2))
 							End If
 						End If
 					End if
