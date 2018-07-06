@@ -444,11 +444,21 @@ Class MyWindow Extends Window
 				Local a:Int,b:Int,w:Int,h:Int
 				dragactive = False
 '				' Select every unit inside the drag zone
-'				
-				a = drag1.x
-				b = drag1.y
-				w = drag2.x-drag1.x
-				h = drag2.y-drag1.y
+				' make sure we have a valid selection set of coords				
+				If drag1.x < drag2.x Then 
+					a = drag1.x
+					w = drag2.x - drag1.x				
+				Else
+					a = drag2.x
+					w = drag1.x - drag2.x
+				End If
+				If drag1.y < drag2.y Then
+					b = drag1.y
+					h = drag2.y - drag1.y
+				Else
+					b = drag2.y
+					h = drag1.y - drag2.y
+				End If
 				If Abs(w)<5 Or Abs(h)<5 Then Return
 				For Local i:Int=0 Until myunit.Length
 					myunit.Get(i).selected =False
@@ -462,17 +472,21 @@ Class MyWindow Extends Window
 	End Method
 	
 	Method drawdrag(canvas:Canvas)
+		' If there is no selection then return
 		If dragactive=False Then Return
+		' Set up a drawing mode with outline
 		canvas.Color = Color.White
 		canvas.OutlineMode=OutlineMode.Smooth
 		canvas.OutlineColor = Color.Blue
 		canvas.OutlineWidth = 4
 		canvas.Color = Color.None
+		' Get the coords for drawing the rectangle
 		Local a:Int,b:Int,w:Int,h:Int
 		a = drag1.x
 		b = drag1.y
 		w = drag2.x-drag1.x
 		h = drag2.y-drag1.y
+		' Draw the rectangle
 		canvas.DrawRect(a,b,w,h)
 	End Method
 
