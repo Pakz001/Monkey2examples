@@ -78,6 +78,14 @@ Class tilegen
 
 		' edge smear TOP
 		For Local x2:Int=x+1 Until x+w
+			If x2<x+w/2 And Rnd()<.2
+				Local d:Int=Rnd(1,5)
+				Local d2:Int=0
+				While d2<d
+					If x2+d2<x+w Then map[x2+d2,y] = 2
+					d2+=1
+				Wend				
+			End If			
 			If Rnd()<.1 Then map[x2,y+1] = 2
 			If Rnd()<.1 Then 
 				map[x2,y+3] = 4
@@ -88,7 +96,7 @@ Class tilegen
 		Next		
 '		' edge smear LEFT
 		For Local y2:Int=y+1 Until y+(h-1)
-			If y2<h/2 And Rnd()<.3
+			If y2<y+h/2 And Rnd()<.2
 				Local d:Int=Rnd(1,5)
 				Local d2:Int=0
 				While d2<d
@@ -111,7 +119,7 @@ Class tilegen
 		Next
 		' edge smear RIGHT
 		For Local y2:Int=y+1 Until y+(h-1)
-			If y2<h/2 And Rnd()<.4
+			If y2<y+h/2 And Rnd()<.2
 				Local d:Int=Rnd(1,5)
 				Local d2:Int=0
 				While d2<d
@@ -131,7 +139,7 @@ Class tilegen
 		Next
 		' edge smear BOTTOM
 		For Local x2:Int=x Until x+w-1
-			If x2>x+w/2 And Rnd()<.3 Then 
+			If x2>x+x+w/2 And Rnd()<.2 Then 
 				Local d:Int=Rnd(1,5)
 				Local d2:Int=0
 				While d2<d
