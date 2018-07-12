@@ -241,8 +241,27 @@ Class tilegen
 		Next
 		End If
 
+		' some spots
+		Local d:Int=Rnd(10,40)
+		For Local i:Int=0 Until (w+h)/d
+			Local x1:Int=Rnd(x+2,x+w-2)
+			Local y1:Int=Rnd(y+2,y+h-2)
+			Local c:Int=Rnd(1,3)
+			c=Rnd(1,4)
+			map[x1,y1] = c
+			c=Rnd(1,3)
+			map[x1,y1+1] = c
+			
+			c=Rnd(1,3)
+			If Rnd()<.4 map[x1-1,y1+1] = c
+			c=Rnd(1,3)
+			If Rnd()<.4 map[x1+1,y1+1] = c
+		Next
+		
+
 	End Method
 	Method createim()
+		Local noiselevel:Float=Rnd(0.1,0.35)
 		For Local y:Int=0 Until imh
 		For Local x:Int=0 Until imw
 			If map[x,y] = 0 Then Continue
@@ -258,6 +277,16 @@ Class tilegen
 				Case 4
 					imcan.Color = col.Blend(Color.White,.4)
 			End Select
+			Local mc:Color 
+			mc = imcan.Color
+			If Rnd()<.5
+			If Rnd()<.5
+				mc = imcan.Color.Blend(Color.White,Rnd(noiselevel))
+			Else
+				mc = imcan.Color.Blend(Color.Black,Rnd(noiselevel))
+			End If
+			End If
+			imcan.Color = mc			
 			imcan.DrawPoint(x,y)	
 		Next
 		Next
