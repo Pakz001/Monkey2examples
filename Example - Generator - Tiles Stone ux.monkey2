@@ -244,11 +244,11 @@ Class tilegen
 				Case 1
 					imcan.Color = col.Blend(Color.Black,.7)
 				Case 2
-					imcan.Color = col.Blend(Color.Black,.3)
+					imcan.Color = col.Blend(Color.Black,.2)
 				Case 3
 					imcan.Color = col
 				Case 4
-					imcan.Color = col.Blend(Color.White,.5)
+					imcan.Color = col.Blend(Color.White,.4)
 			End Select
 			imcan.DrawPoint(x,y)	
 		Next
@@ -270,7 +270,9 @@ Class MyWindow Extends Window
 		If Keyboard.KeyReleased(Key.Key1) Then
 			mywall = New tilegen(64,64,Color.Grey.Blend(New Color(Rnd(),Rnd(),Rnd()),.5))
 		End If
-		canvas.DrawImage(mywall.im,100,100,0,4,4)
+		canvas.DrawImage(mywall.im,50,50,0,4,4)
+		canvas.DrawImage(mywall.im,450,50,0,2,2)
+		canvas.DrawImage(mywall.im,450,250,0,1,1)
 		If Keyboard.KeyDown(Key.Space)
 			canvas.Color = Color.White
 			For Local y:Int=0 Until Height Step 128
