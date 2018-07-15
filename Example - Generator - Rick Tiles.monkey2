@@ -30,8 +30,12 @@ Class tile
 		drawblock(x,y,tw/2,th/2)
 		Next
 		Next
+
 	End Method
 	Method drawblock(x:Int,y:Int,w:Int,h:Int)
+'		If x<0 Or y<0 Or x+w>=tw Or y+h>=th Then Return
+'		w=w+1
+'		h=h+1
 		For Local y1:Int=y Until y+h
 		For Local x1:Int=x Until x+w
 			map[x1,y1] = 1
@@ -60,6 +64,7 @@ Class tile
 				If x1 < x+(w/3) Then d = 6
 				For Local x2:Int=x1 Until x1+d
 					If x2>x+(w-3) Then Exit
+					If y+1>=th Then Continue
 					map[x2,y+1] = 3
 				Next
 			End if
@@ -180,14 +185,24 @@ Class tile
 End Class
 
 Class MyWindow Extends Window
-	Field mytile:tile
+	Field mytile:tile[,] = New tile[6,6]
 	Method New()
-		mytile = New tile(32,32,Color.Grey)
+		For Local y:Int=0 Until 6
+		For Local x:Int=0 Until 6
+			mytile[x,y] = New tile(32,32,Color.Grey)
+		Next
+		next
 	End method
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
-		canvas.DrawImage(mytile.im,100,100,0,6,6)
+		canvas.Clear(Color.Red)
+		'canvas.DrawImage(mytile.im,100,100,0,6,6)
+		For Local y:Int=0 Until 6
+		For Local x:Int=0 Until 6
+			canvas.DrawImage(mytile[x,y].im,x*96,y*96,0,3,3)
+		Next
+		Next		
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
