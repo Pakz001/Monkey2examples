@@ -201,12 +201,8 @@ Class MyWindow Extends Window
 	Field mytile:tile[,] = New tile[10,10]
 	Method New()
 		SeedRnd(Microsecs())
-		For Local y:Int=0 Until 10
-		For Local x:Int=0 Until 10
-			mytile[x,y] = New tile(64,64,Color.Grey.Blend(Color.White,Rnd(0.3,0.7)))
-		Next
-		next
-	End method
+		newtiles()
+	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
@@ -219,7 +215,18 @@ Class MyWindow Extends Window
 		Next		
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
+		If Keyboard.KeyReleased(Key.Space) Then newtiles()		
+		canvas.Color = Color.Red
+		canvas.DrawText("Press <Space> for new tiles..",0,0)
 	End Method	
+
+	Method newtiles()		
+		For Local y:Int=0 Until 10
+		For Local x:Int=0 Until 10
+			mytile[x,y] = New tile(64,64,Color.Grey.Blend(Color.White,Rnd(0.3,0.7)))
+		Next
+		next
+	End Method
 	
 End	Class
 
