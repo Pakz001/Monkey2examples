@@ -25,6 +25,19 @@ Class tile
 		createtile()
 	End Method
 	Method generatetile()
+		If Rnd()<.5
+		drawblock(0,0,tw,th/4)
+		drawblock(0,th/4,tw/2,th/4)
+		drawblock(tw/2,th/4,tw/2,th/4)
+		drawblock(0,th/4*2,tw,th/4*2)
+		Return
+		End If
+		If Rnd()<.5
+		drawblock(0,0,tw/2,th/3)
+		drawblock(0,th/3,tw/2,th/1.5)
+		drawblock(tw/2,0,tw/2,th)
+		Return
+		End If
 		For Local x:Int = 0 Until tw Step tw/2
 		For Local y:Int = 0 Until th Step th/2
 		drawblock(x,y,tw/2,th/2)
@@ -153,7 +166,7 @@ Class tile
 		End If
 	End Method
 	Method createtile()
-		Local noiselevel:Float=Rnd(0.1,0.35)
+		Local noiselevel:Float=Rnd(0.05,0.20)
 		For Local y:Int=0 Until th
 		For Local x:Int=0 Until tw
 			If map[x,y] = 0 Then Continue
