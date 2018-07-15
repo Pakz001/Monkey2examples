@@ -1,6 +1,14 @@
 #Import "<std>"
 #Import "<mojo>"
 
+
+'
+'
+'
+'
+
+
+
 Using std..
 Using mojo..
 
@@ -38,8 +46,10 @@ Class MyWindow Extends Window
 		draw(canvas,ex1,ex1pos.X,ex1pos.Y)
 		draw(canvas,ex2,ex2pos.X,ex2pos.Y)
 		
+		canvas.Color = Color.White
 		canvas.DrawText("Press '1' - to grow arrays.",0,0)
 		canvas.DrawText("Press 'c' - to clear arrays.",0,10)
+		canvas.DrawText("Use Mouse and Left/Right Button to draw in area.",0,300)
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 		If Keyboard.KeyReleased(Key.C) Then reset()
@@ -87,25 +97,22 @@ Class MyWindow Extends Window
 	End Method
 	Method draw(canvas:Canvas,ar:Int[,],x:Int,y:Int)
 		canvas.Color = Color.White
+		canvas.DrawRect(x-1,y-1,ar.GetSize(0)*tw+2,ar.GetSize(1)*th+2)
 		For Local y2:Int = 0 Until ar.GetSize(1)
 		For Local x2:Int = 0 Until ar.GetSize(0)
-			If ar[x2,y2] = 1 Then 
-				canvas.DrawRect(x+x2*tw,y+y2*th,tw,th)
-			End If
+			Select ar[x2,y2] 
+				Case 0 
+					canvas.Color = Color.Black
+				Case 1 
+					canvas.Color = Color.White				
+			End select
+			canvas.DrawRect(x+x2*tw,y+y2*th,tw,th)
 		Next
 		Next		
 	End Method
 	Method reset()
 		ex1 = New Int[w,h]
 		ex2 = New Int[w,h]
-		
-		ex1[10,10] = 1
-		For Local n:Int=0 Until 15
-			ex2[20+n,10+n] = 1
-			ex2[19+n,10+n] = 1
-			ex2[20-n,10+n] = 1
-			ex2[19-n,10+n] = 1
-		Next
 	End Method	
 End	Class
 
