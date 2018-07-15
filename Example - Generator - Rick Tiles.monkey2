@@ -159,13 +159,13 @@ Class tile
 			If map[x,y] = 0 Then Continue
 			Select map[x,y]
 				Case 1
-					imcan.Color = Color.Grey
+					imcan.Color = col
 				Case 2
-					imcan.Color = Color.Grey.Blend(Color.Black,.5)					
+					imcan.Color = col.Blend(Color.Black,.3)					
 				Case 3
-					imcan.Color = Color.Grey.Blend(Color.White,.5)
+					imcan.Color = col.Blend(Color.White,.5)
 				Case 4
-					imcan.Color = Color.Grey.Blend(Color.Brown,.5)
+					imcan.Color = col.Blend(Color.Brown,.8)
 				Case 5
 					imcan.Color = Color.Black
 			End Select			
@@ -177,7 +177,7 @@ Class tile
 					imcan.Color = c.Blend(col.Black,Rnd(noiselevel))
 				End If
 			End If
-			imcan.DrawPoint(x,y)
+			imcan.DrawRect(x,y,2,2)
 		Next
 		Next
 		imcan.Flush()
@@ -185,11 +185,12 @@ Class tile
 End Class
 
 Class MyWindow Extends Window
-	Field mytile:tile[,] = New tile[6,6]
+	Field mytile:tile[,] = New tile[10,10]
 	Method New()
-		For Local y:Int=0 Until 6
-		For Local x:Int=0 Until 6
-			mytile[x,y] = New tile(32,32,Color.Grey)
+		SeedRnd(Microsecs())
+		For Local y:Int=0 Until 10
+		For Local x:Int=0 Until 10
+			mytile[x,y] = New tile(64,64,Color.Grey.Blend(Color.White,Rnd(0.3,0.7)))
 		Next
 		next
 	End method
@@ -198,9 +199,9 @@ Class MyWindow Extends Window
 		App.RequestRender() ' Activate this method 
 		canvas.Clear(Color.Red)
 		'canvas.DrawImage(mytile.im,100,100,0,6,6)
-		For Local y:Int=0 Until 6
-		For Local x:Int=0 Until 6
-			canvas.DrawImage(mytile[x,y].im,x*96,y*96,0,3,3)
+		For Local y:Int=0 Until 10
+		For Local x:Int=0 Until 10
+			canvas.DrawImage(mytile[x,y].im,x*64,y*64)
 		Next
 		Next		
 		' if key escape then quit
