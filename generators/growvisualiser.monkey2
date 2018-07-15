@@ -47,7 +47,7 @@ Class MyWindow Extends Window
 		draw(canvas,ex2,ex2pos.X,ex2pos.Y)
 		
 		canvas.Color = Color.White
-		canvas.DrawText("Press '1' - to grow arrays.",0,0)
+		canvas.DrawText("Press and hold '1' - to grow arrays.",0,0)
 		canvas.DrawText("Press 'c' - to clear arrays.",0,10)
 		canvas.DrawText("Use Mouse and Left/Right Button to draw in area.",0,300)
 		' if key escape then quit
