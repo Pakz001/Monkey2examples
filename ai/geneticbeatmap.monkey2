@@ -222,7 +222,7 @@ Class world
 		setmap1()
 		
 
-		For Local i:Int=0 Until 300
+		For Local i:Int=0 Until 200
 			myagent.Push(New kagent(startx*tw,starty*th))
 			myagent.Get(i).growgenetic()
 		Next
@@ -241,9 +241,9 @@ Class world
 		End If
 		
 		
-		'For Local ii:Int=0 Until 10
+		For Local ii:Int=0 Until 20
 		' update the obstacles
-		While completed=False
+		'While completed=False
 		For Local i:Int=0 Until myobstacle.Length
 			myobstacle.Get(i).update()
 		Next
@@ -257,9 +257,9 @@ Class world
 			newagents()
 			Exit
 		End If
-		Wend
-		'If completed = True Then Exit
-		'Next
+		'Wend
+		If completed = True Then Exit
+		Next
 	End Method
 	Method distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
 		Return Abs(x2-x1)+Abs(y2-y1)
@@ -297,6 +297,7 @@ Class world
 '			Next
 '		Next
 ''
+'Print "a"
 		For Local i:Int=0 Until myagent.Length
 			If i <> closestid
 				myagent.Get(i).genetic.Clear()	
@@ -315,10 +316,12 @@ Class world
 				Next
 			End If
 		Next
+		'Print "b"
 		'Mutate some
 		Local l:Int=1.0/Float(myagent.Get(0).genetic.Length)
 		For Local i:Int=0 Until myagent.Length	
 			If i<>closestid 'And Rnd()<.1
+				
 			For Local ii:Int=0 Until myagent.Get(i).genetic.Length
 				'If ii>myagent.Get(i).genetic.Length/3 Or Rnd()<.2
 				If Rnd()<.2 And ii>myagent.Get(i).deathstep-10 Then myagent.Get(i).genetic.Set(ii,Rnd(0,9))
@@ -326,7 +329,7 @@ Class world
 			Next
 			
 			End If
-			myagent.Get(i).genetic.Set(myagent.Get(i).genetic.Length,Rnd(0,9))
+			'myagent.Get(i).genetic.Set(myagent.Get(i).genetic.Length,Rnd(0,9))
 		Next		
 		'add length of 5
 		For Local i:Int=0 Until myagent.Length	
@@ -335,6 +338,7 @@ Class world
 				myagent.Get(i).genetic.Push(nd)
 			Next
 		Next
+		'Print "c"
 		'reset agents
 		For Local i:Int=0 Until myagent.Length
 			myagent.Get(i).kpx = startx*tw
