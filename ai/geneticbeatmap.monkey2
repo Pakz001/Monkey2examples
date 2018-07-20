@@ -13,6 +13,7 @@ Class world
 		Field die:Bool=False
 		Field winner:Bool=False		
 		Field dis:Int 'last distance to target
+		Field closest:Int 'flood distance
 		Field origx:Int,origy:Int
 		Method New(x:Int,y:Int)
 			kpx = x
@@ -68,12 +69,16 @@ Class world
 		Method update()
 			If die=True Then Return
 			move()
-			If kpx/myworld.tw = myworld.endx And kpy/myworld.th = myworld.endy
+			If Int(kpx/myworld.tw) = myworld.endx And Int(kpy/myworld.th) = myworld.endy
+				For Local i:Int=0 Until myworld.myagent.Length
+					myworld.myagent.Get(i).winner = false
+				Next
 				winner = True
 				currentpos = 0
 				kpx = origx
 				kpy = origy				
 				myworld.completed = True
+				myworld.setmap1()
 				Return
 			End If
 			time+=1
@@ -104,7 +109,9 @@ Class world
 				Local y2:Int=myworld.myobstacle.Get(i).ky
 				Local w2:Int=myworld.myobstacle.Get(i).kw
 				Local h2:Int=myworld.myobstacle.Get(i).kh
-				If rectsoverlap(kpx,kpy,kw,kh,x2,y2,w2,h2)
+				x2+=w2/2
+				y2+=h2/2
+				If rectsoverlap(kpx+kw/2,kpy+kh/2,kw,kh,x2,y2,w2,h2)
 					Return True
 				End if
 			Next
@@ -119,7 +126,7 @@ Class world
 				If myworld.map[x1,y1] = 1
 					Local x2:Int=x1*myworld.tw
 					Local y2:Int=y1*myworld.th					
-					If rectsoverlap(kpx+kw/2,kpy+kh/2,kw,kh,x2,y2,myworld.tw,myworld.th) Then Return True
+					If rectsoverlap(kpx,kpy,kw,kh,x2,y2,myworld.tw,myworld.th) Then Return True
 				End if
 			Next
 			Next
@@ -143,6 +150,8 @@ Class world
 			Self.kh = h
 			If d = "u" Then incy = -1
 			If d = "d" Then incy = 1
+			If d = "l" Then incx = -1
+			If d = "r" Then incx = 1			
 			Self.kd = d
 		End Method
 		Method update()			
@@ -156,6 +165,14 @@ Class world
 					kd = "u"
 					incy = -1
 				End If
+				If kd = "l" Then 
+					kd = "r"
+					incx = 1					
+				Elseif kd = "r"
+					kd = "l"
+					incx = -1
+				End If
+
 			End If 
 		End Method
 		Method draw(canvas:Canvas)
@@ -193,9 +210,11 @@ Class world
 	Field myobstacle:Stack<kobstacle> = New Stack<kobstacle>
 	Field startx:Int,starty:Int,endx:Int,endy:Int
 	Field completed:Bool=False
-	Method New(sw:Int,sh:Int)
+	Field currentlevel:Int
+	Method New(sw:Int,sh:Int,level:Int)
 		Self.sw = sw
 		Self.sh = sh
+		currentlevel = level
 		setmap1()
 		
 
@@ -218,8 +237,9 @@ Class world
 		End If
 		
 		
-		For Local ii:Int=0 Until 10
+		For Local ii:Int=0 Until 500
 		' update the obstacles
+		'While completed=False
 		For Local i:Int=0 Until myobstacle.Length
 			myobstacle.Get(i).update()
 		Next
@@ -233,37 +253,31 @@ Class world
 			newagents()
 			Exit
 		End If
-	Next
+		'Wend
+		Next
 	End Method
 	Method distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
 		Return Abs(x2-x1)+Abs(y2-y1)
 	End Method
 	Method newagents()
 		If completed = True Then Return
+		SeedRnd(Millisecs())
 		' find the agent closest to the destination
-		Local closest:Int=-1
+		Local closest:Int=9999999
 		Local dis:Int=99999999
 		Local closestid:Int=-1
 		For Local i:Int=0 Until myagent.Length
 			Local ax:Int=myagent.Get(i).kpx/tw
 			Local ay:Int=myagent.Get(i).kpy/th
-			If distance(ax,ay,endx,endy)<dis Then
-				'closest = dmap[ax,ay]
+			If dmap[ax,ay]<closest And dmap[ax,ay]>0'distance(ax,ay,endx,endy)<dis Then
+				closest = dmap[ax,ay]
 				closestid = i
-				dis = distance(ax,ay,endx,endy)
+				'dis = distance(ax,ay,endx,endy)
 			End If
 		Next
-		For Local i:Int=0 Until myagent.Length
-			If myagent.Get(i).winner = True
-				If dis<myagent.Get(i).dis
-					myagent.Get(closestid).winner = True
-					myagent.Get(closestid).dis = dis
-					myagent.Get(i).winner=False
-				Else
-					closestid = i
-				End If
-			End If
-		Next
+
+		
+
 		'If dis<5 Then
 		'	 Print "made it...."
 		'	 myagent.Get(closestid).winner = True			 
@@ -271,17 +285,18 @@ Class world
 		'End If
 
 		' cut off 1 of length
-		For Local i:Int = 0 Until myagent.Length
-	'		myagent.Get(i).genetic.Pop			
-		Next
-'		For Local i:Int=0 Until myagent.Length
-'			If i <> closestid
-'				myagent.Get(i).genetic.Clear()
-'			End If
+'		For Local i:Int = 0 Until myagent.Length
+'			For Local ii:Int=0 To 3
+'			myagent.Get(i).genetic.Pop			
+'			Next
 '		Next
+
 		' copy the genetic of the closest into every other
 		For Local i:Int=0 Until myagent.Length
 			If i <> closestid
+				Local ax:Int=myagent.Get(i).kpx/tw
+				Local ay:Int=myagent.Get(i).kpy/th				
+				If dmap[ax,ay] <>0 And dmap[ax,ay]+5 < closest Then Continue
 				myagent.Get(i).genetic.Clear()
 				For Local ii:Int=0 Until myagent.Get(closestid).genetic.Length
 					myagent.Get(i).genetic.Push(myagent.Get(closestid).genetic.Get(ii))
@@ -294,7 +309,7 @@ Class world
 		For Local i:Int=0 Until myagent.Length	
 			If i<>closestid
 			For Local ii:Int=0 Until myagent.Get(i).genetic.Length
-				If Rnd(myagent.Get(i).genetic.Length)<ii/2 Then myagent.Get(i).genetic.Set(ii,Rnd(0,9))
+				If Rnd(myagent.Get(i).genetic.Length)<ii/10 Then myagent.Get(i).genetic.Set(ii,Rnd(0,9))
 			Next
 			End If
 		Next		
@@ -311,7 +326,7 @@ Class world
 			myagent.Get(i).currentpos = 0
 			myagent.Get(i).die = False
 			myagent.Get(i).time = 0
-			myagent.Get(i).winner = False
+			'myagent.Get(i).winner = False
 		Next		
 		setmap1()
 	End Method
@@ -323,23 +338,66 @@ Class world
 	End Method
 	Method setmap1()
 		myobstacle = New Stack<kobstacle>
-		Local l:String[] = New String[10]
-		' 0 - floor
-		' 1 - wall
-		' a - start position
-		' z - end position
-		' u - move up obstacle
-		' d - move down obstacle
-		l[0]="00000011111111000000"
-		l[1]="000000101010d1000000"
-		l[2]="00000010101001000000"
-		l[3]="11111010d0d001011111"
-		l[4]="10001110000001110001"
-		l[5]="10a000000000000000z1"
-		l[6]="10001110000001110001"
-		l[7]="11111010101001011111"
-		l[8]="0000001u1u1u01000000"
-		l[9]="00000011111111000000"
+		Local l:String[] 
+		If currentlevel = 2
+			l = New String[10]
+			' 0 - floor
+			' 1 - wall
+			' a - start position
+			' z - end position
+			' u - move up obstacle
+			' d - move down obstacle
+			l[0]="11111111111111111111"
+			l[1]="1a000011000111111111"
+			l[2]="10000011000000d00001"
+			l[3]="10000011000000000001"
+			l[4]="10000011000110000001"
+			l[5]="10000l11r00110000001"
+			l[6]="10000011000111111001"
+			l[7]="10000011000110d00001"
+			l[8]="100u000000011z000001"
+			l[9]="11111111111111111111"
+		End If
+
+		If currentlevel = 3
+			l = New String[10]
+			' 0 - floor
+			' 1 - wall
+			' a - start position
+			' z - end position
+			' u - move up obstacle
+			' d - move down obstacle
+			l[0]="00000011111111100000"
+			l[1]="000000100a1111100000"
+			l[2]="01111110001111111111"
+			l[3]="010d0000000000000001"
+			l[4]="010000000000u0000001"
+			l[5]="01000011111111111011"
+			l[6]="01000010000001000011"
+			l[7]="010000100000000000z1"
+			l[8]="0100000000000100u001"
+			l[9]="01111111111111111111"
+		End If
+		If currentlevel = 1
+			l = New String[10]
+			' 0 - floor
+			' 1 - wall
+			' a - start position
+			' z - end position
+			' u - move up obstacle
+			' d - move down obstacle
+			l[0]="00000011111111000000"
+			l[1]="000000101010d1000000"
+			l[2]="00000010101001000000"
+			l[3]="11111010d0d001011111"
+			l[4]="10001110000001110001"
+			l[5]="10a000000000000000z1"
+			l[6]="10001110000001110001"
+			l[7]="11111010101001011111"
+			l[8]="0000001u1u1u01000000"
+			l[9]="00000011111111000000"
+		End If
+
 		map = New Int[l[0].Length,l.GetSize(0)]
 		dmap = New Int[l[0].Length,l.GetSize(0)]
 		mapw = map.GetSize(0)
@@ -354,7 +412,7 @@ Class world
 					map[x,y] = 0
 				Case "1"
 					map[x,y] = 1
-				Case "u","d"
+				Case "u","d","l","r"
 					myobstacle.Push(New kobstacle(x*tw,y*th,tw/2,th/2,t))
 				Case "a"
 					startx = x
@@ -365,7 +423,7 @@ Class world
 			End Select
 		Next
 		Next
-		flooddistance(startx,starty,endx,endy)
+		flooddistance(endx,endy,startx,starty)
 	End Method
 	Method flooddistance(sx:Int,sy:Int,ex:Int,ey:Int)
 		Local dx:Stack<Int> = New Stack<Int>
@@ -438,16 +496,25 @@ End Class
 Global myworld:world
 
 Class MyWindow Extends Window
-
+	Field level:Int=1
 	Method New()
 		SeedRnd(Microsecs())
-		myworld = New world(Width,Height)
+		myworld = New world(Width,Height,level)
 	End method
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
 		myworld.update()
 		myworld.draw(canvas)
+		
+		If myworld.completed
+		If Keyboard.KeyReleased(Key.Space)
+			level+=1
+			If level>3 Then level=1
+			myworld = New world(Width,Height,level)
+		End If
+		End If
+		
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
