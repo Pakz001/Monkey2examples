@@ -11,15 +11,35 @@ Class world
 		Field currentpos:Int
 		Field time:Int,timeend:Int=10
 		Field die:Bool=False
-		Field winner:Bool=False
+		Field winner:Bool=False		
+		Field dis:Int 'last distance to target
+		Field origx:Int,origy:Int
 		Method New(x:Int,y:Int)
 			kpx = x
 			kpy = y
+			origx = x
+			origy = y
 			kw = 10
 			kh = 10
 		End Method
-		Method update()
-			If die=True Then Return
+		Method updatewinner()
+			time+=1
+			move()
+
+			If time>timeend Then 
+				time = 0
+				currentpos += 1
+				If int(kpx/myworld.tw) = myworld.endx And int(kpy/myworld.th) = myworld.endy Then 
+					currentpos = 0
+					kpx = origx
+					kpy = origy
+					myworld.setmap1()
+					Print "reset"
+				End If
+			End If
+
+		End Method
+		Method move()
 			Select genetic.Get(currentpos)
 				Case 0
 					kpx-=1
@@ -43,6 +63,19 @@ Class world
 					kpx+=1
 					kpy+=1
 			End Select
+
+		End Method
+		Method update()
+			If die=True Then Return
+			move()
+			If kpx/myworld.tw = myworld.endx And kpy/myworld.th = myworld.endy
+				winner = True
+				currentpos = 0
+				kpx = origx
+				kpy = origy				
+				myworld.completed = True
+				Return
+			End If
 			time+=1
 			If time>timeend Then 
 				time = 0
@@ -52,16 +85,30 @@ Class world
 			If collidemap()
 				die = True
 			End If
+			If collideobstacle()
+				die = True
+			End If
 		End Method
 		Method growgenetic()
 			For Local i:Int=0 Until 5
 				genetic.Push(Rnd(0,9))
-				Print genetic.Get(i)
 			Next
 		End Method
 		Method draw(canvas:Canvas)
 			canvas.Color = Color.Red
 			canvas.DrawOval(kpx,kpy,kw,kh)
+		End Method
+		Method collideobstacle:Bool()
+			For Local i:Int=0 Until myworld.myobstacle.Length
+				Local x2:Int=myworld.myobstacle.Get(i).kx
+				Local y2:Int=myworld.myobstacle.Get(i).ky
+				Local w2:Int=myworld.myobstacle.Get(i).kw
+				Local h2:Int=myworld.myobstacle.Get(i).kh
+				If rectsoverlap(kpx,kpy,kw,kh,x2,y2,w2,h2)
+					Return True
+				End if
+			Next
+			Return False
 		End Method
 		Method collidemap:Bool()
 			Local cx:Int=(kpx+kw/2)/myworld.tw
@@ -145,18 +192,33 @@ Class world
 	Field myagent:Stack<kagent> = New Stack<kagent>
 	Field myobstacle:Stack<kobstacle> = New Stack<kobstacle>
 	Field startx:Int,starty:Int,endx:Int,endy:Int
+	Field completed:Bool=False
 	Method New(sw:Int,sh:Int)
 		Self.sw = sw
 		Self.sh = sh
 		setmap1()
 		
 
-		For Local i:Int=0 Until 100
+		For Local i:Int=0 Until 200
 			myagent.Push(New kagent(startx*tw,starty*th))
 			myagent.Get(i).growgenetic()
 		Next
 	End Method
 	Method update()
+		If completed
+			For Local i:Int=0 Until myobstacle.Length
+				myobstacle.Get(i).update()
+			Next
+			For Local i:Int=0 Until myagent.Length				
+				If myagent.Get(i).winner = True
+					myagent.Get(i).updatewinner()					
+				End If
+			Next
+			Return
+		End If
+		
+		
+		For Local ii:Int=0 Until 10
 		' update the obstacles
 		For Local i:Int=0 Until myobstacle.Length
 			myobstacle.Get(i).update()
@@ -169,12 +231,15 @@ Class world
 			Next
 		Else
 			newagents()
+			Exit
 		End If
+	Next
 	End Method
 	Method distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
 		Return Abs(x2-x1)+Abs(y2-y1)
 	End Method
 	Method newagents()
+		If completed = True Then Return
 		' find the agent closest to the destination
 		Local closest:Int=-1
 		Local dis:Int=99999999
@@ -188,11 +253,26 @@ Class world
 				dis = distance(ax,ay,endx,endy)
 			End If
 		Next
-		
-		myagent.Get(closestid).winner=True
+		For Local i:Int=0 Until myagent.Length
+			If myagent.Get(i).winner = True
+				If dis<myagent.Get(i).dis
+					myagent.Get(closestid).winner = True
+					myagent.Get(closestid).dis = dis
+					myagent.Get(i).winner=False
+				Else
+					closestid = i
+				End If
+			End If
+		Next
+		'If dis<5 Then
+		'	 Print "made it...."
+		'	 myagent.Get(closestid).winner = True			 
+		'	 completed=True
+		'End If
+
 		' cut off 1 of length
 		For Local i:Int = 0 Until myagent.Length
-			myagent.Get(i).genetic.Pop
+	'		myagent.Get(i).genetic.Pop			
 		Next
 '		For Local i:Int=0 Until myagent.Length
 '			If i <> closestid
@@ -210,10 +290,11 @@ Class world
 		Next
 		
 ''		'Mutate some
+		Local l:Int=1.0/Float(myagent.Get(0).genetic.Length)
 		For Local i:Int=0 Until myagent.Length	
-			If Rnd()<.1 And myagent.Get(i).winner=False
+			If i<>closestid
 			For Local ii:Int=0 Until myagent.Get(i).genetic.Length
-				If Rnd()<.1 Then myagent.Get(i).genetic.Set(ii,Rnd(0,9))
+				If Rnd(myagent.Get(i).genetic.Length)<ii/2 Then myagent.Get(i).genetic.Set(ii,Rnd(0,9))
 			Next
 			End If
 		Next		
@@ -232,6 +313,7 @@ Class world
 			myagent.Get(i).time = 0
 			myagent.Get(i).winner = False
 		Next		
+		setmap1()
 	End Method
 	Method alldead:Bool()
 		For Local i:Int=0 Until myagent.Length
@@ -240,6 +322,7 @@ Class world
 		Return True
 	End Method
 	Method setmap1()
+		myobstacle = New Stack<kobstacle>
 		Local l:String[] = New String[10]
 		' 0 - floor
 		' 1 - wall
@@ -330,7 +413,14 @@ Class world
 '		' draw the agents
 '		If myagent
 		For Local i:Int=0 Until myagent.Length
-			myagent.Get(i).draw(canvas)
+			If completed = False
+				myagent.Get(i).draw(canvas)
+			Elseif completed = True				
+				If myagent.Get(i).winner = True				
+					myagent.Get(i).draw(canvas)
+					
+				End If
+			End If
 		Next
 '		End If
 		' Draw the distances
@@ -350,6 +440,7 @@ Global myworld:world
 Class MyWindow Extends Window
 
 	Method New()
+		SeedRnd(Microsecs())
 		myworld = New world(Width,Height)
 	End method
 	
