@@ -146,7 +146,8 @@ Class world
 			If time>timeend Then 
 				time = 0
 				currentpos += 1
-				If int(kpx/myworld.tw) = myworld.endx And int(kpy/myworld.th) = myworld.endy Then 
+				'If int(kpx/myworld.tw) = myworld.endx And int(kpy/myworld.th) = myworld.endy Then 
+				If distance((kpx/myworld.tw)-1,(kpy/myworld.th)-1,myworld.endx,myworld.endy) < 3 Or currentpos = deathstep
 					currentpos = 0
 					kpx = origx
 					kpy = origy
@@ -189,6 +190,7 @@ Class world
 				For Local i:Int=0 Until myworld.myagent.Length
 					myworld.myagent.Get(i).winner = false
 				Next
+				deathstep = currentpos
 				winner = True
 				currentpos = 0
 				kpx = origx
@@ -250,6 +252,9 @@ Class world
 			Next
 			Return False
 		End Method
+		Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
+			Return Abs(x2-x1)+Abs(y2-y1)
+		End Function
 		Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
 		    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
 		    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
@@ -420,8 +425,8 @@ Class world
 		Next
 		' copy the genetic of the closest into every other
 		Local maxd:Int=myagent.Get(closestid).genetic.Length
-		If myagent.Get(closestid).deathstep+10 < myagent.Get(closestid).genetic.Length
-			maxd = myagent.Get(closestid).deathstep+10
+		If myagent.Get(closestid).deathstep+20 < myagent.Get(closestid).genetic.Length
+			maxd = myagent.Get(closestid).deathstep+20
 		Endif
 		For Local i:Int=0 Until myagent.Length
 			If i <> closestid
@@ -479,7 +484,7 @@ Class world
 		myobstacle = New Stack<kobstacle>
 		Local l:String[] 
 		
-		If currentlevel >= 4  And currentlevel<=10 'random one
+		If currentlevel >= 4  And currentlevel<=9999 'random one
 			Local sx:Int,sy:Int,ex:Int,ey:Int
 			SeedRnd(currentlevel)
 			Local dw:Int=25,dh:Int=25
@@ -778,7 +783,7 @@ Class MyWindow Extends Window
 		'If myworld.completed
 		If Keyboard.KeyReleased(Key.Space)
 			level+=1
-			If level>10 Then level=1
+			If level>9999 Then level=1
 			myworld = New world(Width,Height,level)
 		End If
 		'End If
