@@ -15,6 +15,7 @@ Class world
 		Field dis:Int 'last distance to target
 		Field closest:Int 'flood distance
 		Field origx:Int,origy:Int
+		Field deathstep:Int=-1
 		Method New(x:Int,y:Int)
 			kpx = x
 			kpy = y
@@ -89,9 +90,11 @@ Class world
 			End If
 			If collidemap()
 				die = True
+				deathstep = currentpos
 			End If
 			If collideobstacle()
 				die = True
+				deathstep = currentpos
 			End If
 		End Method
 		Method growgenetic()
@@ -111,7 +114,7 @@ Class world
 				Local h2:Int=myworld.myobstacle.Get(i).kh
 				x2+=w2/2
 				y2+=h2/2
-				If rectsoverlap(kpx+kw/2,kpy+kh/2,kw,kh,x2,y2,w2,h2)
+				If rectsoverlap(kpx+kw/2,kpy+kh/2,kw,kh,x2,y2,w2*2,h2*2)
 					Return True
 				End if
 			Next
@@ -120,8 +123,8 @@ Class world
 		Method collidemap:Bool()
 			Local cx:Int=(kpx+kw/2)/myworld.tw
 			Local cy:Int=(kpy+kh/2)/myworld.th
-			For Local y1:Int=cy-2 To cy+2
-			For Local x1:Int=cx-2 To cx+2
+			For Local y1:Int=cy-3 To cy+3
+			For Local x1:Int=cx-3 To cx+3
 				If x1<0 Or y1<0 Or x1>=myworld.mapw Or y1>=myworld.maph Then Continue
 				If myworld.map[x1,y1] = 1
 					Local x2:Int=x1*myworld.tw
@@ -211,6 +214,7 @@ Class world
 	Field startx:Int,starty:Int,endx:Int,endy:Int
 	Field completed:Bool=False
 	Field currentlevel:Int
+	
 	Method New(sw:Int,sh:Int,level:Int)
 		Self.sw = sw
 		Self.sh = sh
@@ -237,9 +241,9 @@ Class world
 		End If
 		
 		
-		For Local ii:Int=0 Until 150
+		'For Local ii:Int=0 Until 10
 		' update the obstacles
-		'While completed=False
+		While completed=False
 		For Local i:Int=0 Until myobstacle.Length
 			myobstacle.Get(i).update()
 		Next
@@ -253,9 +257,9 @@ Class world
 			newagents()
 			Exit
 		End If
-		'Wend
-		If completed = True Then Exit
-		Next
+		Wend
+		'If completed = True Then Exit
+		'Next
 	End Method
 	Method distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
 		Return Abs(x2-x1)+Abs(y2-y1)
@@ -288,34 +292,41 @@ Class world
 
 		' cut off 1 of length
 '		For Local i:Int = 0 Until myagent.Length
-'			For Local ii:Int=0 To 1
+'			For Local ii:Int=0 To 3
 '			myagent.Get(i).genetic.Pop			
 '			Next
 '		Next
-'
+''
+		For Local i:Int=0 Until myagent.Length
+			If i <> closestid
+				myagent.Get(i).genetic.Clear()	
+			End If
+		Next
 		' copy the genetic of the closest into every other
 		For Local i:Int=0 Until myagent.Length
 			If i <> closestid
 				Local ax:Int=myagent.Get(i).kpx/tw
-				Local ay:Int=myagent.Get(i).kpy/th				
+				Local ay:Int=myagent.Get(i).kpy/th
+				'myagent.Get(i).genetic.Clear()				
 				'If dmap[ax,ay] <>0 And dmap[ax,ay]+2 < closest Then Continue
-				myagent.Get(i).genetic.Clear()
 				For Local ii:Int=0 Until myagent.Get(closestid).genetic.Length
+					'myagent.Get(i).genetic.Clear()
 					myagent.Get(i).genetic.Push(myagent.Get(closestid).genetic.Get(ii))
 				Next
 			End If
 		Next
-		
-''		'Mutate some
+		'Mutate some
 		Local l:Int=1.0/Float(myagent.Get(0).genetic.Length)
 		For Local i:Int=0 Until myagent.Length	
 			If i<>closestid 'And Rnd()<.1
 			For Local ii:Int=0 Until myagent.Get(i).genetic.Length
-				If ii>myagent.Get(i).genetic.Length/3 Or Rnd()<.2
-				If Rnd(myagent.Get(i).genetic.Length)<ii/5 Or Rnd()<.1 Then myagent.Get(i).genetic.Set(ii,Rnd(0,9))
-				End If
+				'If ii>myagent.Get(i).genetic.Length/3 Or Rnd()<.2
+				If Rnd()<.2 And ii>myagent.Get(i).deathstep-10 Then myagent.Get(i).genetic.Set(ii,Rnd(0,9))
+				'End If
 			Next
+			
 			End If
+			myagent.Get(i).genetic.Set(myagent.Get(i).genetic.Length,Rnd(0,9))
 		Next		
 		'add length of 5
 		For Local i:Int=0 Until myagent.Length	
@@ -522,6 +533,7 @@ Class MyWindow Extends Window
 		
 		canvas.Color = Color.Red
 		canvas.DrawText("Press space to Train new - (can take a while)",0,0)
+		'canvas.DrawText(myworld.myagent.Length,0,20)
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
