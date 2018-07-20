@@ -218,7 +218,7 @@ Class world
 		setmap1()
 		
 
-		For Local i:Int=0 Until 200
+		For Local i:Int=0 Until 300
 			myagent.Push(New kagent(startx*tw,starty*th))
 			myagent.Get(i).growgenetic()
 		Next
@@ -237,7 +237,7 @@ Class world
 		End If
 		
 		
-		For Local ii:Int=0 Until 50
+		For Local ii:Int=0 Until 150
 		' update the obstacles
 		'While completed=False
 		For Local i:Int=0 Until myobstacle.Length
@@ -262,6 +262,7 @@ Class world
 	End Method
 	Method newagents()
 		If completed = True Then Return
+		'If Rnd()<.05 Then Print Microsecs()
 		SeedRnd(Millisecs())
 		' find the agent closest to the destination
 		Local closest:Int=9999999
@@ -287,17 +288,17 @@ Class world
 
 		' cut off 1 of length
 '		For Local i:Int = 0 Until myagent.Length
-'			For Local ii:Int=0 To 3
+'			For Local ii:Int=0 To 1
 '			myagent.Get(i).genetic.Pop			
 '			Next
 '		Next
-
+'
 		' copy the genetic of the closest into every other
 		For Local i:Int=0 Until myagent.Length
 			If i <> closestid
 				Local ax:Int=myagent.Get(i).kpx/tw
 				Local ay:Int=myagent.Get(i).kpy/th				
-				If dmap[ax,ay] <>0 And dmap[ax,ay]+5 < closest Then Continue
+				'If dmap[ax,ay] <>0 And dmap[ax,ay]+2 < closest Then Continue
 				myagent.Get(i).genetic.Clear()
 				For Local ii:Int=0 Until myagent.Get(closestid).genetic.Length
 					myagent.Get(i).genetic.Push(myagent.Get(closestid).genetic.Get(ii))
@@ -308,16 +309,19 @@ Class world
 ''		'Mutate some
 		Local l:Int=1.0/Float(myagent.Get(0).genetic.Length)
 		For Local i:Int=0 Until myagent.Length	
-			If i<>closestid
+			If i<>closestid 'And Rnd()<.1
 			For Local ii:Int=0 Until myagent.Get(i).genetic.Length
-				If Rnd(myagent.Get(i).genetic.Length)<ii/10 Then myagent.Get(i).genetic.Set(ii,Rnd(0,9))
+				If ii>myagent.Get(i).genetic.Length/3 Or Rnd()<.2
+				If Rnd(myagent.Get(i).genetic.Length)<ii/5 Or Rnd()<.1 Then myagent.Get(i).genetic.Set(ii,Rnd(0,9))
+				End If
 			Next
 			End If
 		Next		
 		'add length of 5
 		For Local i:Int=0 Until myagent.Length	
 			For Local ii:Int=0 Until 5
-				myagent.Get(i).genetic.Push(Rnd(0,9))
+				Local nd:Int=Rnd(0,9)
+				myagent.Get(i).genetic.Push(nd)
 			Next
 		Next
 		'reset agents
