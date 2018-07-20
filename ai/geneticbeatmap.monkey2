@@ -237,7 +237,7 @@ Class world
 		End If
 		
 		
-		For Local ii:Int=0 Until 500
+		For Local ii:Int=0 Until 50
 		' update the obstacles
 		'While completed=False
 		For Local i:Int=0 Until myobstacle.Length
@@ -254,6 +254,7 @@ Class world
 			Exit
 		End If
 		'Wend
+		If completed = True Then Exit
 		Next
 	End Method
 	Method distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
@@ -372,8 +373,8 @@ Class world
 			l[2]="01111110001111111111"
 			l[3]="010d0000000000000001"
 			l[4]="010000000000u0000001"
-			l[5]="01000011111111111011"
-			l[6]="01000010000001000011"
+			l[5]="01000011111111111111"
+			l[6]="01000l100d0001000011"
 			l[7]="010000100000000000z1"
 			l[8]="0100000000000100u001"
 			l[9]="01111111111111111111"
@@ -507,14 +508,16 @@ Class MyWindow Extends Window
 		myworld.update()
 		myworld.draw(canvas)
 		
-		If myworld.completed
+		'If myworld.completed
 		If Keyboard.KeyReleased(Key.Space)
 			level+=1
 			If level>3 Then level=1
 			myworld = New world(Width,Height,level)
 		End If
-		End If
+		'End If
 		
+		canvas.Color = Color.Red
+		canvas.DrawText("Press space to Train new - (can take a while)",0,0)
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
