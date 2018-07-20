@@ -98,7 +98,7 @@ Class dungeon
 		y-=1
 		w+=1
 		h+=1
-		If x-w/2<0 Or y-h/2<0 Or x+w/2>=mapwidth Or y+h/2>=mapheight Then Return True
+		If x-w/2<3 Or y-h/2<3 Or x+w/2>=mapwidth-3 Or y+h/2>=mapheight-3 Then Return True
 		For Local y1:Int=y-h/2 Until y+h/2
 		For Local x1:Int=x-w/2 Until x+w/2
 			If map[x1,y1] = 1 Then Return True
@@ -479,8 +479,9 @@ Class world
 		myobstacle = New Stack<kobstacle>
 		Local l:String[] 
 		
-		If currentlevel = 4 'random one
-			SeedRnd(1)
+		If currentlevel >= 4  And currentlevel<=10 'random one
+			Local sx:Int,sy:Int,ex:Int,ey:Int
+			SeedRnd(currentlevel)
 			Local dw:Int=25,dh:Int=25
 			Local mydun:dungeon = New dungeon(640,480,dw,dh)
 			'grow width and height by 1 (blocks)
@@ -510,7 +511,8 @@ Class world
 			For Local y:Int=0 Until dh
 			For Local x:Int=0 Until dw
 				Local t:Int=mydun.map[x,y]
-				If t=0 Or t=1 Then l[y]+="0" 
+				If t=1 Then l[y]+="0" 
+				If t=0 Then l[y]+="q"
 				If t=2 Then l[y]+="1"
 			Next
 			Next
@@ -522,6 +524,8 @@ Class world
 				If l[y].Mid(x,1) = 1 And l[y].Mid(x+1,1) = 0
 					l[y]=l[y].Mid(0,x+1)+"a"+l[y].Mid(x+2,l[y].Length-x-1)
 					set=True
+					sx = x
+					sy = y
 				End If
 				End If
 			Next
@@ -535,12 +539,73 @@ Class world
 				If l[y].Mid(x,1) = 1 And l[y].Mid(x-1,1) = 0
 					l[y]=l[y].Mid(0,x-1)+"z"+l[y].Mid(x,l[y].Length-x-1)
 					set=True
+					ex = x
+					ey = y
 				End If
 				End If
 			Next
 			If set=True Then Exit
 			Next		
+			' Add a UPMOVING obstacle (u)
+			Local isplaced:Bool=False
+			For Local y:Int=dh-1 Until 1 Step -1
+			For Local x:Int=dw-1 Until 1 Step -1
+				If x<1 Or y<1 Or x>=dw-1 Or y>=dh-1 Then Continue
+				Local y2:Int=0
+				If l[y].Mid(x,1) = 1 And l[y-1].Mid(x,1) = 0
+					y-=1
+				Repeat
+					If l[y-y2].Mid(x,1) = 0 Then
+						y2+=1
+						If y2=3 Then 
+							l[y]=l[y].Mid(0,x-1)+"u"+l[y].Mid(x,l[y].Length-x)
+							isplaced = True
+							Exit
+						End If
+					Else
+						Exit
+					End If
+					
+				Forever
+				End If
+				If isplaced = True Then Exit
+			Next
+			If isplaced = True Then Exit
+			Next
+			' Add a RIGHTMOVING obstacle (r)
+			For Local i:Int=0 Until 200
+				Local x:Int=Rnd(2,dw-2)
+				Local y:Int=Rnd(dh/5,dh-dh/5)
+				'see if spot is wall
+				If l[y].Mid(x,1) = 1 And l[y].Mid(x+1,1) = 0
+					' see if there is another wall at the end
+					Local step1:Bool=False
+					For Local z:Int=x+1 Until dw-2
+						If l[y].Mid(z,1) = 1 Then step1=True  
+					Next
+					If step1 = True
+						l[y] = l[y].Mid(0,x+1) + "r" + l[y].Mid(x+2,l[y].Length-x-2)
+						Exit
+					End If
+				End If
+			Next
+			' Add a downmoving obstacle
+			For Local i:Int=0 Until 200
+				Local x:Int=Rnd(dw/5,dw-dw/5)
+				Local y:Int=Rnd(dh/5,dh-dh/3)
+				If l[y].Mid(x,1) = 1 And l[y+1].Mid(x,1) = 0
+					'see If there is another wall at the end
+					Local step1:Bool=False
+					For Local z:Int=y+1 Until dh-2
+						If l[z].Mid(x,1) = 1 Then step1=True  
+					Next
+					If step1 = True
+						l[y+1] = l[y+1].Mid(0,x) + "d" + l[y+1].Mid(x+1,l[y+1].Length-x-2)
+						Exit
+					End If
 
+				End If
+			Next
 		End If
 		If currentlevel = 2
 			l = New String[10]
@@ -713,7 +778,7 @@ Class MyWindow Extends Window
 		'If myworld.completed
 		If Keyboard.KeyReleased(Key.Space)
 			level+=1
-			If level>3 Then level=1
+			If level>10 Then level=1
 			myworld = New world(Width,Height,level)
 		End If
 		'End If
