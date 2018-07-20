@@ -6,7 +6,83 @@ Using mojo..
 
 Class world
 	Class kagent
-		Field kx:Int,ky:Int
+		Field kpx:Int,kpy:Int,kw:Int,kh:Int
+		Field genetic:Stack<Int> = New Stack<Int>
+		Field currentpos:Int
+		Field time:Int,timeend:Int=10
+		Field die:Bool=False
+		Field winner:Bool=False
+		Method New(x:Int,y:Int)
+			kpx = x
+			kpy = y
+			kw = 10
+			kh = 10
+		End Method
+		Method update()
+			If die=True Then Return
+			Select genetic.Get(currentpos)
+				Case 0
+					kpx-=1
+					kpy-=1
+				Case 1
+					kpy-=1
+				Case 2
+					kpx+=1
+					kpy-=1
+				Case 3
+					kpx-=1
+				Case 4
+				Case 5
+					kpx+=1
+				Case 6
+					kpx-=1
+					kpy+=1
+				Case 7
+					kpy+=1
+				Case 8
+					kpx+=1
+					kpy+=1
+			End Select
+			time+=1
+			If time>timeend Then 
+				time = 0
+				currentpos += 1
+				If currentpos = genetic.Length Then die = True
+			End If
+			If collidemap()
+				die = True
+			End If
+		End Method
+		Method growgenetic()
+			For Local i:Int=0 Until 5
+				genetic.Push(Rnd(0,9))
+				Print genetic.Get(i)
+			Next
+		End Method
+		Method draw(canvas:Canvas)
+			canvas.Color = Color.Red
+			canvas.DrawOval(kpx,kpy,kw,kh)
+		End Method
+		Method collidemap:Bool()
+			Local cx:Int=(kpx+kw/2)/myworld.tw
+			Local cy:Int=(kpy+kh/2)/myworld.th
+			For Local y1:Int=cy-2 To cy+2
+			For Local x1:Int=cx-2 To cx+2
+				If x1<0 Or y1<0 Or x1>=myworld.mapw Or y1>=myworld.maph Then Continue
+				If myworld.map[x1,y1] = 1
+					Local x2:Int=x1*myworld.tw
+					Local y2:Int=y1*myworld.th					
+					If rectsoverlap(kpx+kw/2,kpy+kh/2,kw,kh,x2,y2,myworld.tw,myworld.th) Then Return True
+				End if
+			Next
+			Next
+			Return False
+		End Method
+		Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+		    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+		    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+		    Return True
+		End Function
 	End Class
 	Class kobstacle
 		Field kx:Int,ky:Int
@@ -65,17 +141,103 @@ Class world
 	Field tw:Float,th:Float
 	Field mapw:Int,maph:Int
 	Field map:Int[,]
+	Field dmap:Int[,] 'contains distances from end to start
 	Field myagent:Stack<kagent> = New Stack<kagent>
 	Field myobstacle:Stack<kobstacle> = New Stack<kobstacle>
+	Field startx:Int,starty:Int,endx:Int,endy:Int
 	Method New(sw:Int,sh:Int)
 		Self.sw = sw
 		Self.sh = sh
 		setmap1()
+		
+
+		For Local i:Int=0 Until 100
+			myagent.Push(New kagent(startx*tw,starty*th))
+			myagent.Get(i).growgenetic()
+		Next
 	End Method
 	Method update()
+		' update the obstacles
 		For Local i:Int=0 Until myobstacle.Length
 			myobstacle.Get(i).update()
 		Next
+
+'		' update the agents
+		If alldead() = False		
+			For Local i:Int=0 Until myagent.Length
+				myagent.Get(i).update()
+			Next
+		Else
+			newagents()
+		End If
+	End Method
+	Method distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)
+		Return Abs(x2-x1)+Abs(y2-y1)
+	End Method
+	Method newagents()
+		' find the agent closest to the destination
+		Local closest:Int=-1
+		Local dis:Int=99999999
+		Local closestid:Int=-1
+		For Local i:Int=0 Until myagent.Length
+			Local ax:Int=myagent.Get(i).kpx/tw
+			Local ay:Int=myagent.Get(i).kpy/th
+			If distance(ax,ay,endx,endy)<dis Then
+				'closest = dmap[ax,ay]
+				closestid = i
+				dis = distance(ax,ay,endx,endy)
+			End If
+		Next
+		
+		myagent.Get(closestid).winner=True
+		' cut off 1 of length
+		For Local i:Int = 0 Until myagent.Length
+			myagent.Get(i).genetic.Pop
+		Next
+'		For Local i:Int=0 Until myagent.Length
+'			If i <> closestid
+'				myagent.Get(i).genetic.Clear()
+'			End If
+'		Next
+		' copy the genetic of the closest into every other
+		For Local i:Int=0 Until myagent.Length
+			If i <> closestid
+				myagent.Get(i).genetic.Clear()
+				For Local ii:Int=0 Until myagent.Get(closestid).genetic.Length
+					myagent.Get(i).genetic.Push(myagent.Get(closestid).genetic.Get(ii))
+				Next
+			End If
+		Next
+		
+''		'Mutate some
+		For Local i:Int=0 Until myagent.Length	
+			If Rnd()<.1 And myagent.Get(i).winner=False
+			For Local ii:Int=0 Until myagent.Get(i).genetic.Length
+				If Rnd()<.1 Then myagent.Get(i).genetic.Set(ii,Rnd(0,9))
+			Next
+			End If
+		Next		
+		'add length of 5
+		For Local i:Int=0 Until myagent.Length	
+			For Local ii:Int=0 Until 5
+				myagent.Get(i).genetic.Push(Rnd(0,9))
+			Next
+		Next
+		'reset agents
+		For Local i:Int=0 Until myagent.Length
+			myagent.Get(i).kpx = startx*tw
+			myagent.Get(i).kpy = starty*th
+			myagent.Get(i).currentpos = 0
+			myagent.Get(i).die = False
+			myagent.Get(i).time = 0
+			myagent.Get(i).winner = False
+		Next		
+	End Method
+	Method alldead:Bool()
+		For Local i:Int=0 Until myagent.Length
+			If myagent.Get(i).die = False Then Return False
+		Next
+		Return True
 	End Method
 	Method setmap1()
 		Local l:String[] = New String[10]
@@ -90,12 +252,13 @@ Class world
 		l[2]="00000010101001000000"
 		l[3]="11111010d0d001011111"
 		l[4]="10001110000001110001"
-		l[5]="1a0000000000000000z1"
+		l[5]="10a000000000000000z1"
 		l[6]="10001110000001110001"
 		l[7]="11111010101001011111"
 		l[8]="0000001u1u1u01000000"
 		l[9]="00000011111111000000"
 		map = New Int[l[0].Length,l.GetSize(0)]
+		dmap = New Int[l[0].Length,l.GetSize(0)]
 		mapw = map.GetSize(0)
 		maph = map.GetSize(1)
 		tw = Float(sw)/Float(map.GetSize(0))
@@ -110,9 +273,43 @@ Class world
 					map[x,y] = 1
 				Case "u","d"
 					myobstacle.Push(New kobstacle(x*tw,y*th,tw/2,th/2,t))
+				Case "a"
+					startx = x
+					starty = y
+				Case "z"
+					endx = x
+					endy = y					
 			End Select
 		Next
 		Next
+		flooddistance(startx,starty,endx,endy)
+	End Method
+	Method flooddistance(sx:Int,sy:Int,ex:Int,ey:Int)
+		Local dx:Stack<Int> = New Stack<Int>
+		Local dy:Stack<Int> = New Stack<Int>
+		Local dd:Stack<Int> = New Stack<Int>
+		dx.Push(sx)
+		dy.Push(sy)
+		dmap[sx,sy] = 1
+		Local x:Int,y:Int,d:Int
+		Local mx:Int[]=New Int[](-1,0,1,0)
+		Local my:Int[]=New Int[](0,-1,0,1)
+		While dx.Length>0
+			x = dx.Get(0)
+			y = dy.Get(0)
+			dx.Erase(0)
+			dy.Erase(0)
+			For Local i:Int=0 Until mx.Length
+				Local x1:Int=x+mx[i]
+				Local y1:Int=y+my[i]
+				If x1<0 Or y1<0 Or x1>=mapw Or y1>=maph Then Continue
+				If map[x1,y1] = 0 And dmap[x1,y1] = 0
+					dx.Push(x1)
+					dy.Push(y1)
+					dmap[x1,y1] = dmap[x,y]+1
+				End If
+			Next
+		Wend
 	End Method
 	Method draw(canvas:Canvas)
 		For Local y:Int=0 Until map.GetSize(1)
@@ -130,6 +327,21 @@ Class world
 		For Local i:Int=0 Until myobstacle.Length
 			myobstacle.Get(i).draw(canvas)
 		Next
+'		' draw the agents
+'		If myagent
+		For Local i:Int=0 Until myagent.Length
+			myagent.Get(i).draw(canvas)
+		Next
+'		End If
+		' Draw the distances
+		If Keyboard.KeyDown(Key.Key1)
+			canvas.Color=Color.Black
+			For Local y:Int=0 Until dmap.GetSize(1)
+			For Local x:Int=0 Until dmap.GetSize(0)
+				canvas.DrawText(dmap[x,y],x*tw,y*th)
+			Next
+			Next	
+		End If
 	End Method
 End Class
 
