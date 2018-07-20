@@ -562,7 +562,7 @@ Class world
 				Repeat
 					If l[y-y2].Mid(x,1) = 0 Then
 						y2+=1
-						If y2=3 Then 
+						If y2=5 Then 
 							l[y]=l[y].Mid(0,x-1)+"u"+l[y].Mid(x,l[y].Length-x)
 							isplaced = True
 							Exit
@@ -584,9 +584,14 @@ Class world
 				'see if spot is wall
 				If l[y].Mid(x,1) = 1 And l[y].Mid(x+1,1) = 0
 					' see if there is another wall at the end
-					Local step1:Bool=False
+					Local step1:Bool=True
+					Local d:Int=0
 					For Local z:Int=x+1 Until dw-2
-						If l[y].Mid(z,1) = 1 Then step1=True  
+						If l[y].Mid(z,1) = 1 And d<5 Then 
+							step1=false  
+							Exit
+						End If
+						d+=1
 					Next
 					If step1 = True
 						l[y] = l[y].Mid(0,x+1) + "r" + l[y].Mid(x+2,l[y].Length-x-2)
@@ -596,14 +601,21 @@ Class world
 			Next
 			' Add a downmoving obstacle
 			For Local i:Int=0 Until 200
-				Local x:Int=Rnd(dw/5,dw-dw/5)
+				Local x:Int=Rnd(dw/3,dw-dw/5)
 				Local y:Int=Rnd(dh/5,dh-dh/3)
-				If l[y].Mid(x,1) = 1 And l[y+1].Mid(x,1) = 0
+				If l[y].Mid(x,1) = 1 And l[y+1].Mid(x,1) = 0 'And l[y+2].Mid(x,1) = 0 And l[y+3].Mid(x,1) = 0
 					'see If there is another wall at the end
-					Local step1:Bool=False
+					Local step1:Bool=True
+					Local d:Int=0
 					For Local z:Int=y+1 Until dh-2
-						If l[z].Mid(x,1) = 1 Then step1=True  
+						
+						If l[z].Mid(x,1) = 1 And d<5 
+							step1=False  						
+							Exit
+						End If
+						d+=1
 					Next
+					
 					If step1 = True
 						l[y+1] = l[y+1].Mid(0,x) + "d" + l[y+1].Mid(x+1,l[y+1].Length-x-2)
 						Exit
