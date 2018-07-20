@@ -304,13 +304,17 @@ Class world
 			End If
 		Next
 		' copy the genetic of the closest into every other
+		Local maxd:Int=myagent.Get(closestid).genetic.Length
+		If myagent.Get(closestid).deathstep+10 < myagent.Get(closestid).genetic.Length
+			maxd = myagent.Get(closestid).deathstep+10
+		Endif
 		For Local i:Int=0 Until myagent.Length
 			If i <> closestid
 				Local ax:Int=myagent.Get(i).kpx/tw
 				Local ay:Int=myagent.Get(i).kpy/th
 				'myagent.Get(i).genetic.Clear()				
 				'If dmap[ax,ay] <>0 And dmap[ax,ay]+2 < closest Then Continue
-				For Local ii:Int=0 Until myagent.Get(closestid).genetic.Length
+				For Local ii:Int=0 Until maxd'myagent.Get(closestid).genetic.Length
 					'myagent.Get(i).genetic.Clear()
 					myagent.Get(i).genetic.Push(myagent.Get(closestid).genetic.Get(ii))
 				Next
