@@ -151,8 +151,7 @@ Class world
 					currentpos = 0
 					kpx = origx
 					kpy = origy
-					myworld.setmap1()
-					Print "reset"
+					myworld.setmap1()					
 				End If
 			End If
 
@@ -794,8 +793,9 @@ Class MyWindow Extends Window
 		
 		'If myworld.completed
 		If Keyboard.KeyReleased(Key.Space)
-			level+=1
-			If level>9999 Then level=1
+			'level+=1
+			'If level>9999 Then level=1
+			level = Rnd(1,9999)
 			myworld = New world(Width,Height,level)
 		End If
 		'End If
