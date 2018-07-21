@@ -41,9 +41,10 @@ Class MyWindow Extends Window
 		im[a,b].Handle = New Vec2f(0,0)
 		can[a,b] = New Canvas(im[a,b])
 		can[a,b].Clear(New Color(0,0,0,0))
+		' Create our shape by growing it
 		Local tmp:Int[,] = New Int[im[a,b].Width,im[a,b].Height]
 		tmp[im[a,b].Width/2,im[a,b].Height/2] = 1
-		For Local i:Int=0 Until (im[a,b].Width*im[a,b].Height)*10
+		For Local i:Int=0 Until (im[a,b].Width*im[a,b].Height)*14
 			Local x:Int=Rnd(1,im[a,b].Width-2)
 			Local y:Int=Rnd(1,im[a,b].Height-2)
 			If tmp[x,y] = 1 Then tmp[x+Rnd(-1,2),y+Rnd(-1,2)] = 1
@@ -51,10 +52,13 @@ Class MyWindow Extends Window
 		' Create light and dark edges
 		For Local y:Int=1 Until im[a,b].Height-1
 		For Local x:Int=1 Until im[a,b].Width-1
-			If tmp[x,y] = 0
+			If tmp[x,y] = 0 'if no shape value
+				' loop around the no shape value
 				For Local y2:Int=y-1 To y+1
 				For Local x2:Int=x-1 To x+1
+					' if here is a shape value
 					If tmp[x2,y2] = 1
+						' edge color is based on angle (2 or 3)
 						Local angle:Float=getangle(x,y,im[a,b].Width/2,im[a,b].Height/2)
 						If angle>0 And angle<Pi 
 							tmp[x2,y2] = 2
@@ -67,7 +71,7 @@ Class MyWindow Extends Window
 			End If		
 		Next
 		Next
-		'
+		' Turn the shape into a image
 		can[a,b].Color = Color.Grey
 		For Local y:Int=0 Until im[a,b].Height
 		For Local x:Int=0 Until im[a,b].Width
