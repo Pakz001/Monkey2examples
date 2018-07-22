@@ -1,11 +1,12 @@
-#Import "<std>"
-#Import "<mojo>"
-
 
 '
-' Create rocks or shapes with shaded edges.
-' This is done by taking the angle from the center of the shape to
-' the edge and turning this into a light or dark color. 
+' This kind of failed - I need to learn more about this ...
+'''
+
+'
+
+#Import "<std>"
+#Import "<mojo>"
 '
 
 Using std..
@@ -46,6 +47,7 @@ Class wfc
 		rocklighttop = 6
 		
 	End Enum
+	Field tused:Stack<wavenode>
 	Method New(sw:Int,sh:Int,mw:Int,mh:Int)
 		Self.sw = sw
 		Self.sh = sh
@@ -54,10 +56,25 @@ Class wfc
 		tw = Float(sw) / Float(mw)
 		th = Float(sh) / Float(mh)
 		map = New Int[mw,mh]
+		tused = New Stack<wavenode>
+	End Method
+	Method printinfo(tile:Int)
+		For Local i:Int=0 Until tused.Length
+			If tused.Get(i).tile = tile
+				Print "tile :"+tile
+				For Local ii:Int=0 Until 9
+					Print " side :" + ii
+					For Local n:Int=0 Until tused.Get(i).beside[ii].Length
+					Print tused.Get(i).beside[ii].Get(n)
+					Next
+				Next
+			End If
+		Next
+		
 	End Method
 	Method dofunction()
 		'find tiles used
-		Local tused:Stack<wavenode> = New Stack<wavenode>
+		tused = New Stack<wavenode>
 		
 		Local exsists := Lambda:Bool(in:Int)
 			For Local i:Int=0 Until tused.Length
@@ -97,7 +114,7 @@ Class wfc
 			
 		Next
 		Next		
-		
+	
 		If tused.Length = 0 Then Return
 		
 		' Get a random tile from the tiles used stack
@@ -110,82 +127,64 @@ Class wfc
 			Return False
 		End Lambda
 
-		' Is this tile legal here
-		Local islegaltile := Lambda:Bool(side:Int,check:Int,t:Int)			
-
-			For Local i:Int=0 Until tused.Length
-				'Print tused.Get(i).tile + "," + check
-				If tused.Get(i).tile=check
-				'Print tused.Get(i).beside[side].Length
-					For Local ii:Int=0 Until tused.Get(i).beside[side].Length
-						
-						If tused.Get(i).beside[side].Get(ii) = t Then 
-							
-							Return True
-						End if
-					Next
-				End If
-			Next
-			Return False
-		End Lambda
-
-		'get legal tile
-		Local getlegaltile := Lambda:Bool(side:Int,check:Int)			
-			
-			For Local i:Int=0 Until tused.Length
-				'Print tused.Get(i).tile + "," + check
-				If tused.Get(i).tile=check
-					
-				'Print tused.Get(i).beside[side].Length
-				'Print tused.Get(i).beside[side].Length + "side:" + side
-					If tused.Get(i).beside[side].Length=0 Then Return False
-					
-					Local z:Int= tused.Get(i).beside[side].Get(Rnd(0,tused.Get(i).beside[side].Length))
-					Print z
-					Return z
-				End If
-			Next
-			Return False
-		End Lambda
 		
 
+		'get legal tile
+		Local getlegaltile := Lambda:Int(x:Int,y:Int)			
+			
+			Local l:Int[] = New Int[999]
+			For Local i:Int=0 Until 999
+				l[i]=-1
+			Next
+			'get what is allowed here by inserting
+			'all legal tiles from around
+			'add beside(0) 
+			Local cnt:Int=0
+		
+			For Local y1:Int=y-1 To y+1
+			For Local x1:Int=x-1 To x+1
+				If x1<0 Or y1<0 Or x1>=mw Or y1>=mh
+					cnt+=1
+					Continue
+				End If
+	
+				If cnt=4
+					Else
+				For Local i:Int=0 Until tused.Length
+					If tused.Get(i).tile = map[x1,y1]
+					For Local ii:Int=0 Until tused.Get(i).beside[8-cnt].Length
+						l[tused.Get(i).beside[8-cnt].Get(ii)]+=1
+					Next
+					End If
+				Next
+				End If
+				cnt+=1
+			Next
+			Next
+			' count all that are 
+			Local z:Int=4
+			For Local ii:Int=0 Until 150
+			For Local i:Int=0 Until 15
+				If l[i] > z And Rnd()<.1 Then 
+				If i<>0 Then Return i
+				End If
+			Next
+			If Rnd()<.2 Then z-=1
+			Next
+			Return -1
+		End Lambda
+		
 
 		' Create new map
 		map = New Int[mw,mh]
 		map[Rnd(0,mw),Rnd(0,mh)] = randomtile()		
-		For Local i:Int=0 Until mw*mh*5
+		For Local i:Int=0 Until mw*mh/2
 			
 			Local x:Int=Rnd(mw)
 			Local y:Int=Rnd(mh)
 			
-			If map[x,y] = 0 Then Continue
-			
-			Local side:Int=0
-			For Local y1:Int=y-1 To y+1
-			For Local x1:Int=x-1 To x+1
-				
-				If x1<0 Or y1<0 Or x1>=mw Or y1>=mh Then 
-					side+=1
-					Continue
-				End If
-				'findlegal
-				
-				If side<>4 Then 	
-								
-				'For Local z:Int=0 Until 200
-					map[x1,y1]=getlegaltile(side,map[x,y])
-					'Print Microsecs() + " r:"+r
-					'If islegaltile(side,map[x,y],r) Then
-					'	
-					'	map[x1,y1] = r
-					'	Print Microsecs()
-					'	Return
-					'End If
-				'Next
-				End If
-				side+=1
-			Next
-			Next
+			If map[x,y] <> 0 Then Continue
+			map[x,y]=getlegaltile(x,y)
 			
 		Next
 		Print "done"
@@ -321,6 +320,13 @@ Class MyWindow Extends Window
 		If Keyboard.KeyReleased(Key.Space)
 			mywfc.dofunction()
 		End If
+		
+		If Keyboard.KeyReleased(Key.I)
+			Local x:Int=Mouse.X/mywfc.tw
+			Local y:Int=Mouse.Y/mywfc.th
+			mywfc.printinfo(mywfc.map[x,y])
+		End If
+		
 		
 		If Keyboard.KeyReleased(Key.Key1) Then pastemap()
 		If Keyboard.KeyReleased(Key.Key0) Then pastetoclip()
