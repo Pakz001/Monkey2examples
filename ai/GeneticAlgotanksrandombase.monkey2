@@ -12,6 +12,65 @@ Enum tiles
 	capturepoint=13,startpoint=14
 End Enum
 
+Enum geneinst
+	turnleft=1,turnright=2,moveforward=3,movebackward=4
+End Enum
+
+Class ai
+	Field tankimage:Image
+	Field tankcanvas:Canvas
+	Class brain
+		Field deathstep:Int ' how close to target were we
+		Field angle:Float
+		Field kx:Float,ky:Float,kw:Float,kh:Float 'xywidhtheight
+		Field genescom:Stack<Int>
+		Field genesval:Stack<Float>
+		Method New(x:Int,y:Int)
+			genescom = New Stack<Int>
+			genesval = New Stack<Float>
+			Self.kx = x
+			Self.ky = y
+			Self.kw = myworld.tw / 3
+			Self.kh = myworld.th / 2
+			Self.angle = 0
+		End Method
+		Method insertinstruction()
+		End Method
+		Method draw(canvas:Canvas)
+			angle+=0.1
+			canvas.Color = Color.White
+			canvas.DrawImage(myai.tankimage,kx,ky,angle)
+		End Method
+	End Class
+	Field mybrain:Stack<brain>
+	Method New()
+		mybrain = New Stack<brain>
+		createtankimage()
+	End Method
+	Method createtankimage()
+		tankimage = New Image(myworld.tw,myworld.th)
+		tankimage.Handle = New Vec2f(0.5,0.5)
+		tankcanvas = New Canvas(tankimage)
+		tankcanvas.Clear(New Color(0,0,0,0))
+		tankcanvas.Flush()
+		tankcanvas.Color = Color.Brown
+		tankcanvas.DrawQuad(tankimage.Width/2+5,3,
+							tankimage.Width/2-5,3,
+							4,tankimage.Height-2,
+							tankimage.Width-4,tankimage.Height-2)
+		tankcanvas.Color = Color.Silver
+		tankcanvas.DrawOval(tankimage.Width/2-tankimage.Width/6,
+							tankimage.Height/2-tankimage.Height/6,
+							tankimage.Width/3,
+							tankimage.Height/3)
+		tankcanvas.Color = Color.Gold
+		tankcanvas.DrawRect(tankimage.Width/2-tankimage.Width/20,0,tankimage.Width/10,tankimage.Height/2)
+		tankcanvas.Color = Color.Brown.Blend(Color.Black,.5)
+		tankcanvas.DrawLine(tankimage.Width/2-5,3,							
+							4,tankimage.Height-2)
+		tankcanvas.Flush()
+	End Method
+End Class
 
 Class world
 	Field sw:Int,sh:Int,mw:Int,mh:Int,tw:Float,th:Float
@@ -148,17 +207,26 @@ Class world
 End Class
 
 Global myworld:world
+Global myai:ai
 
 Class MyWindow Extends Window
 	Field mapwidth:Int=25,mapheight:Int=25
 	Method New()
 		myworld = New world(Width,Height,mapwidth,mapheight)
+		myai = New ai()
+		myai.mybrain.Push(New ai.brain(10,10))
 	End method
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
 		'
 		myworld.drawmap(canvas)
+'		myai.mybrain.Get(0).kx = Rnd(Width)
+'		myai.mybrain.Get(0).ky = Rnd(Height)
+'		myai.mybrain.Get(0).draw(canvas)
+		For Local i:Int=0 Until myai.mybrain.Length			
+			myai.mybrain.Get(i).draw(canvas)
+		Next
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
