@@ -10,7 +10,7 @@
 
 Using std..
 Using mojo..
-
+Global instance:AppInstance
 Class wfc
 	'wave function setup
 	Class wavenode		
@@ -28,7 +28,7 @@ Class wfc
 			For Local i:Int=0 Until beside[location].Length
 				If beside[location].Get(i) = tile Then Return
 			Next
-			beside[location].Push(tile)
+			beside[location].Push(tile)			
 		End Method
 	End Class
 	'map setup
@@ -66,12 +66,23 @@ Class wfc
 			Return False
 		End Lambda
 
+		Local stindex := Lambda:Int(in:Int)
+			For Local i:Int=0 Until tused.Length
+				If tused.Get(i).tile = in Then Return i
+			Next
+			Return -1
+		End Lambda
+
+
 		For Local y:Int=0 Until mh
 		For Local x:Int=0 Until mw			
 			'add tile and add surroundings
 			If exsists(map[x,y]) = False
 				tused.Push(New wavenode(map[x,y]))
+			End If			
 				Print "added:"+map[x,y]
+				Local zz:Int=stindex(map[x,y])
+				If zz=-1 Then RuntimeError("ere")
 				Local location:Int=0
 				For Local y2:Int=y-1 To y+1
 				For Local x2:Int=x-1 To x+1
@@ -79,11 +90,11 @@ Class wfc
 						location +=1
 						Continue
 					End If
-					tused.Get(0).addtile(location,map[x2,y2])	
+					tused.Get(zz).addtile(location,map[x2,y2])	
 					location +=1
 				Next
 				Next
-			End If			
+			
 		Next
 		Next		
 		
@@ -101,46 +112,76 @@ Class wfc
 
 		' Is this tile legal here
 		Local islegaltile := Lambda:Bool(side:Int,check:Int,t:Int)			
+
 			For Local i:Int=0 Until tused.Length
+				'Print tused.Get(i).tile + "," + check
 				If tused.Get(i).tile=check
+				'Print tused.Get(i).beside[side].Length
 					For Local ii:Int=0 Until tused.Get(i).beside[side].Length
-						If tused.Get(i).beside[side].Get(ii) = t Then Return True
+						
+						If tused.Get(i).beside[side].Get(ii) = t Then 
+							
+							Return True
+						End if
 					Next
 				End If
 			Next
 			Return False
 		End Lambda
 
+		'get legal tile
+		Local getlegaltile := Lambda:Bool(side:Int,check:Int)			
+			
+			For Local i:Int=0 Until tused.Length
+				'Print tused.Get(i).tile + "," + check
+				If tused.Get(i).tile=check
+					
+				'Print tused.Get(i).beside[side].Length
+				'Print tused.Get(i).beside[side].Length + "side:" + side
+					If tused.Get(i).beside[side].Length=0 Then Return False
+					
+					Local z:Int= tused.Get(i).beside[side].Get(Rnd(0,tused.Get(i).beside[side].Length))
+					Print z
+					Return z
+				End If
+			Next
+			Return False
+		End Lambda
+		
 
-		For Local i:Int=0 Until 20
-			Print randomtile()
-		Next
 
 		' Create new map
 		map = New Int[mw,mh]
 		map[Rnd(0,mw),Rnd(0,mh)] = randomtile()		
-		For Local i:Int=0 Until 500
+		For Local i:Int=0 Until mw*mh*5
 			
 			Local x:Int=Rnd(mw)
 			Local y:Int=Rnd(mh)
-			'If map[x,y] = 0 Then Continue
+			
+			If map[x,y] = 0 Then Continue
+			
 			Local side:Int=0
 			For Local y1:Int=y-1 To y+1
 			For Local x1:Int=x-1 To x+1
+				
 				If x1<0 Or y1<0 Or x1>=mw Or y1>=mh Then 
 					side+=1
 					Continue
 				End If
 				'findlegal
-				If side<>4 Then 
-										
-				For Local z:Int=0 Until 200
-					Local r:Int=randomtile()
-					If islegaltile(side,map[x,y],r) Then
-						map[x1,y1] = r
-						Return
-					End If
-				Next
+				
+				If side<>4 Then 	
+								
+				'For Local z:Int=0 Until 200
+					map[x1,y1]=getlegaltile(side,map[x,y])
+					'Print Microsecs() + " r:"+r
+					'If islegaltile(side,map[x,y],r) Then
+					'	
+					'	map[x1,y1] = r
+					'	Print Microsecs()
+					'	Return
+					'End If
+				'Next
 				End If
 				side+=1
 			Next
@@ -280,13 +321,131 @@ Class MyWindow Extends Window
 		If Keyboard.KeyReleased(Key.Space)
 			mywfc.dofunction()
 		End If
+		
+		If Keyboard.KeyReleased(Key.Key1) Then pastemap()
+		If Keyboard.KeyReleased(Key.Key0) Then pastetoclip()
 		' if key escape then quit
-		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
+		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()				
 	End Method	
+	Method pastetoclip()
+		Local d:String=""
+		Local cnt:Int=0
+		For Local y:Int=0 Until mywfc.mh
+			d+="m["+cnt+"]=~q"
+		For Local x:Int=0 Until mywfc.mw			
+			d+=translatetoabc(mywfc.map[x,y])
+		Next
+		cnt+=1
+			d+="~q~n"
+		Next
+		instance.ClipboardText = d
+	End Method
+	Method pastemap()
+		Local m:String[] = New String[16]
+m[0]="aaaaaaaaaaaaaaaa"
+m[1]="aaaaaaaaaaaaaaaa"
+m[2]="aajggkaaaaaajkaa"
+m[3]="aaeddfaaaaaaefaa"
+m[4]="aaeddfaaaaaaefaa"
+m[5]="aaeddfaaaaaaefaa"
+m[6]="aaeddfaaaaaaefaa"
+m[7]="aaeddfaaaaaaefaa"
+m[8]="aaeddfaaaaaaefaa"
+m[9]="aaeddfaaaaaaefaa"
+m[10]="aaeddfaaaaaaefaa"
+m[11]="aaeddfaahiaaefaa"
+m[12]="cccccccccccccccc"
+m[13]="bbbbbbbbbbbbbbbb"
+m[14]="bbbbbbbbbbbbbbbb"
+m[15]="bbbbbbbbbbbbbbbb"
+	
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			mywfc.map[x,y] = translateto0(m[y].Mid(x,1))
+			'mywfc.map[x,y] = Int(m[y].Mid(x,1))
+		Next
+		Next	
+	End Method
+	Method translateto0:Int(in:String)
+		Select in
+			Case "a"
+				Return 0
+			Case "b"
+				Return 1
+			Case "c"
+				Return 2
+			Case "d"
+				Return 3
+			Case "e"
+				Return 4
+			Case "f"
+				Return 5
+			Case "g"
+				Return 6
+			Case "h"
+				Return 7
+			Case "i"
+				Return 8
+			Case "j"
+				Return 9
+			Case "k"
+				Return 10
+			Case "l"
+				Return 11
+			Case "m"
+				Return 12
+			Case "n"
+				Return 13
+			Case "o"
+				Return 14
+			Case "p"
+				Return 15
+			Case "q"
+				Return 16
+			Case "r"	
+				Return 17				
+		End Select
+		Return 0
+	End Method
+	Method translatetoabc:String(in:Int)
+		Select in
+			Case 0
+				Return "a"
+			Case 1
+				Return "b"
+			Case 2
+				Return "c"
+			Case 3
+				Return "d"
+			Case 4
+				Return "e"
+			Case 5
+				Return "f"
+			Case 6
+				Return "g"
+			Case 7
+				Return "h"
+			Case 8
+				Return "i"
+			Case 9
+				Return "j"
+			Case 10
+				Return "k"
+			Case 11
+				Return "l"
+			Case 12
+				Return "m"
+			Case 13
+				Return "n"
+
+		End Select
+		Return "a"
+	End Method
 End	Class
 
 Function Main()
-	New AppInstance		
+	'New AppInstance		
+	instance = New AppInstance
 	New MyWindow
 	App.Run()
 End Function
