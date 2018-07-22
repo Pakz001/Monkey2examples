@@ -12,6 +12,26 @@ Using std..
 Using mojo..
 
 Class wfc
+	'wave function setup
+	Class wavenode		
+		Field tile:int
+		'Global a:List<test>[] = New List<test>[10]
+		Field beside:Stack<Int>[]
+		Method New(t:Int)
+			Self.tile = t			
+			beside = New Stack<Int>[9]
+			For Local i:Int=0 Until 9
+				beside[i] = New Stack<Int>
+			Next
+		End Method
+		Method addtile(location:Int,tile:Int)
+			For Local i:Int=0 Until beside[location].Length
+				If beside[location].Get(i) = tile Then Return
+			Next
+			beside[location].Push(tile)
+		End Method
+	End Class
+	'map setup
 	Field map:Int[,]
 	Field mw:Int,mh:Int,sw:Int,sh:Int
 	Field tw:Float,th:Float
@@ -34,6 +54,100 @@ Class wfc
 		tw = Float(sw) / Float(mw)
 		th = Float(sh) / Float(mh)
 		map = New Int[mw,mh]
+	End Method
+	Method dofunction()
+		'find tiles used
+		Local tused:Stack<wavenode> = New Stack<wavenode>
+		
+		Local exsists := Lambda:Bool(in:Int)
+			For Local i:Int=0 Until tused.Length
+				If tused.Get(i).tile = in Then Return True
+			Next
+			Return False
+		End Lambda
+
+		For Local y:Int=0 Until mh
+		For Local x:Int=0 Until mw			
+			'add tile and add surroundings
+			If exsists(map[x,y]) = False
+				tused.Push(New wavenode(map[x,y]))
+				Print "added:"+map[x,y]
+				Local location:Int=0
+				For Local y2:Int=y-1 To y+1
+				For Local x2:Int=x-1 To x+1
+					If x2<0 Or y2<0 Or x2>=mw Or y2>=mh Then 
+						location +=1
+						Continue
+					End If
+					tused.Get(0).addtile(location,map[x2,y2])	
+					location +=1
+				Next
+				Next
+			End If			
+		Next
+		Next		
+		
+		If tused.Length = 0 Then Return
+		
+		' Get a random tile from the tiles used stack
+		Local randomtile := Lambda:Int()			
+			Repeat			
+				For Local i:Int=0 Until tused.Length
+					If Rnd() <.01 Then Return tused.Get(i).tile 
+				Next
+			Forever
+			Return False
+		End Lambda
+
+		' Is this tile legal here
+		Local islegaltile := Lambda:Bool(side:Int,check:Int,t:Int)			
+			For Local i:Int=0 Until tused.Length
+				If tused.Get(i).tile=check
+					For Local ii:Int=0 Until tused.Get(i).beside[side].Length
+						If tused.Get(i).beside[side].Get(ii) = t Then Return True
+					Next
+				End If
+			Next
+			Return False
+		End Lambda
+
+
+		For Local i:Int=0 Until 20
+			Print randomtile()
+		Next
+
+		' Create new map
+		map = New Int[mw,mh]
+		map[Rnd(0,mw),Rnd(0,mh)] = randomtile()		
+		For Local i:Int=0 Until 500
+			
+			Local x:Int=Rnd(mw)
+			Local y:Int=Rnd(mh)
+			'If map[x,y] = 0 Then Continue
+			Local side:Int=0
+			For Local y1:Int=y-1 To y+1
+			For Local x1:Int=x-1 To x+1
+				If x1<0 Or y1<0 Or x1>=mw Or y1>=mh Then 
+					side+=1
+					Continue
+				End If
+				'findlegal
+				If side<>4 Then 
+										
+				For Local z:Int=0 Until 200
+					Local r:Int=randomtile()
+					If islegaltile(side,map[x,y],r) Then
+						map[x1,y1] = r
+						Return
+					End If
+				Next
+				End If
+				side+=1
+			Next
+			Next
+			
+		Next
+		Print "done"
 	End Method
 	Method edit()
 		Local x:Int=Mouse.X / tw
@@ -162,6 +276,10 @@ Class MyWindow Extends Window
 		mywfc.draw(canvas)
 		If delay>maxdelay Then mywfc.edit()
 		If Keyboard.KeyDown(Key.LeftShift) Then mywfc.tileselect(canvas) ; delay=0
+		
+		If Keyboard.KeyReleased(Key.Space)
+			mywfc.dofunction()
+		End If
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
