@@ -66,7 +66,7 @@ Class ai
 				For Local ii:Int=0 Until deathstep[i]
 					If Rnd() < .1 Then 
 						genescom[i].Set(ii,Rnd(0,6))
-						genesval[i].Set(ii,5)
+						genesval[i].Set(ii,10)
 					End If
 				Next
 			Next
@@ -76,7 +76,7 @@ Class ai
 			For Local ii:Int=0 Until 5
 				For Local i:Int=0 Until numbrains
 					genescom[i].Push(Rnd(0,6))
-					genesval[i].Push(5)
+					genesval[i].Push(10)
 				Next
 			Next
 		End Method		
@@ -131,7 +131,7 @@ Class ai
 			For Local ii:Int=0 Until 5
 				For Local i:Int=0 Until numbrains
 					genescom[i].Push(Rnd(0,6))
-					genesval[i].Push(5)
+					genesval[i].Push(10)
 				Next
 			Next
 		End Method
@@ -150,7 +150,7 @@ Class ai
 		' start at 0 and at every step update the world
 		' check collision with bullets(damage)
 		' check collision with obstacles(collision)
-		Method rungene(position:Int)						
+		Method rungene(position:Int)
 			Local i:Int=position
 			For Local ii:Int=0 Until numbrains
 			Select genescom[ii].Get(i)
@@ -402,6 +402,7 @@ Class world
 				canvas.DrawOval(x+tw/5,y+th/5,tw/1.25,th/1.25)
 			
 		End Select
+		SeedRnd(Microsecs())
 	End Method
 	Method drawmap(canvas:Canvas)
 		For Local y:Int=0 Until mh
@@ -421,12 +422,15 @@ Global myai:ai
 
 Class MyWindow Extends Window
 	Field mapwidth:Int=25,mapheight:Int=25
+	Field pos:Int=0
 	Method New()
 		myworld = New world(Width,Height,mapwidth,mapheight)
 		myai = New ai()
 		
-		myai.mybrain.insertinstruction(geneinst.moveforward,5)
-		myai.mybrain.insertinstruction(geneinst.turnright,5)
+		myai.mybrain.insertrandominstructions()
+		myai.mybrain.insertrandominstructions()
+		myai.mybrain.insertrandominstructions()		
+		SeedRnd(Microsecs())
 	End method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -436,10 +440,17 @@ Class MyWindow Extends Window
 
 		myai.mybrain.draw(canvas)
 
-		If Keyboard.KeyReleased(Key.Space)
-			myai.mybrain.rungene(0)
-			myai.mybrain.rungene(1)
-		End If
+		'If Keyboard.KeyReleased(Key.Space)
+						
+			If Rnd()<.3
+			If pos < myai.mybrain.genescom[0].Length Then 
+				myai.mybrain.rungene(pos)
+			Else
+				pos=0
+			End If
+			pos+=1
+			End If
+		'End If
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
