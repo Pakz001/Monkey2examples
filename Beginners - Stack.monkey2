@@ -12,6 +12,8 @@ Class MyWindow Extends Window
 		For Local i:=0 To 10
 			mystack.Push(i)
 		Next
+		mystack.Add(500) ' add is like push
+		mystack.Insert(0,1000) ' insert at any point (0) = at starting point of list
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -24,6 +26,10 @@ Class MyWindow Extends Window
 		For Local i:=0 until mystack.Length
 			canvas.DrawText(mystack.Get(i),10,i*20)
 		Next
+		
+		'
+		' top reads the last value added
+		canvas.DrawText("Stack.Top value :"+mystack.Top,320,40)
 		
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
