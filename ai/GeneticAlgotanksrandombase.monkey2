@@ -208,18 +208,18 @@ Class ai
 			' brain history
 			mybrainhistory.Push(New brainhistory(numtanks))
 			For Local ii:Int=0 Until numtanks 
-				mybrainhistory.Get(0).damagedone[ii] = mybrain.damagedone[ii]
-				mybrainhistory.Get(0).damagetaken[ii] = mybrain.damagetaken[ii]
-				mybrainhistory.Get(0).deathstep[ii] = mybrain.deathstep[ii]
-				mybrainhistory.Get(0).numbrains = mybrain.numbrains
+				mybrainhistory.Top.damagedone[ii] = mybrain.damagedone[ii]
+				mybrainhistory.Top.damagetaken[ii] = mybrain.damagetaken[ii]
+				mybrainhistory.Top.deathstep[ii] = mybrain.deathstep[ii]
+				mybrainhistory.Top.numbrains = mybrain.numbrains
 				For Local iii:Int= 0 Until mybrain.genescom[ii].Length
-					mybrainhistory.Get(0).genescom[ii] = mybrain.genescom[ii]
-					mybrainhistory.Get(0).genesval[ii] = mybrain.genesval[ii]
+					mybrainhistory.Top.genescom[ii] = mybrain.genescom[ii]
+					mybrainhistory.Top.genesval[ii] = mybrain.genesval[ii]
 				Next
 			Next
 			' add a series of new random instructions
-			mybrainhistory.Get(0).mutate()
-			mybrainhistory.Get(0).insertrandominstructions()
+			mybrainhistory.Top.mutate()
+			mybrainhistory.Top.insertrandominstructions()
 		Next
 	End Method
 	Method createtankimage()
