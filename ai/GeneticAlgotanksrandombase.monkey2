@@ -39,15 +39,51 @@ Class ai
 	' Here we store a x amount of runs that we use
 	' to select the fittest for a new run.
 	Class brainhistory
-		Field id:Int ' 0 = tank 1, 1=tank 2 etc...
-		Field deathstep:Int
-		Field damagedone:Int
-		Field damagetaken:Int
-		Field genescom:Stack<Int>
-		Field genesval:Stack<Int>
-		Method New()
+		Field numbrains:Int
+		Field deathstep:Int[] ' how close to target were we
+		Field damagedone:Int[]
+		Field damagetaken:Int[]
+		Field genescom:Stack<Int>[]
+		Field genesval:Stack<Int>[]
+		Method New(numbrains:Int)
+			Self.numbrains = numbrains
+			'set up the genes
+			genescom = New Stack<Int>[numbrains]
+			genesval = New Stack<Int>[numbrains]
+			For Local i:Int=0 Until numbrains
+				genescom[i] = New Stack<Int>
+				genesval[i] = New Stack<Int>
+			Next
+			' genetic algorithm variables
+			damagedone = New Int[numbrains]
+			deathstep = New Int[numbrains]			
+			damagetaken = New Int[numbrains]
 		End Method
+		Method mutate()			
+			For Local i:Int=0 Until numbrains
+				Local st:Int=deathstep[i]-10
+				If st<0 Then st=0
+				For Local ii:Int=0 Until deathstep[i]
+					If Rnd() < .1 Then 
+						genescom[i].Set(ii,Rnd(0,6))
+						genesval[i].Set(ii,5)
+					End If
+				Next
+			Next
+		End Method
+		' Insert 5 random instructions
+		Method insertrandominstructions()
+			For Local ii:Int=0 Until 5
+				For Local i:Int=0 Until numbrains
+					genescom[i].Push(Rnd(0,6))
+					genesval[i].Push(5)
+				Next
+			Next
+		End Method		
 	End Class
+	Field mybrainhistory:Stack<brainhistory>
+	
+	
 	Class brain
 		'Global a:List<test>[] = New List<test>[10]
 		Field numbrains:Int
@@ -156,9 +192,35 @@ Class ai
 		End Method
 	End Class
 	Field mybrain:brain
+	Field numhistory:Int=200
+	Field sx:Int=50,sy:Int=20,ex:Int,ey:Int 'start position and end position	
+	Field numtanks:Int=5
 	Method New()
-		mybrain = New brain(5,50,20)
+		mybrain = New brain(numtanks,50,20)
+		mybrainhistory = New Stack<brainhistory>
 		createtankimage()
+	End Method
+	' create x amount of brains (copy from mybrain)
+	Method createsetofbrains()
+		mybrainhistory.Clear()
+		For Local i:Int=0 Until numhistory
+			' Copy the contents of the current brain into the 
+			' brain history
+			mybrainhistory.Push(New brainhistory(numtanks))
+			For Local ii:Int=0 Until numtanks 
+				mybrainhistory.Get(0).damagedone[ii] = mybrain.damagedone[ii]
+				mybrainhistory.Get(0).damagetaken[ii] = mybrain.damagetaken[ii]
+				mybrainhistory.Get(0).deathstep[ii] = mybrain.deathstep[ii]
+				mybrainhistory.Get(0).numbrains = mybrain.numbrains
+				For Local iii:Int= 0 Until mybrain.genescom[ii].Length
+					mybrainhistory.Get(0).genescom[ii] = mybrain.genescom[ii]
+					mybrainhistory.Get(0).genesval[ii] = mybrain.genesval[ii]
+				Next
+			Next
+			' add a series of new random instructions
+			mybrainhistory.Get(0).mutate()
+			mybrainhistory.Get(0).insertrandominstructions()
+		Next
 	End Method
 	Method createtankimage()
 		tankimage = New Image(myworld.tw,myworld.th)
