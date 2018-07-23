@@ -1,6 +1,14 @@
 #Import "<std>"
 #Import "<mojo>"
 
+
+'
+' I want to run 1 or a group of tanks on one simulation at a time.
+' I run a simulation a x amount of times and store the genes
+' Then I select a new fittest brain and do some mutations and repeat.
+'
+'
+
 Using std..
 Using mojo..
 
@@ -13,31 +21,89 @@ Enum tiles
 End Enum
 
 Enum geneinst
-	turnleft=1,turnright=2,moveforward=3,movebackward=4
+	turnleft=1,turnright=2,moveforward=3,movebackward=4,
+	stop=5
 End Enum
 
 Class ai
 	Field tankimage:Image
 	Field tankcanvas:Canvas
+	'
+	' Here we store a x amount of runs that we use
+	' to select the fittest for a new run.
+	Class brainhistory
+		Field id:Int ' 0 = tank 1, 1=tank 2 etc...
+		Field deathstep:Int
+		Field damagedone:Int
+		Field damagetaken:Int
+		Field genescom:Stack<Int>
+		Field genesval:Stack<Int>
+		Method New()
+		End Method
+	End Class
 	Class brain
 		Field deathstep:Int ' how close to target were we
+		Field damagedone:Int
+		Field damagetaken:Int
+		Field position:Int
 		Field angle:Float
 		Field kx:Float,ky:Float,kw:Float,kh:Float 'xywidhtheight
 		Field genescom:Stack<Int>
-		Field genesval:Stack<Float>
+		Field genesval:Stack<Int> 'time
 		Method New(x:Int,y:Int)
 			genescom = New Stack<Int>
-			genesval = New Stack<Float>
+			genesval = New Stack<Int>
 			Self.kx = x
 			Self.ky = y
 			Self.kw = myworld.tw / 3
 			Self.kh = myworld.th / 2
 			Self.angle = 0
 		End Method
-		Method insertinstruction()
+		' Insert a instruction
+		Method insertinstruction(in1:Int,in2:Int)
+			'in1 is a command
+			'in2 is the time/steps
+			genescom.Push(in1)
+			genesval.Push(in2)
 		End Method
-		Method draw(canvas:Canvas)
-			angle+=0.1
+		'
+		' Here we execute 1 step at position from the genes
+		' start at 0 and at every step update the world
+		' check collision with bullets(damage)
+		' check collision with obstacles(collision)
+		Method rungene(position:Int)						
+			Local i:Int=position
+			Select genescom.Get(i)
+				Case geneinst.stop
+					Local val:Int=genesval.Get(i)
+					For Local i2:Int=0 Until val
+
+					Next				
+				Case geneinst.moveforward						
+					Local val:Int=genesval.Get(i)
+					For Local i2:Int=0 Until val
+						kx += Cos(-angle)*1
+						ky += Sin(-angle)*1
+					Next				
+				Case geneinst.movebackward
+					Local val:Int=genesval.Get(i)
+					For Local i2:Int=0 Until val
+						kx -= Cos(-angle)*1
+						ky -= Sin(-angle)*1
+					Next				
+				Case geneinst.turnleft
+					Local val:Int=genesval.Get(i)
+					For Local i2:Int=0 Until val
+						angle-=.05
+					Next
+				Case geneinst.turnright
+					Local val:Int=genesval.Get(i)
+					For Local i2:Int=0 Until val
+						angle+=.05
+					Next
+			End Select
+		End Method
+		Method draw(canvas:Canvas)			
 			canvas.Color = Color.White
 			canvas.DrawImage(myai.tankimage,kx,ky,angle)
 		End Method
@@ -54,20 +120,21 @@ Class ai
 		tankcanvas.Clear(New Color(0,0,0,0))
 		tankcanvas.Flush()
 		tankcanvas.Color = Color.Brown
-		tankcanvas.DrawQuad(tankimage.Width/2+5,3,
-							tankimage.Width/2-5,3,
-							4,tankimage.Height-2,
-							tankimage.Width-4,tankimage.Height-2)
+		tankcanvas.DrawQuad(tankimage.Width,tankimage.Height/2+5,
+							tankimage.Width,tankimage.Height/2-5,
+							4,4,
+							4,tankimage.Height-4)
 		tankcanvas.Color = Color.Silver
 		tankcanvas.DrawOval(tankimage.Width/2-tankimage.Width/6,
 							tankimage.Height/2-tankimage.Height/6,
 							tankimage.Width/3,
 							tankimage.Height/3)
 		tankcanvas.Color = Color.Gold
-		tankcanvas.DrawRect(tankimage.Width/2-tankimage.Width/20,0,tankimage.Width/10,tankimage.Height/2)
+		tankcanvas.DrawRect(tankimage.Width/2,tankimage.Height/2,
+							tankimage.Width/2,tankimage.Height/10)
 		tankcanvas.Color = Color.Brown.Blend(Color.Black,.5)
-		tankcanvas.DrawLine(tankimage.Width/2-5,3,							
-							4,tankimage.Height-2)
+		tankcanvas.DrawLine(tankimage.Width,tankimage.Height/2-5,							
+							4,4)
 		tankcanvas.Flush()
 	End Method
 End Class
@@ -214,19 +281,22 @@ Class MyWindow Extends Window
 	Method New()
 		myworld = New world(Width,Height,mapwidth,mapheight)
 		myai = New ai()
-		myai.mybrain.Push(New ai.brain(10,10))
+		myai.mybrain.Push(New ai.brain(100,100))
+		myai.mybrain.Get(0).insertinstruction(geneinst.moveforward,5)
+		myai.mybrain.Get(0).insertinstruction(geneinst.turnright,5)
 	End method
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
 		'
 		myworld.drawmap(canvas)
-'		myai.mybrain.Get(0).kx = Rnd(Width)
-'		myai.mybrain.Get(0).ky = Rnd(Height)
-'		myai.mybrain.Get(0).draw(canvas)
 		For Local i:Int=0 Until myai.mybrain.Length			
 			myai.mybrain.Get(i).draw(canvas)
 		Next
+		If Keyboard.KeyReleased(Key.Space)
+			myai.mybrain.Get(0).rungene(0)
+			myai.mybrain.Get(0).rungene(1)
+		End If
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
