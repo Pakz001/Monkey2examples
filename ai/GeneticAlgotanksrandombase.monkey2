@@ -25,7 +25,8 @@ Enum tiles
 	turret=9,turretdestroyed=10
 	tree=11,treedestroyed=12
 	capturepoint=13,startpoint=14,
-	groundvariation=15
+	groundvariation=15,
+	rockfloor=16
 End Enum
 
 Enum geneinst
@@ -229,22 +230,28 @@ Class ai
 		tankcanvas = New Canvas(tankimage)
 		tankcanvas.Clear(New Color(0,0,0,0))
 		tankcanvas.Flush()
-		tankcanvas.Color = Color.Brown
+		tankcanvas.Color = Color.Red
 		tankcanvas.DrawQuad(tankimage.Width,tankimage.Height/2+5,
 							tankimage.Width,tankimage.Height/2-5,
 							4,4,
 							4,tankimage.Height-4)
-		tankcanvas.Color = Color.Silver
+		tankcanvas.Color = Color.Silver.Blend(Color.Grey,.5)
 		tankcanvas.DrawOval(tankimage.Width/2-tankimage.Width/6,
 							tankimage.Height/2-tankimage.Height/6,
 							tankimage.Width/3,
 							tankimage.Height/3)
-		tankcanvas.Color = Color.Gold
+		tankcanvas.Color = Color.Gold.Blend(Color.Grey,.5)
 		tankcanvas.DrawRect(tankimage.Width/2,tankimage.Height/2,
 							tankimage.Width/2,tankimage.Height/10)
+		tankcanvas.Color = Color.White
+		tankcanvas.DrawRect(tankimage.Width/1.1,tankimage.Height/2,
+							tankimage.Width/1.5,tankimage.Height/10)
+
 		tankcanvas.Color = Color.Brown.Blend(Color.Black,.5)
 		tankcanvas.DrawLine(tankimage.Width,tankimage.Height/2-5,							
 							4,4)
+		tankcanvas.DrawLine(tankimage.Width,tankimage.Height/2+5,							
+							4,tankimage.Height-5)
 		tankcanvas.Flush()
 	End Method
 End Class
@@ -269,6 +276,17 @@ Class world
 		For Local i:Int=0 Until 20
 			map[Rnd(mw),Rnd(mh)] = tiles.groundvariation
 		next
+		
+		
+		For Local y:Int= 10 To 20
+		For Local x:Int=10 To 20
+			map[x,y] = tiles.rockfloor
+		Next
+		Next
+		For Local i:Int=0 Until 29
+			map[15+Rnd(-6,7),15+Rnd(-6,7)]=tiles.rockfloor
+		Next		
+		
 		For Local x:Int=0 Until 10
 			map[10+x,10] = tiles.wallhor
 		Next
@@ -288,6 +306,8 @@ Class world
 			map[Rnd(mw),Rnd(mh)] = tiles.treedestroyed
 			End If
 		Next
+
+
 
 		
 		map[10,10] = tiles.wallhor
@@ -332,34 +352,57 @@ Class world
 	Method drawtile(canvas:Canvas,x:Int,y:Int,tile:Int)
 		Select tile
 			Case tiles.ground
-				canvas.Color = Color.Yellow.Blend(Color.Red,.5)
+				canvas.Color = New Color(.78,.47,.23)
 				canvas.DrawRect(x,y,tw+1,th+1)
 				SeedRnd(1)
 				For Local i:Int=0 Until tw*th/20
-					canvas.Color = Color.Red.Blend(Color.Black,Rnd(0,.2))
+					canvas.Color = New Color(.78,.47,.23).Blend(Color.Black,Rnd(0,.2))
 					canvas.DrawPoint(x+Rnd(tw),y+Rnd(th))
+					For Local y2:Int=-2 To 2
+					For Local x2:Int=-2 To 2
+					If Rnd()<.1
+						canvas.DrawPoint(x+Rnd(tw)+x2,y+Rnd(th)+y2)
+					End	if
+					Next
+					Next
+					If Rnd()<.2
+						canvas.DrawPoint(x+Rnd(tw)+1,y+Rnd(th)+1)
+						canvas.DrawPoint(x+Rnd(tw),y+Rnd(th)+2)
+					End if
 				Next				
 			Case tiles.groundvariation
-				canvas.Color = Color.Yellow.Blend(Color.Red,.5)
-				canvas.DrawRect(x,y,tw+1,th+1)
+				'canvas.Color = Color.Yellow.Blend(Color.Red,.5)
+				'canvas.DrawRect(x,y,tw+1,th+1)
+				'SeedRnd(1)
+				drawtile(canvas,x,y,tiles.ground)
 				SeedRnd(1)
 				For Local i:Int=0 Until tw*th/20
-					canvas.Color = Color.Yellow.Blend(Color.Yellow,Rnd(0,.04))
+					canvas.Color = Color.Yellow.Blend(Color.Brown,Rnd(0.3,.8))
 					canvas.DrawPoint(x+Rnd(tw),y+Rnd(th))
 				Next
 			Case tiles.turret
-				canvas.Color = Color.Grey.Blend(Color.Red,.5)
+				canvas.Color = Color.Grey.Blend(Color.White,.5)
 				canvas.DrawRect(x,y,tw+1,th+1)
+				canvas.Color = Color.Grey.Blend(Color.White,.8)
+				canvas.DrawRect(x,y,tw/8,th)
+				canvas.Color = Color.Grey.Blend(Color.Black,.5)
+				canvas.DrawOval(x+tw/4-2,y+th/4-2,tw/2.5+4,th/2.5+4)
 				canvas.Color = Color.Grey.Blend(Color.Yellow,.5)
 				canvas.DrawOval(x+tw/4,y+th/4,tw/2.5,th/2.5)
 			Case tiles.wallver
-				drawtile(canvas,x,y,tiles.ground)
-				canvas.Color = Color.Grey.Blend(Color.Red,.5)
+				drawtile(canvas,x,y,tiles.rockfloor)
+				canvas.Color = Color.Grey.Blend(Color.White,.5)
 				canvas.DrawRect(x+tw/4,y,tw/2,th+1)		
+				canvas.Color = Color.Grey.Blend(Color.White,.8)		
+				canvas.DrawRect(x+tw/4,y,2,th+1)		
 			Case tiles.wallhor
-				drawtile(canvas,x,y,tiles.ground)
-				canvas.Color = Color.Grey.Blend(Color.Red,.5)
-				canvas.DrawRect(x,y+th/4,tw+1,th/2)		
+				drawtile(canvas,x,y,tiles.rockfloor)
+				canvas.Color = Color.Grey.Blend(Color.White,.5)
+				canvas.DrawRect(x,y+th/4,tw+1,th/2)
+				canvas.Color = Color.Grey.Blend(Color.White,.8)		
+				canvas.DrawRect(x,y+th/4,tw+1,2)
+				canvas.Color = Color.Grey.Blend(Color.White,.1)		
+				canvas.DrawRect(x,y+th/1.5,tw+1,th/4)
 			Case tiles.treedestroyed
 				drawtile(canvas,x,y,tiles.ground)
 				SeedRnd(1)
@@ -383,7 +426,7 @@ Class world
 								
 
 			Case tiles.turretdestroyed
-				drawtile(canvas,x,y,tiles.ground)
+				drawtile(canvas,x,y,tiles.rockfloor)
 				SeedRnd(1)
 				For Local i:Int=0 Until 14
 					If Rnd()<.5
@@ -404,31 +447,31 @@ Class world
 				Next
 								
 			Case tiles.wallhordestroyed
-				drawtile(canvas,x,y,tiles.ground)
+				drawtile(canvas,x,y,tiles.rockfloor)
 				SeedRnd(1)
-				For Local i:Int=0 Until 14
+				For Local i:Int=0 Until 19
 					If Rnd()<.5
-						canvas.Color = Color.Grey.Blend(Color.Brown,Rnd(0.1,0.3))
+						canvas.Color = Color.Grey.Blend(Color.Brown,Rnd(0.3,0.6))
 					Else
 						If Rnd()<.5
-							canvas.Color = Color.Grey.Blend(Color.Black,Rnd(0.1,1))
+							canvas.Color = Color.Grey.Blend(Color.Black,Rnd(0.3,1))
 						Else
-							canvas.Color = Color.Grey.Blend(Color.White,Rnd(0.1,1))
+							canvas.Color = Color.Grey.Blend(Color.White,Rnd(0.3,1))
 						End If
 					End If
 					canvas.DrawRect(x+Rnd(tw-tw/3),y+Rnd(th/5,th-th/3),Rnd(2,tw/6),Rnd(2,th/6))		
 				Next
 			Case tiles.wallverdestroyed
-				drawtile(canvas,x,y,tiles.ground)
+				drawtile(canvas,x,y,tiles.rockfloor)
 				SeedRnd(1)
-				For Local i:Int=0 Until 14
+				For Local i:Int=0 Until 19
 					If Rnd()<.5
-						canvas.Color = Color.Grey.Blend(Color.Brown,Rnd(0.1,0.3))
+						canvas.Color = Color.Grey.Blend(Color.Brown,Rnd(0.3,0.3))
 					Else
 						If Rnd()<.5
-							canvas.Color = Color.Grey.Blend(Color.Black,Rnd(0.1,1))
+							canvas.Color = Color.Grey.Blend(Color.Black,Rnd(0.3,1))
 						Else
-							canvas.Color = Color.Grey.Blend(Color.White,Rnd(0.1,1))
+							canvas.Color = Color.Grey.Blend(Color.White,Rnd(0.3,1))
 						End If
 					End If
 					canvas.DrawRect(x+Rnd(tw/3,tw-tw/3),y+Rnd(0,th-th/3),Rnd(2,tw/6),Rnd(2,th/6))		
@@ -440,6 +483,80 @@ Class world
 				canvas.DrawOval(x+tw/5,y+th/5,tw/1.25,th/1.25)
 				canvas.Color = Color.Green.Blend(Color.White,.2)
 				canvas.DrawOval(x+tw/4,y+th/4,tw/2,th/3.25)
+			Case tiles.rockfloor
+				canvas.Color = New Color(.5,.5,.4)'main
+				canvas.DrawRect(x,y,tw+1,th+1)
+				canvas.Color = New Color(.8,.8,.55)'light
+				SeedRnd(1)
+				Local x1:Float=x+tw/3
+				Local y1:Float=y+th/1.24
+				Local angle:Float=0
+				For Local i:Int=0 Until th
+					x1-=Cos(angle)*1
+					y1-=Sin(angle)*1
+					If i<th/2 Then 
+						angle+=Rnd(0.1,.3)
+					Else
+						angle-=Rnd(0.1,.3)
+					End if
+					If Rnd()<.7 Then canvas.DrawPoint(x1,y1)
+					If Rnd()<.2 Then 
+						canvas.Color = New Color(.8,.8,.55).Blend(Color.Black,Rnd(.5,.71))'light
+						canvas.DrawPoint(x1+Rnd(-2,2),y1+Rnd(-2,2))
+						If Rnd()<.5
+							canvas.DrawPoint(x1+Rnd(-2,2),y1+Rnd(-2,2))
+						Endif
+						canvas.Color = New Color(.8,.8,.55).Blend(Color.Black,Rnd(.5,.71))'light
+					End If
+				Next				
+				
+				canvas.Color = New Color(.3,.3,.25)'dark
+				x1=x+tw/2
+				y1=y
+				angle=0
+				For Local i:Int=0 Until th
+					x1+=Cos(angle)*1
+					y1+=Sin(angle)*1
+					If i<th/2
+						angle+=Rnd(0.1,.3)
+					Else
+						angle-=Rnd(0.1,.3)
+					End If
+					canvas.DrawPoint(x1,y1)
+					If Rnd()<.5 Then canvas.DrawPoint(x1+Rnd(-2,2),y1)
+				Next
+
+				canvas.Color = New Color(.6,.43,.43)'brownish
+				For Local i:Int=0 Until 6
+					canvas.DrawRect(x+Rnd(tw),y+Rnd(th),Rnd(4),Rnd(4))
+				Next
+
+				'random spots
+				canvas.Color = New Color(.3,.3,.25)'dark
+				For Local i:Int=0 Until 2
+				x1=x+Rnd(tw/3,tw-tw/3)
+				y1=y+Rnd(th/3,th-th/3)
+				'dark rock spots
+				For Local ii:Int = 0 Until 5
+					canvas.DrawRect(x1+Rnd(-6,6),y1+Rnd(-4,4),Rnd(3),Rnd(3))
+				Next
+				Next
+				
+				canvas.Color = New Color(.8,.8,.55)'light
+				For Local i:Int=0 Until 1
+				x1=x+Rnd(tw/3,tw-tw/3)
+				y1=y+Rnd(th/5,th-th/4)
+				'dark rock spots
+				For Local ii:Int = 0 Until 3
+					canvas.DrawRect(x1+Rnd(-6,6),y1+Rnd(-4,4),Rnd(3),Rnd(3))
+				Next
+				Next
+				
+				'noise
+				For Local i:Int=0 Until tw+th
+					canvas.Color = New Color(.8,.8,.55).Blend(Color.Black,Rnd(.3,.8))'light
+					canvas.DrawPoint(Rnd(x,x+tw),Rnd(y,y+th))
+				Next
 		End Select
 		SeedRnd(Microsecs())
 	End Method
