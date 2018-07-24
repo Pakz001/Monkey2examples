@@ -356,7 +356,11 @@ Class world
 				canvas.DrawRect(x,y,tw+1,th+1)
 				SeedRnd(1)
 				For Local i:Int=0 Until tw*th/20
-					canvas.Color = New Color(.78,.47,.23).Blend(Color.Black,Rnd(0,.2))
+					If Rnd()<.5
+					canvas.Color = New Color(.78,.47,.23).Blend(Color.Black,Rnd(0.1,.3))
+					Else
+					canvas.Color = New Color(.78,.47,.23).Blend(Color.White,Rnd(0.1,.3))
+					Endif
 					canvas.DrawPoint(x+Rnd(tw),y+Rnd(th))
 					For Local y2:Int=-2 To 2
 					For Local x2:Int=-2 To 2
@@ -377,7 +381,7 @@ Class world
 				drawtile(canvas,x,y,tiles.ground)
 				SeedRnd(1)
 				For Local i:Int=0 Until tw*th/20
-					canvas.Color = Color.Yellow.Blend(Color.Brown,Rnd(0.3,.8))
+					canvas.Color = Color.Yellow.Blend(Color.Brown,Rnd(0.1,.8))
 					canvas.DrawPoint(x+Rnd(tw),y+Rnd(th))
 				Next
 			Case tiles.turret
@@ -479,8 +483,10 @@ Class world
 
 			Case tiles.tree
 				drawtile(canvas,x,y,tiles.ground)
+				canvas.Color = Color.Green.Blend(Color.Black,.7)
+				canvas.DrawOval(x+tw/5,y+th/5,tw/1.25,th/1.25)				
 				canvas.Color = Color.Green.Blend(Color.Red,.2)
-				canvas.DrawOval(x+tw/5,y+th/5,tw/1.25,th/1.25)
+				canvas.DrawOval(x+tw/7,y+th/7,tw/1.25,th/1.25)
 				canvas.Color = Color.Green.Blend(Color.White,.2)
 				canvas.DrawOval(x+tw/4,y+th/4,tw/2,th/3.25)
 			Case tiles.rockfloor
