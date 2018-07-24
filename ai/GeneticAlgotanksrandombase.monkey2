@@ -24,7 +24,8 @@ Enum tiles
 	wallverdestroyed=3,wallhordestroyed=4
 	turret=9,turretdestroyed=10
 	tree=11,treedestroyed=12
-	capturepoint=13,startpoint=14
+	capturepoint=13,startpoint=14,
+	groundvariation=15
 End Enum
 
 Enum geneinst
@@ -196,7 +197,7 @@ Class ai
 	Field sx:Int=50,sy:Int=20,ex:Int,ey:Int 'start position and end position	
 	Field numtanks:Int=5
 	Method New()
-		mybrain = New brain(numtanks,50,20)
+		mybrain = New brain(numtanks,50,120)
 		mybrainhistory = New Stack<brainhistory>
 		createtankimage()
 	End Method
@@ -265,6 +266,30 @@ Class world
 		generatemap()
 	End Method
 	Method generatemap()
+		For Local i:Int=0 Until 20
+			map[Rnd(mw),Rnd(mh)] = tiles.groundvariation
+		next
+		For Local x:Int=0 Until 10
+			map[10+x,10] = tiles.wallhor
+		Next
+		For Local y:Int=0 Until 10
+			If Rnd()<.8
+				map[20,10+y] = tiles.wallverdestroyed								
+			Else
+				map[20,10+y] = tiles.wallver
+			End If
+		Next
+		map[20,10] = tiles.turret
+		
+		For Local i:Int=0 Until 20
+			If Rnd()<.5 Then 
+			map[Rnd(mw),Rnd(mh)] = tiles.tree
+			Else
+			map[Rnd(mw),Rnd(mh)] = tiles.treedestroyed
+			End If
+		Next
+
+		
 		map[10,10] = tiles.wallhor
 		map[11,10] = tiles.wallhordestroyed
 		map[10,10] = tiles.turretdestroyed
@@ -309,6 +334,19 @@ Class world
 			Case tiles.ground
 				canvas.Color = Color.Yellow.Blend(Color.Red,.5)
 				canvas.DrawRect(x,y,tw+1,th+1)
+				SeedRnd(1)
+				For Local i:Int=0 Until tw*th/20
+					canvas.Color = Color.Red.Blend(Color.Black,Rnd(0,.2))
+					canvas.DrawPoint(x+Rnd(tw),y+Rnd(th))
+				Next				
+			Case tiles.groundvariation
+				canvas.Color = Color.Yellow.Blend(Color.Red,.5)
+				canvas.DrawRect(x,y,tw+1,th+1)
+				SeedRnd(1)
+				For Local i:Int=0 Until tw*th/20
+					canvas.Color = Color.Yellow.Blend(Color.Yellow,Rnd(0,.04))
+					canvas.DrawPoint(x+Rnd(tw),y+Rnd(th))
+				Next
 			Case tiles.turret
 				canvas.Color = Color.Grey.Blend(Color.Red,.5)
 				canvas.DrawRect(x,y,tw+1,th+1)
@@ -400,7 +438,8 @@ Class world
 				drawtile(canvas,x,y,tiles.ground)
 				canvas.Color = Color.Green.Blend(Color.Red,.2)
 				canvas.DrawOval(x+tw/5,y+th/5,tw/1.25,th/1.25)
-			
+				canvas.Color = Color.Green.Blend(Color.White,.2)
+				canvas.DrawOval(x+tw/4,y+th/4,tw/2,th/3.25)
 		End Select
 		SeedRnd(Microsecs())
 	End Method
