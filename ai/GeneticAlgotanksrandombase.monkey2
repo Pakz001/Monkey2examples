@@ -19,14 +19,16 @@
 Using std..
 Using mojo..
 
+Global numtiles:Int=13
+
 Enum tiles
 	ground=0,wallver=1,wallhor=2
 	wallverdestroyed=3,wallhordestroyed=4
-	turret=9,turretdestroyed=10
-	tree=11,treedestroyed=12
-	capturepoint=13,startpoint=14,
-	groundvariation=15,
-	rockfloor=16
+	turret=5,turretdestroyed=6
+	tree=7,treedestroyed=8
+	capturepoint=9,startpoint=10,
+	groundvariation=11,
+	rockfloor=12
 End Enum
 
 Enum geneinst
@@ -261,6 +263,8 @@ Class world
 	Field map:Int[,]
 	Field dmap:Int[,]
 	Field capturexy:Vec2i,startxy:Vec2i
+	Field tileim:Image[] = New Image[numtiles]
+	Field tilecan:Canvas[] = New Canvas[numtiles]
 	Method New(sw:Int,sh:Int,mw:Int,mh:Int)
 		Self.sw = sw
 		Self.sh = sh
@@ -270,6 +274,7 @@ Class world
 		th = Float(sh) / Float(mh)
 		map = New Int[mw,mh]
 		dmap = New Int[mw,mh]
+		createtiles()
 		generatemap()
 	End Method
 	Method generatemap()
@@ -349,7 +354,21 @@ Class world
 			Next
 		Wend
 	End Method	
-	Method drawtile(canvas:Canvas,x:Int,y:Int,tile:Int)
+	Method createtiles()		
+		For Local i:Int=0 Until numtiles			
+			tileim[i] = New Image(tw+1,th+1)
+			tilecan[i] = New Canvas(tileim[i])
+			tilecan[i].Clear(Color.Black)
+			tilecan[i].Flush()
+			createtile(tilecan[i],0,0,i)
+			tilecan[i].Flush()
+		Next	
+	End Method
+	Method drawtile(canvas:Canvas,x:Float,y:Float,tile:Int)
+		canvas.Color = Color.White
+		canvas.DrawImage(tileim[tile],x,y)
+	End Method
+	Method createtile(canvas:Canvas,x:Int,y:Int,tile:Int)		
 		Select tile
 			Case tiles.ground
 				canvas.Color = New Color(.78,.47,.23)
@@ -394,13 +413,15 @@ Class world
 				canvas.Color = Color.Grey.Blend(Color.Yellow,.5)
 				canvas.DrawOval(x+tw/4,y+th/4,tw/2.5,th/2.5)
 			Case tiles.wallver
-				drawtile(canvas,x,y,tiles.rockfloor)
+				
+				createtile(canvas,x,y,tiles.rockfloor)
+				
 				canvas.Color = Color.Grey.Blend(Color.White,.5)
 				canvas.DrawRect(x+tw/4,y,tw/2,th+1)		
 				canvas.Color = Color.Grey.Blend(Color.White,.8)		
 				canvas.DrawRect(x+tw/4,y,2,th+1)		
 			Case tiles.wallhor
-				drawtile(canvas,x,y,tiles.rockfloor)
+				createtile(canvas,x,y,tiles.rockfloor)
 				canvas.Color = Color.Grey.Blend(Color.White,.5)
 				canvas.DrawRect(x,y+th/4,tw+1,th/2)
 				canvas.Color = Color.Grey.Blend(Color.White,.8)		
@@ -408,7 +429,7 @@ Class world
 				canvas.Color = Color.Grey.Blend(Color.White,.1)		
 				canvas.DrawRect(x,y+th/1.5,tw+1,th/4)
 			Case tiles.treedestroyed
-				drawtile(canvas,x,y,tiles.ground)
+				createtile(canvas,x,y,tiles.ground)
 				SeedRnd(1)
 				For Local i:Int=0 Until 14
 					If Rnd()<.6
@@ -430,7 +451,7 @@ Class world
 								
 
 			Case tiles.turretdestroyed
-				drawtile(canvas,x,y,tiles.rockfloor)
+				createtile(canvas,x,y,tiles.rockfloor)
 				SeedRnd(1)
 				For Local i:Int=0 Until 14
 					If Rnd()<.5
@@ -451,7 +472,7 @@ Class world
 				Next
 								
 			Case tiles.wallhordestroyed
-				drawtile(canvas,x,y,tiles.rockfloor)
+				createtile(canvas,x,y,tiles.rockfloor)
 				SeedRnd(1)
 				For Local i:Int=0 Until 19
 					If Rnd()<.5
@@ -466,7 +487,7 @@ Class world
 					canvas.DrawRect(x+Rnd(tw-tw/3),y+Rnd(th/5,th-th/3),Rnd(2,tw/6),Rnd(2,th/6))		
 				Next
 			Case tiles.wallverdestroyed
-				drawtile(canvas,x,y,tiles.rockfloor)
+				createtile(canvas,x,y,tiles.rockfloor)
 				SeedRnd(1)
 				For Local i:Int=0 Until 19
 					If Rnd()<.5
@@ -482,7 +503,7 @@ Class world
 				Next
 
 			Case tiles.tree
-				drawtile(canvas,x,y,tiles.ground)
+				createtile(canvas,x,y,tiles.ground)
 				canvas.Color = Color.Green.Blend(Color.Black,.7)
 				canvas.DrawOval(x+tw/5,y+th/5,tw/1.25,th/1.25)				
 				canvas.Color = Color.Green.Blend(Color.Red,.2)
@@ -602,6 +623,8 @@ Class MyWindow Extends Window
 
 		myai.mybrain.draw(canvas)
 
+		
+			
 		'If Keyboard.KeyReleased(Key.Space)
 						
 			If Rnd()<.3
