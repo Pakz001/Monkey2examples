@@ -36,6 +36,7 @@ Enum geneinst
 	stop=5
 End Enum
 
+
 Class ai
 	Field tankimage:Image
 	Field tankcanvas:Canvas
@@ -259,12 +260,44 @@ Class ai
 End Class
 
 Class world
+	' this is the turret class
+	Class turret
+		'turret x and y and width and height - in pixels
+		Field kx:Int,ky:Int,kw:Int,kh:Int
+		Field dist:Int=7 'what is their range
+		Field angle:Float,targetangle:Float
+		Method New(x:Int,y:Int,w:Int,h:Int)
+			kx = x
+			ky = y
+			kw = w
+			kh = h
+		End Method
+		Method draw(canvas:Canvas)
+			' Draw a circle around the turret which shows
+			' his firing range .
+			Local cx:Int=kx + kw/2
+			Local cy:Int=ky + kh/2
+			canvas.Color = New Color(0,0,0,0)
+			canvas.OutlineMode = OutlineMode.Smooth
+			canvas.OutlineWidth = 1
+			canvas.OutlineColor = Color.Yellow
+			canvas.DrawOval(cx-kw*dist,cy-kh*dist,kw*dist*2,kh*dist*2)
+		End Method
+	   	Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)   
+	    	Return Abs(x2-x1)+Abs(y2-y1)   
+	    End Function
+		Function getangle:Float(x1:Int,y1:Int,x2:Int,y2:Int)
+			Return ATan2(y2-y1, x2-x1)
+		End Function 	    
+	End Class
+	
 	Field sw:Int,sh:Int,mw:Int,mh:Int,tw:Float,th:Float
 	Field map:Int[,]
 	Field dmap:Int[,]
 	Field capturexy:Vec2i,startxy:Vec2i
 	Field tileim:Image[] = New Image[numtiles]
 	Field tilecan:Canvas[] = New Canvas[numtiles]
+	Field myturret:Stack<turret> = New Stack<turret>
 	Method New(sw:Int,sh:Int,mw:Int,mh:Int)
 		Self.sw = sw
 		Self.sh = sh
@@ -326,6 +359,15 @@ Class world
 		map[10,13] = tiles.turret
 		map[4,4] = tiles.tree
 		flooddistance(mw/2,mh/2,0,0)
+		
+		' initiate the turrets
+		For Local y:Int=0 Until mh
+		For Local x:Int=0 Until mw
+			If map[x,y] = tiles.turret
+				myturret.Push(New turret(x*tw,y*th,tw,th))
+			End If
+		Next
+		Next
 	End Method
 	Method flooddistance(sx:Int,sy:Int,ex:Int,ey:Int)
 		Local dx:Stack<Int> = New Stack<Int>
@@ -588,14 +630,20 @@ Class world
 		SeedRnd(Microsecs())
 	End Method
 	Method drawmap(canvas:Canvas)
+		' draw the tiles 
 		For Local y:Int=0 Until mh
 		For Local x:Int=0 Until mw
 			drawtile(canvas,x*tw,y*th,map[x,y])
 			canvas.Color = Color.Black
+			' draw the distance map
 			If Keyboard.KeyDown(Key.LeftShift)
 				canvas.DrawText(dmap[x,y],x*tw,y*th)
 			End If
 		Next
+		Next
+		' draw the turrets
+		For Local i:Int=0 Until myturret.Length
+			myturret.Get(i).draw(canvas)
 		Next
 	End Method
 End Class
@@ -603,12 +651,15 @@ End Class
 Global myworld:world
 Global myai:ai
 
+
 Class MyWindow Extends Window
 	Field mapwidth:Int=25,mapheight:Int=25
 	Field pos:Int=0
 	Method New()
+		
 		myworld = New world(Width,Height,mapwidth,mapheight)
 		myai = New ai()
+		
 		
 		myai.mybrain.insertrandominstructions()
 		myai.mybrain.insertrandominstructions()
