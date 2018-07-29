@@ -21,7 +21,7 @@ Class MyWindow Extends Window
 		targetangle = getangle(turretxy.x,turretxy.y,Mouse.X,Mouse.Y)
 		
 		'
-		' Find the shortest turn towards target angle
+		' Find the shortest turn towards target angle (stackoverflow)
 		
 		' Make the angle and target angle suitable for comapisment		
 		If (targetangle >= (angle + Pi))
