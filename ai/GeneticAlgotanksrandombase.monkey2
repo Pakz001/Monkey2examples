@@ -1,7 +1,7 @@
 #Import "<std>"
 #Import "<mojo>"
 
-
+' Tanks destroying a random base defended by turrets. Using the Genetic Algorithm.
 '
 ' I want to run 1 or a group of tanks on one simulation at a time.
 ' I run a simulation a x amount of times and store the genes
