@@ -205,6 +205,11 @@ Class ai
 		mybrainhistory = New Stack<brainhistory>
 		createtankimage()
 	End Method
+	Method updateturrets()
+		For Local i:Int=0 Until myworld.myturret.Length
+			myworld.myturret.Get(i).update()
+		Next
+	End Method
 	' create x amount of brains (copy from mybrain)
 	Method createsetofbrains()
 		mybrainhistory.Clear()
@@ -266,11 +271,61 @@ Class world
 		Field kx:Int,ky:Int,kw:Int,kh:Int
 		Field dist:Int=7 'what is their range
 		Field angle:Float,targetangle:Float
+		Field targettime:Int
+		Field targetfound:Bool=False
 		Method New(x:Int,y:Int,w:Int,h:Int)
 			kx = x
 			ky = y
 			kw = w
 			kh = h
+			angle=0
+		End Method
+		Method update()
+			' if no target then find target
+			findtarget()
+			'
+			' Find the shortest turn towards target angle (stackoverflow)
+			
+			' Make the angle and target angle suitable for comapisment		
+			If (targetangle >= (angle + Pi))
+			    angle += TwoPi
+			ElseIf (targetangle < (angle - Pi))
+			        targetangle += TwoPi
+			End If
+			' .05 is the turn speed
+			Local directiondiff:Float = targetangle - angle
+			
+			If (directiondiff < -.05)
+			    directiondiff = -.05
+			End If
+			If (directiondiff > .05)
+			    directiondiff = .05
+			End If
+			angle+=directiondiff			
+		End Method
+		'
+		' Find the closest target
+		' Every 100 clicks check for change of position
+		' or new closest target.
+		Method findtarget()
+			targettime-=1
+			
+			If targettime>0 Then Return
+			targettime = 100
+			targetfound=False
+			' closest target angle.			
+			Local closest:Int=999999
+			For Local i:Int=0 Until myai.mybrain.numbrains
+				Local x2:Int=myai.mybrain.kx[i]
+				Local y2:Int=myai.mybrain.ky[i]
+				Local d:Int=distance(kx,ky,x2,y2)
+				If d<closest Then
+					closest = d
+					targetangle=getangle(kx,ky,x2,y2)					
+					targetfound=True
+				End If
+			next
+			
 		End Method
 		Method draw(canvas:Canvas)
 			' Draw a circle around the turret which shows
@@ -282,6 +337,33 @@ Class world
 			canvas.OutlineWidth = 1
 			canvas.OutlineColor = Color.Yellow
 			canvas.DrawOval(cx-kw*dist,cy-kh*dist,kw*dist*2,kh*dist*2)
+			' Draw the barrel
+			' get the turret barrel angle
+			' turret center x and y 
+			Local tcx:Int=kx+kw/2
+			Local tcy:Int=ky+kh/2			
+			Local tx:Float,ty:Float
+			tx = tcx+Cos(angle)*kw/1.5
+			ty = tcy+Sin(angle)*kh/1.5
+
+			canvas.Color = Color.Black
+			canvas.LineWidth = 5
+			canvas.DrawLine(tcx,tcy,tx,ty)
+
+			canvas.Color = Color.DarkGrey
+			canvas.LineWidth = 3
+			canvas.DrawLine(tcx,tcy,tx,ty)
+
+			canvas.Color = Color.White
+			canvas.LineWidth = 1
+			canvas.DrawLine(tcx,tcy,tx,ty)
+
+
+
+
+
+''			canvas.LineWidth = 2
+'			canvas.DrawLine(tcx,tcy,dx,dy)
 		End Method
 	   	Function distance:Int(x1:Int,y1:Int,x2:Int,y2:Int)   
 	    	Return Abs(x2-x1)+Abs(y2-y1)   
@@ -311,6 +393,7 @@ Class world
 		generatemap()
 	End Method
 	Method generatemap()
+		SeedRnd(1)
 		For Local i:Int=0 Until 20
 			map[Rnd(mw),Rnd(mh)] = tiles.groundvariation
 		next
@@ -358,7 +441,7 @@ Class world
 		map[5,6] = tiles.tree
 		map[10,13] = tiles.turret
 		map[4,4] = tiles.tree
-		flooddistance(mw/2,mh/2,0,0)
+		'flooddistance(mw/2,mh/2,0,0)
 		
 		' initiate the turrets
 		For Local y:Int=0 Until mh
@@ -674,7 +757,7 @@ Class MyWindow Extends Window
 
 		myai.mybrain.draw(canvas)
 
-		
+		myai.updateturrets()		
 			
 		'If Keyboard.KeyReleased(Key.Space)
 						
