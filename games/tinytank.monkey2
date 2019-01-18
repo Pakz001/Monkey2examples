@@ -8,17 +8,28 @@ Global tilew:Int=16,tileh:Int=16
 
 Class turret
 	Field x:Float,y:Float,w:Int,h:Int
-	Field angle:Float
+	Field mx:Int,my:Int 'on which tile in the map is it.
+	Field angle:Float,destangle:Float
 	Field deleteme:Bool
-	Method New(x:Int,y:Int)
+	Field clearshot:Bool
+	Method New(x:Int,y:Int,mx:Int,my:Int)
 		Self.x = x
 		Self.y = y
+		Self.mx = mx
+		Self.my = my
 		Self.w = tilew
 		Self.h = tileh
 	End Method
 	Method align(ax:Float,ay:Float)
 		x+=ax
 		y+=ay
+	End Method
+	Method update()
+		turntoplayer()
+		clearshot = pathblocked()
+		If Rnd()<.01 And clearshot  Then 
+			mybullet.Add(New bullet(x+Cos(angle)*tilew+tilew/2,y+Sin(angle)*tileh+tileh/2,Cos(angle)*3,Sin(angle)*3,"turret"))
+		End If
 	End Method
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.Black
@@ -28,8 +39,52 @@ Class turret
 		For Local i:Int=0 Until tilew
 			x1+=Cos(angle)
 			y1+=Sin(angle)
+			canvas.DrawPoint(x1+tilew/2,y1+tileh/2)
 		Next
 	End Method
+	
+	Method pathblocked:Bool()
+		Local ax:Float=x+tilew/2,ay:Float=y+tileh/2
+		ax+=Cos(angle)*(tilew*2)
+		ay+=Sin(angle)*(tileh*2)
+		For Local i:Int=0 Until 300 Step 5
+			If collidetile(ax,ay) Then 
+				Return False
+			End If
+			ax+=Cos(angle)*5
+			ay+=Sin(angle)*5
+		Next
+		Return True
+	End Method
+	Method collidetile:Bool(posx:Int,posy:Int)
+		Local zx:Int = (posx/tilew) + mytank.tx
+		Local zy:Int = (posy/tileh) + mytank.ty
+		For Local y1:Int=zy-2 To zy+2
+		For Local x1:Int=zx-2 To zx+2
+			If x1<0 Or y1<0 Or x1>=mymap.mw Or y1>=mymap.mh Then Continue
+			
+			If mymap.map[x1,y1] = 1 'Or mymap.map[x1,y1] = 2
+				
+				Local x2:Int=((x1-mytank.tx)*tilew)+mytank.px-16
+				Local y2:Int=((y1-mytank.ty)*tileh)+mytank.py-16
+				If rectsoverlap(posx-2,posy-2,4,4,x2,y2,tilew,tileh)
+					
+					Return True
+				End If
+			End If
+		Next
+		Next
+		Return False
+	End Method
+
+	Method turntoplayer()
+		destangle = getangle(x,y,320,200)
+		If destangle<angle Then angle-=0.005
+		If destangle>angle Then angle+=0.005
+	End Method
+	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
+		Return ATan2(y2-y1, x2-x1)
+	End Function
 End Class
 
 Class bullet
@@ -40,11 +95,12 @@ Class bullet
 	Field deleteme:Bool=False
 	Field mx:Float,my:Float
 	Field angle:Float
-	Method New(x:Int,y:Int,mx:Float,my:Float)
+	Method New(x:Int,y:Int,mx:Float,my:Float,owner:String="player")
 		Self.x = x
 		Self.y = y
 		Self.mx = mx
 		Self.my = my
+		Self.owner = owner
 		timeout = 2000
 	End Method
 	Method update(canvas:Canvas)
@@ -52,33 +108,31 @@ Class bullet
 		If timeout<0 Then deleteme=True
 		x+=mx
 		y+=my
-		collidetile(canvas,1,1)
+		If owner = "player" Then collidetile(canvas,1,1)
 	End Method
 	Method align(mmx:Float,mmy:Float)
 		x += mmx
 		y += mmy
 	End Method
 	Method collidetile(canvas:Canvas,posx:Int,posy:Int)
-		'tile under bullet
-		'Local ax:Int=(x/tilew+mytank.px) + mytank.tx 
-		'Local ay:Int=(y/tileh+mytank.py) + mytank.ty
-		'If ax<0 Or ay<0 Or ax>=mymap.mw Or ay>=mymap.mh Then Return
 		Local zx:Int = (x/tilew) + mytank.tx
 		Local zy:Int = (y/tileh) + mytank.ty
 		For Local y1:Int=zy-2 To zy+2
 		For Local x1:Int=zx-2 To zx+2
 			If x1<0 Or y1<0 Or x1>=mymap.mw Or y1>=mymap.mh Then Continue
 			
-			If mymap.map[x1,y1] = 1
+			If mymap.map[x1,y1] = 1 Or mymap.map[x1,y1] = 2
 				
 				Local x2:Int=((x1-mytank.tx)*tilew)+mytank.px-16
 				Local y2:Int=((y1-mytank.ty)*tileh)+mytank.py-16
 				If rectsoverlap(x-2,y-2,4,4,x2,y2,tilew,tileh)
 					mymap.map[x1,y1] = 0
 					canvas.Color = Color.Black
-					canvas.DrawRect(x2,y2,tilew,tileh)
-
+					canvas.DrawRect(x2,y2,tilew,tileh)			
 					deleteme = True
+					For Local i:turret = Eachin myturret
+						If i.mx = x1 And i.my = y1 Then i.deleteme = True
+					Next
 				End If
 			End If
 		Next
@@ -88,11 +142,6 @@ Class bullet
 		canvas.Color = Color.Yellow
 		canvas.DrawCircle(x,y,3)
 	End Method
-	Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
-	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
-	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
-	    Return True
-	End	Function
 End Class
 
 Class playertank
@@ -252,7 +301,7 @@ Class MyWindow Extends Window
 				Local x2:Int,y2:Int
 				x2 = (x-mytank.tx)*tilew-tilew
 				y2 = (y-mytank.ty)*tileh-tileh
-				myturret.Add(New turret(x2,y2))
+				myturret.Add(New turret(x2,y2,x,y))
 			End If
 		Next
 		Next
@@ -275,7 +324,7 @@ Class MyWindow Extends Window
 			i.draw(canvas)
 		Next
 		For Local i:turret = Eachin myturret
-			
+			i.update()
 		Next
 
 		For Local i:bullet = Eachin mybullet
@@ -291,6 +340,13 @@ Class MyWindow Extends Window
 	End Method	
 	
 End	Class
+
+	Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+	    Return True
+	End	Function
+
 
 Function Main()
 	New AppInstance		
