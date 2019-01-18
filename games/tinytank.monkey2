@@ -6,6 +6,32 @@ Using mojo..
 
 Global tilew:Int=16,tileh:Int=16
 
+Class turret
+	Field x:Float,y:Float,w:Int,h:Int
+	Field angle:Float
+	Field deleteme:Bool
+	Method New(x:Int,y:Int)
+		Self.x = x
+		Self.y = y
+		Self.w = tilew
+		Self.h = tileh
+	End Method
+	Method align(ax:Float,ay:Float)
+		x+=ax
+		y+=ay
+	End Method
+	Method draw(canvas:Canvas)
+		canvas.Color = Color.Black
+		canvas.DrawOval(x+2,y+2,w-4,h-4)
+		canvas.Color = Color.White
+		Local x1:Float=x,y1:Float=y
+		For Local i:Int=0 Until tilew
+			x1+=Cos(angle)
+			y1+=Sin(angle)
+		Next
+	End Method
+End Class
+
 Class bullet
 	Field x:Float,y:Float
 	Field w:Float,h:Float
@@ -103,12 +129,21 @@ Class playertank
 			For Local i:bullet = Eachin mybullet
 				i.align(Cos(angle)*1,Sin(angle)*1)
 			Next
+			For Local i:turret = Eachin myturret
+				i.x+=Cos(angle)*1
+				i.y+=Sin(angle)*1
+			Next
+
 			Local ax:Int,ay:Int
-			If px>tilew Then px=0 ; tx-=1 ; ax=-1
-			If px<0 Then px=16 ; tx+=1 ; ax = 1
-			If py>tileh Then py=0 ; ty-=1 ; ay=-1
-			If py<0 Then py=16 ; ty+=1 ; ay=1
-			
+			If px>=tilew-1 Then px-=tilew ; tx-=1 ; ax=-1
+			If ax=0 And px<0 Then px+=tilew ; tx+=1 ; ax = 1
+			If py>=tileh-1 Then py-=tileh ; ty-=1 ; ay=-1
+			If ay=0 And py<0 Then py+=tileh ; ty+=1 ; ay=1
+			For Local i:turret = Eachin myturret
+				'If ax = 1 Then i.align(16,0)
+				'If ax = -1 Then i.align(-16,0)
+			Next
+
 		End If
 	End Method
 	
@@ -157,7 +192,7 @@ Class mainmap
 				map[lx+x,ly+y] = 1
 			End If
 			If brushmap[y][x] = 116't-urret
-				map[lx+x,ly+y] = 2
+				map[lx+x,ly+y] = 2				
 			End If
 			If brushmap[y][x] = 102 'f-flag
 				map[lx+x,ly+y] = 3
@@ -170,7 +205,6 @@ Class mainmap
 			End If
 		Next
 		Next
-
 	End Method
 	Method drawmap(canvas:Canvas,px:Int,py:Int,tx:Int,ty:Int)
 		For Local y:Int=0 Until (sh/th)+1
@@ -203,12 +237,25 @@ End Class
 	Global mymap:mainmap
 	Global mytank:playertank
 	Global mybullet:List<bullet>
-
+	Global myturret:List<turret>
+	
 Class MyWindow Extends Window
 	Method New()
-		mymap = New mainmap(Width,Height,100,100)
 		mytank = New playertank(6,10)
+		myturret = New List<turret>
+		mymap = New mainmap(Width,Height,100,100)				
 		mybullet = New List<bullet>
+		'inititate the turrets
+		For Local y:Int=0 Until mymap.mh
+		For Local x:Int=0 Until mymap.mw
+			If mymap.map[x,y] = 2
+				Local x2:Int,y2:Int
+				x2 = (x-mytank.tx)*tilew-tilew
+				y2 = (y-mytank.ty)*tileh-tileh
+				myturret.Add(New turret(x2,y2))
+			End If
+		Next
+		Next
 	End method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -217,10 +264,20 @@ Class MyWindow Extends Window
 		For Local i:bullet = Eachin mybullet
 			If i.deleteme = True Then mybullet.Remove(i)
 		Next
+		For Local i:turret = Eachin myturret
+			If i.deleteme = True Then myturret.Remove(i)
+		Next
 		
 		'mytank.controlmap()
 		mytank.controltank()
 		mytank.draw(canvas)
+		For Local i:turret = Eachin myturret
+			i.draw(canvas)
+		Next
+		For Local i:turret = Eachin myturret
+			
+		Next
+
 		For Local i:bullet = Eachin mybullet
 			i.draw(canvas)
 		Next
