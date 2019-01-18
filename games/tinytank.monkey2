@@ -4,14 +4,16 @@
 Using std..
 Using mojo..
 
-Global tilew:Int=16,tileh:Int=16
+Global tilew:Int=24,tileh:Int=24
 
 Class turret
-	Field x:Float,y:Float,w:Int,h:Int
+	Field x:Float,y:Float,w:Float,h:Float
 	Field mx:Int,my:Int 'on which tile in the map is it.
 	Field angle:Float,destangle:Float
 	Field deleteme:Bool
 	Field clearshot:Bool
+	Field maxdamage:Int=10
+	Field damage:Int=10
 	Method New(x:Int,y:Int,mx:Int,my:Int)
 		Self.x = x
 		Self.y = y
@@ -27,48 +29,67 @@ Class turret
 	Method update()
 		turntoplayer()
 		clearshot = pathblocked()
-		If Rnd()<.01 And clearshot  Then 
-			mybullet.Add(New bullet(x+Cos(angle)*tilew+tilew/2,y+Sin(angle)*tileh+tileh/2,Cos(angle)*3,Sin(angle)*3,"turret"))
+		If Rnd()<.1 And clearshot  Then 
+			mybullet.Add(New bullet((x+Cos(angle)*(tilew))+tilew/2,(y+Sin(angle)*tileh)+(tileh/2),Cos(angle)*3,Sin(angle)*3,"turret"))
 		End If
 	End Method
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.Black
-		canvas.DrawOval(x+2,y+2,w-4,h-4)
+		canvas.DrawOval(x+w/2-2,y+h/2-2,w-4,h-4)
 		canvas.Color = Color.White
-		Local x1:Float=x,y1:Float=y
-		For Local i:Int=0 Until tilew
+		Local x1:Float=x+w/4,y1:Float=y+h/4
+		For Local i:Int=0 Until tilew/2
 			x1+=Cos(angle)
 			y1+=Sin(angle)
-			canvas.DrawPoint(x1+tilew/2,y1+tileh/2)
+			canvas.DrawRect(x1+tilew/2,y1+tileh/2,3,3)
 		Next
+		' Draw the damage bar
+		Local pw:Int=tilew
+		Local ph:Int=tileh/5
+		Local p:Int=(pw/maxdamage+1)*damage
+		canvas.Color = Color.Black
+		canvas.DrawRect(x,y,pw,ph)
+		If damage < 5 Then 
+			canvas.Color = Color.Red
+		Else
+			canvas.Color = Color.Green
+		End If
+		canvas.DrawRect(x+1,y+1,p,ph-2)
+		
+		
 	End Method
 	
 	Method pathblocked:Bool()
+		' First check if we are not goint to hit a wall or other turret
 		Local ax:Float=x+tilew/2,ay:Float=y+tileh/2
-		ax+=Cos(angle)*(tilew*2)
-		ay+=Sin(angle)*(tileh*2)
-		For Local i:Int=0 Until 300 Step 5
+		ax+=Cos(angle)*(tilew*3)
+		ay+=Sin(angle)*(tileh*3)
+		For Local i:Int=0 Until 300 Step 2
 			If collidetile(ax,ay) Then 
 				Return False
 			End If
+			' Check if we have a chance of hitting the player
+			If rectsoverlap(ax,ay,16,16,320-tilew*1.5,200-tileh*1.5,tilew*2,tileh*2) = True
+				Return True
+			End If
+			'
 			ax+=Cos(angle)*5
 			ay+=Sin(angle)*5
 		Next
-		Return True
+		
+		
+		Return False
 	End Method
 	Method collidetile:Bool(posx:Int,posy:Int)
 		Local zx:Int = (posx/tilew) + mytank.tx
 		Local zy:Int = (posy/tileh) + mytank.ty
 		For Local y1:Int=zy-2 To zy+2
 		For Local x1:Int=zx-2 To zx+2
-			If x1<0 Or y1<0 Or x1>=mymap.mw Or y1>=mymap.mh Then Continue
-			
-			If mymap.map[x1,y1] = 1 'Or mymap.map[x1,y1] = 2
-				
+			If x1<0 Or y1<0 Or x1>=mymap.mw Or y1>=mymap.mh Then Continue			
+			If mymap.map[x1,y1] = 1 Or mymap.map[x1,y1] = 2				
 				Local x2:Int=((x1-mytank.tx)*tilew)+mytank.px-16
 				Local y2:Int=((y1-mytank.ty)*tileh)+mytank.py-16
-				If rectsoverlap(posx-2,posy-2,4,4,x2,y2,tilew,tileh)
-					
+				If rectsoverlap(posx-2,posy-2,4,4,x2,y2,tilew,tileh)					
 					Return True
 				End If
 			End If
@@ -79,8 +100,22 @@ Class turret
 
 	Method turntoplayer()
 		destangle = getangle(x,y,320,200)
-		If destangle<angle Then angle-=0.005
-		If destangle>angle Then angle+=0.005
+		' Make the angle and target angle suitable for comapisment		
+		If (destangle >= (angle + Pi))
+		    angle += TwoPi
+		Elseif (destangle < (angle - Pi))
+		        destangle += TwoPi
+		End If		
+		' .05 is the turn speed
+		Local directiondiff:Float = destangle - angle
+		
+		If (directiondiff < -.007)
+		    directiondiff = -.007
+		End If
+		If (directiondiff > .007)
+		    directiondiff = .007
+		End If
+		angle+=directiondiff
 	End Method
 	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
 		Return ATan2(y2-y1, x2-x1)
@@ -109,10 +144,17 @@ Class bullet
 		x+=mx
 		y+=my
 		If owner = "player" Then collidetile(canvas,1,1)
+		If owner = "turret" Then collideplayer()
 	End Method
 	Method align(mmx:Float,mmy:Float)
 		x += mmx
 		y += mmy
+	End Method
+	Method collideplayer()
+		If rectsoverlap(320-tilew/2,200-tileh/2,tilew,tileh,x-1,y-1,3,3)
+			If mytank.damage>0 Then mytank.damage-=1
+			deleteme = True
+		End If
 	End Method
 	Method collidetile(canvas:Canvas,posx:Int,posy:Int)
 		Local zx:Int = (x/tilew) + mytank.tx
@@ -126,12 +168,18 @@ Class bullet
 				Local x2:Int=((x1-mytank.tx)*tilew)+mytank.px-16
 				Local y2:Int=((y1-mytank.ty)*tileh)+mytank.py-16
 				If rectsoverlap(x-2,y-2,4,4,x2,y2,tilew,tileh)
-					mymap.map[x1,y1] = 0
-					canvas.Color = Color.Black
+					If mymap.map[x1,y1] = 1 And Rnd()<.2 Then mymap.map[x1,y1] = 0
+					canvas.Color = Color.Red.Blend(Color.Yellow,Rnd())
 					canvas.DrawRect(x2,y2,tilew,tileh)			
 					deleteme = True
-					For Local i:turret = Eachin myturret
-						If i.mx = x1 And i.my = y1 Then i.deleteme = True
+					For Local i:turret = Eachin myturret						
+						If i.mx = x1 And i.my = y1 Then 
+							i.damage-=1
+							If i.damage<=0 Then 
+								i.deleteme = True
+								mymap.map[x1,y1] = 0
+							End if
+						End If
 					Next
 				End If
 			End If
@@ -145,15 +193,19 @@ Class bullet
 End Class
 
 Class playertank
-	Field x:Float,y:Float
+	Field x:Float,y:Float,w:Int,h:Int
 	Field tx:Int,ty:Int 'tile x and y pos
 	Field px:Float,py:Float 'tank pixel x and y
 	Field angle:Float
+	Field maxdamage:Int=10
+	Field damage:Int=10
 	Method New(tx:Int,ty:Int)
 		' tile x and y position
 		Self.tx = tx ; Self.ty = ty
 		' tank pixel x and y position
 		Self.x = tx*tilew ; Self.y = ty*tileh
+		Self.w = tilew/2
+		Self.h = tileh/2
 	End Method
 	Method controlmap()
 		If Keyboard.KeyReleased(Key.Left) Then tx -=1		
@@ -163,7 +215,7 @@ Class playertank
 	End Method
 	Method controltank()
 		If Keyboard.KeyReleased(Key.Space)
-			mybullet.Add(New bullet(320,200,-Cos(angle)*4,-Sin(angle)*4))
+			mybullet.Add(New bullet(320+tilew/2,200+tileh/2,-Cos(angle)*4,-Sin(angle)*4))
 		End If
 		If Keyboard.KeyDown(Key.Left)
 			angle-=.1
@@ -172,42 +224,82 @@ Class playertank
 			angle+=.1
 		End If
 
-		If Keyboard.KeyDown(Key.Up) Then 
-			px += Cos(angle)*1
-			py += Sin(angle)*1
+		If Keyboard.KeyDown(Key.Up) 
+			Local xx:Float=Cos(angle)*1,yy:Float=Sin(angle)*1
+			 ' First move ahead
+			px += xx
+			py += yy
+			' If we touch a tile then move back and return
+		 	If collidetile(xx,yy) = True Then
+				px -= xx
+				py -= yy
+				Return
+			End If
+			
+			' update the bullets with the new scroll posotion	
 			For Local i:bullet = Eachin mybullet
-				i.align(Cos(angle)*1,Sin(angle)*1)
+				i.align(xx,yy)
 			Next
+			' udpat the turrets with the new scroll position
 			For Local i:turret = Eachin myturret
-				i.x+=Cos(angle)*1
-				i.y+=Sin(angle)*1
+				i.x+=xx
+				i.y+=yy
 			Next
-
+			' Scroll the actual tiles if we moved a tile dimension		
 			Local ax:Int,ay:Int
 			If px>=tilew-1 Then px-=tilew ; tx-=1 ; ax=-1
 			If ax=0 And px<0 Then px+=tilew ; tx+=1 ; ax = 1
 			If py>=tileh-1 Then py-=tileh ; ty-=1 ; ay=-1
 			If ay=0 And py<0 Then py+=tileh ; ty+=1 ; ay=1
-			For Local i:turret = Eachin myturret
-				'If ax = 1 Then i.align(16,0)
-				'If ax = -1 Then i.align(-16,0)
-			Next
 
 		End If
+	End Method
+	Method collidetile:Bool(posx:Int,posy:Int)
+		Local zx:Int = ((320-tilew/2+posx)/tilew) + mytank.tx
+		Local zy:Int = ((200-tileh/2+posy)/tileh) + mytank.ty
+		For Local y1:Int=zy-2 To zy+2
+		For Local x1:Int=zx-2 To zx+2
+			If x1<0 Or y1<0 Or x1>=mymap.mw Or y1>=mymap.mh Then Continue
+			
+			If mymap.map[x1,y1] = 1 Or mymap.map[x1,y1] = 2
+				
+				Local x2:Int=((x1-mytank.tx)*tilew)+mytank.px-16
+				Local y2:Int=((y1-mytank.ty)*tileh)+mytank.py-16
+				If rectsoverlap(320,200,w,h,x2,y2,tilew,tileh)
+					Return True
+				End If
+			End If
+		Next
+		Next
+		Return False
 	End Method
 	
 	Method draw(canvas:Canvas)
 		mymap.drawmap(canvas,px,py,tx,ty)
 		canvas.Color = Color.White
-		canvas.DrawOval(320,200,tilew,tileh)
+		canvas.DrawOval(320,200,w,h)
 		canvas.PushMatrix()
-		canvas.Translate(320+tilew/2,200+tileh/2)
+		canvas.Translate(320+w/2,200+h/2)
 		canvas.Rotate(-angle)
 		
 		canvas.DrawRect(-12,-4,7,4)
 		'canvas.DrawRect(0,-8,10,16)
 		
 		canvas.PopMatrix()
+		'draw the damage bar
+		Local dw:Int=w
+		Local dh:Int=h/5
+		Local d:Int=(dw/maxdamage+1)*damage
+		canvas.Color = Color.Black
+		canvas.DrawRect(320,200-dh,dw,dh)
+		If damage>maxdamage/3 Then 
+			canvas.Color = Color.Green
+		Elseif damage<maxdamage/3
+			canvas.Color = Color.Yellow
+		Else
+			canvas.Color = Color.Red
+		End If
+		canvas.DrawRect(320+1,200-dh+1,d,dh-2)
 	End Method
 End Class
 
