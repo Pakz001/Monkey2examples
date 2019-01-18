@@ -21,20 +21,52 @@ Class bullet
 		Self.my = my
 		timeout = 2000
 	End Method
-	Method update()
+	Method update(canvas:Canvas)
 		timeout-=1
 		If timeout<0 Then deleteme=True
 		x+=mx
 		y+=my
+		collidetile(canvas,1,1)
 	End Method
 	Method align(mmx:Float,mmy:Float)
 		x += mmx
 		y += mmy
 	End Method
+	Method collidetile(canvas:Canvas,posx:Int,posy:Int)
+		'tile under bullet
+		'Local ax:Int=(x/tilew+mytank.px) + mytank.tx 
+		'Local ay:Int=(y/tileh+mytank.py) + mytank.ty
+		'If ax<0 Or ay<0 Or ax>=mymap.mw Or ay>=mymap.mh Then Return
+		Local zx:Int = (x/tilew) + mytank.tx
+		Local zy:Int = (y/tileh) + mytank.ty
+		For Local y1:Int=zy-2 To zy+2
+		For Local x1:Int=zx-2 To zx+2
+			If x1<0 Or y1<0 Or x1>=mymap.mw Or y1>=mymap.mh Then Continue
+			
+			If mymap.map[x1,y1] = 1
+				
+				Local x2:Int=((x1-mytank.tx)*tilew)+mytank.px-16
+				Local y2:Int=((y1-mytank.ty)*tileh)+mytank.py-16
+				If rectsoverlap(x-2,y-2,4,4,x2,y2,tilew,tileh)
+					mymap.map[x1,y1] = 0
+					canvas.Color = Color.Black
+					canvas.DrawRect(x2,y2,tilew,tileh)
+
+					deleteme = True
+				End If
+			End If
+		Next
+		Next
+	End Method
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.Yellow
 		canvas.DrawCircle(x,y,3)
 	End Method
+	Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+	    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+	    Return True
+	End	Function
 End Class
 
 Class playertank
@@ -183,9 +215,6 @@ Class MyWindow Extends Window
 		App.RequestRender() ' Activate this method 
 		'
 		For Local i:bullet = Eachin mybullet
-			i.update()
-		Next
-		For Local i:bullet = Eachin mybullet
 			If i.deleteme = True Then mybullet.Remove(i)
 		Next
 		
@@ -194,6 +223,9 @@ Class MyWindow Extends Window
 		mytank.draw(canvas)
 		For Local i:bullet = Eachin mybullet
 			i.draw(canvas)
+		Next
+		For Local i:bullet = Eachin mybullet
+			i.update(canvas)
 		Next
 
 		'mymap.drawmap(canvas)
