@@ -5,6 +5,120 @@ Using std..
 Using mojo..
 
 Global tilew:Int=24,tileh:Int=24
+Global screenw:Int=640
+Global screenh:Int=480
+
+Class soldier
+	Field sx:Float,sy:Float,sw:Float,sh:Float
+	Field tx:Int,ty:Int
+	Field map:Int[,]
+	Method New()
+		map = New Int[mymap.mw,mymap.mh]
+		tx=10
+		ty=10
+		sx = (tx-mytank.tx)*tilew
+		sy = (ty-mytank.ty)*tileh
+		sw = tilew/3
+		sh = tileh/3
+		
+		
+	End Method
+	Method update()
+		If Keyboard.KeyDown(Key.A) Then 
+			For Local i:Int=0 Until 30
+				findsafespot()
+			Next
+		End if
+	End Method
+	Method findsafespot()
+		'Here the soldiier find sa safe spot behind a wall
+		'from that spot a path is flooded so he can get there
+		Local tankx:Float,tanky:Float
+		tankx = (320/tilew)+mytank.tx
+		tanky = (200/tileh)+mytank.ty
+		Local a:Float= Rnd(TwoPi)
+		For Local i:Int=0 To 20
+			tankx+=Cos(a)
+			tanky+=Sin(a)
+			
+			If tankx<0 Or tanky<0 Or tankx>=mymap.mw Or tanky>=mymap.mh Then Return
+			
+			If mymap.map[tankx,tanky] = 1				
+				For Local ii:Int=0 To 4
+					tankx+=Cos(a)
+					tanky+=Sin(a)
+					If tankx<0 Or tanky<0 Or tankx>=mymap.mw Or tanky>=mymap.mh Then Return
+					If mymap.map[tankx,tanky] = 4
+						'mymap.map[tankx,tanky] = 2
+						fillpos(tankx,tanky,5)
+						Return
+					End If
+				Next
+			End	if
+
+		Next
+		
+	End Method
+	Method fillpos(fx:Int,fy:Int,radius:Int)
+		map = New Int[mymap.mw,mymap.mh]
+		map[fx,fy] = 1
+		Local current:Int=1
+		
+		For Local i:Int=0 Until radius
+		For Local y:Int = fy-radius To fy+radius
+		For Local x:Int = fx-radius To fx+radius
+			If x<1 Or y<1 Or x>mymap.mw-1 Or y>=mymap.mh-1 Then Continue
+			If map[x,y] = current Then 
+				If validfilltile(x-1,y) And map[x-1,y] = 0 Then map[x-1,y] = current+1
+				If validfilltile(x+1,y) And map[x+1,y] = 0 Then map[x+1,y] = current+1
+				If validfilltile(x,y-1) And map[x,y-1] = 0 Then map[x,y-1] = current+1
+				If validfilltile(x,y+1) And map[x,y+1] = 0 Then map[x,y+1] = current+1
+			End if
+		Next
+		Next
+			current+=1
+		Next
+	End Method
+	Method validfilltile:Bool(x:Int,y:Int)
+		Select mymap.map[x,y]
+			Case 0
+				Return True
+			Case 1
+				Return False
+			Case 2
+				Return False
+			Default Return True
+		End Select
+		Return False
+	End Method
+	Method draw(canvas:Canvas)
+		canvas.Color = Color.Blue
+		canvas.DrawOval(sx-1,sy-1,sw+2,sh+2)
+		canvas.Color = Color.Blue
+		canvas.DrawOval(sx,sy,sw,sh)
+		' drawmap
+		If Keyboard.KeyDown(Key.LeftShift)
+			drawmap(canvas)
+		End If
+	End Method
+	Method drawmap(canvas:Canvas)
+		Local px:Int = mytank.px
+		Local py:Int = mytank.py
+		Local tx:Int = mytank.tx
+		Local ty:Int = mytank.ty
+		For Local y:Int=0 Until (screenh/tileh)+1
+		For Local x:Int=0 Until (screenw/tilew)+1
+			If x+tx<0 Or y+ty<0 Or x+tx>=mymap.mw Or y+ty>=mymap.mh Then Continue
+			Local dx:Int=x*tilew+px-16
+			Local dy:Int=y*tileh+py-16
+			'Select map[x+tx,y+ty]
+			canvas.Color = Color.White
+			canvas.DrawText(map[x+tx,y+ty],dx+tilew/2,dy+tileh/2)
+			'End Select
+		Next
+		Next		
+	End Method
+End Class
 
 Class turret
 	Field x:Float,y:Float,w:Float,h:Float
@@ -29,7 +143,7 @@ Class turret
 	Method update()
 		turntoplayer()
 		clearshot = pathblocked()
-		If Rnd()<.1 And clearshot  Then 
+		If Rnd()<.01 And clearshot  Then 
 			mybullet.Add(New bullet((x+Cos(angle)*(tilew))+tilew/2,(y+Sin(angle)*tileh)+(tileh/2),Cos(angle)*3,Sin(angle)*3,"turret"))
 		End If
 	End Method
@@ -117,9 +231,7 @@ Class turret
 		End If
 		angle+=directiondiff
 	End Method
-	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
-		Return ATan2(y2-y1, x2-x1)
-	End Function
+
 End Class
 
 Class bullet
@@ -245,6 +357,11 @@ Class playertank
 				i.x+=xx
 				i.y+=yy
 			Next
+			' udpat the soldiers with the new scroll position
+			For Local i:soldier = Eachin mysoldier
+				i.sx+=xx
+				i.sy+=yy
+			Next			
 			' Scroll the actual tiles if we moved a tile dimension		
 			Local ax:Int,ay:Int
 			If px>=tilew-1 Then px-=tilew ; tx-=1 ; ax=-1
@@ -379,6 +496,7 @@ End Class
 	Global mytank:playertank
 	Global mybullet:List<bullet>
 	Global myturret:List<turret>
+	Global mysoldier:List<soldier>
 	
 Class MyWindow Extends Window
 	Method New()
@@ -386,6 +504,8 @@ Class MyWindow Extends Window
 		myturret = New List<turret>
 		mymap = New mainmap(Width,Height,100,100)				
 		mybullet = New List<bullet>
+		mysoldier = New List<soldier>
+		mysoldier.Add(New soldier())
 		'inititate the turrets
 		For Local y:Int=0 Until mymap.mh
 		For Local x:Int=0 Until mymap.mw
@@ -425,6 +545,14 @@ Class MyWindow Extends Window
 		For Local i:bullet = Eachin mybullet
 			i.update(canvas)
 		Next
+		
+		For Local i:soldier = Eachin mysoldier
+			i.update()
+		Next
+		For Local i:soldier = Eachin mysoldier
+			i.draw(canvas)
+		Next
+
 
 		'mymap.drawmap(canvas)
 		' if key escape then quit
@@ -438,8 +566,14 @@ End	Class
 	    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
 	    Return True
 	End	Function
-
-
+	Function getangle:float(x1:Int,y1:Int,x2:Int,y2:Int)
+		Return ATan2(y2-y1, x2-x1)
+	End Function
+    ' Manhattan Distance (less precise)
+    Function distance:Float(x1:Float,y1:Float,x2:Float,y2:Float)   
+	    Return Abs(x2-x1)+Abs(y2-y1)   
+    End Function
+    
 Function Main()
 	New AppInstance		
 	New MyWindow
