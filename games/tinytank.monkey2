@@ -12,10 +12,11 @@ Class soldier
 	Field sx:Float,sy:Float,sw:Float,sh:Float
 	Field tx:Int,ty:Int
 	Field map:Int[,]
-	Method New()
+	Field targetx:Int,targety:Int
+	Method New(x:Int,y:Int)
 		map = New Int[mymap.mw,mymap.mh]
-		tx=10
-		ty=10
+		tx=x
+		ty=y
 		sx = (tx-mytank.tx)*tilew
 		sy = (ty-mytank.ty)*tileh
 		sw = tilew/3
@@ -24,11 +25,48 @@ Class soldier
 		
 	End Method
 	Method update()
-		If Keyboard.KeyDown(Key.A) Then 
-			For Local i:Int=0 Until 30
-				findsafespot()
-			Next
-		End if
+		tx = sx/tilew+mytank.tx		
+		ty = sy/tileh+mytank.ty
+		
+		If (Rnd()<.1 And map[tx,ty] = 0 ) Or Rnd()<0.05
+			findsafespot()
+		End If
+		If Rnd()<.05 And map[tx,ty] > 0
+			Local lowest:Int=map[tx,ty]
+			Local mx:Int,my:Int			
+			If map[tx-1,ty]>0 And map[tx-1,ty] < lowest Then lowest = map[tx-1,ty] ; mx=-1;my=0
+			If map[tx+1,ty]>0 And map[tx+1,ty] < lowest Then lowest = map[tx+1,ty] ; mx=1;my=0
+			If map[tx,ty-1]>0 And map[tx,ty-1] < lowest Then lowest = map[tx,ty-1] ; my=-1;mx=0
+			If map[tx,ty+1]>0 And map[tx,ty+1] < lowest Then lowest = map[tx,ty+1] ; my=1;mx=0
+			tx+=mx
+			ty+=my
+			sx+=mx*tilew
+			sy+=my*tileh
+			
+			'sx+=Float(mx)*3
+			'sy+=Float(my)*3
+			targetx = tx+mx
+			targety = ty+my
+		End If
+		'If Keyboard.KeyDown(Key.A) Then 
+		'	For Local i:Int=0 Until 30
+		'		findsafespot()
+		'	Next
+		'End If
+		' If soldier are ontop of eachother then move them apart
+'		Local posx:Int=sx-tilew/2+sw/2
+'		Local posy:Int=sy-tileh/2+sh/2
+		For Local i:soldier = Eachin mysoldier
+		For Local ii:soldier = Eachin mysoldier
+			If i<>ii
+				If rectsoverlap(i.sx,i.sy,i.sw,i.sh,ii.sx,ii.sy,ii.sw,ii.sh)
+					Local a:Float=getangle(i.sx,i.sy,ii.sx,ii.sy)
+					i.sx-=Cos(a)/10
+					i.sy-=Sin(a)/10
+				End If
+			End if
+		Next
+		Next
 	End Method
 	Method findsafespot()
 		'Here the soldiier find sa safe spot behind a wall
@@ -50,7 +88,7 @@ Class soldier
 					If tankx<0 Or tanky<0 Or tankx>=mymap.mw Or tanky>=mymap.mh Then Return
 					If mymap.map[tankx,tanky] = 4
 						'mymap.map[tankx,tanky] = 2
-						fillpos(tankx,tanky,5)
+						fillpos(tankx,tanky,10)
 						Return
 					End If
 				Next
@@ -92,10 +130,12 @@ Class soldier
 		Return False
 	End Method
 	Method draw(canvas:Canvas)
+		Local posx:Int=sx-tilew/2+sw/2
+		Local posy:Int=sy-tileh/2+sh/2
 		canvas.Color = Color.Blue
-		canvas.DrawOval(sx-1,sy-1,sw+2,sh+2)
-		canvas.Color = Color.Blue
-		canvas.DrawOval(sx,sy,sw,sh)
+		canvas.DrawOval(posx-1,posy-1,sw+2,sh+2)
+		canvas.Color = Color.Yellow
+		canvas.DrawOval(posx,posy,sw,sh)
 		' drawmap
 		If Keyboard.KeyDown(Key.LeftShift)
 			drawmap(canvas)
@@ -505,7 +545,12 @@ Class MyWindow Extends Window
 		mymap = New mainmap(Width,Height,100,100)				
 		mybullet = New List<bullet>
 		mysoldier = New List<soldier>
-		mysoldier.Add(New soldier())
+		mysoldier.Add(New soldier(18,13))
+		mysoldier.Add(New soldier(5,9))
+		mysoldier.Add(New soldier(18,6))
+		For Local i:Int=0 Until 4
+		mysoldier.Add(New soldier(10,13))
+		Next
 		'inititate the turrets
 		For Local y:Int=0 Until mymap.mh
 		For Local x:Int=0 Until mymap.mw
