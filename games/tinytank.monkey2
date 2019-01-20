@@ -630,8 +630,8 @@ Class mainmap
 	Field brushmap:String[]
 	Field map:Int[,] '
 	Field tilemap:Int[,] 'the aactual tile graphics
-	Field im:=New Image[10]
-	Field can:=New Canvas[10]
+	Field im:=New Image[20]
+	Field can:=New Canvas[20]
 	Method New(sw:Int,sh:Int,mw:Int,mh:Int)
 		Self.sw = sw ; Self.sh = sh
 		Self.mw = mw ; Self.mh = mh
@@ -642,7 +642,7 @@ Class mainmap
 		createtiles()
 	End Method
 	Method createtiles()
-		Local numtiles:Int=9
+		Local numtiles:Int=19
 		For Local i:Int=0 To numtiles
 			im[i] = New Image(tilew,tileh)
 			can[i] = New Canvas(im[i])
@@ -676,6 +676,23 @@ Class mainmap
 			can[ct].DrawPoint(x,y2+1)
 		Next
 		can[ct].Flush()
+		
+		' grass tile below wall (SHADE)
+		ct=10
+		can[ct].DrawImage(im[5],0,0)
+		can[ct].Alpha = 0.5
+		can[ct].Color = Color.Black
+		can[ct].DrawRect(0,0,tilew,tileh/6)
+		can[ct].Alpha=1
+		can[ct].Flush()
+		' grass tile RIGHT of wall (SHADE)
+		ct=11
+		can[ct].DrawImage(im[5],0,0)
+		can[ct].Alpha = 0.5
+		can[ct].Color = Color.Black		
+		can[ct].DrawRect(0,0,tilew/6,tileh)
+		can[ct].Alpha=1
+		can[ct].Flush()
 
 		' sand tile
 		ct=5
@@ -690,6 +707,22 @@ Class mainmap
 			can[ct].DrawRect(x,y,1,1)
 		Next
 		can[ct].Flush()
+	
+		' Sand under wall or turret
+		ct=14
+		can[ct].DrawImage(im[5],0,0)
+		can[ct].Alpha = 0.5
+		can[ct].Color = Color.Black
+		can[ct].DrawRect(0,0,tilew,tileh/6)
+		can[ct].Flush()
+		' Sand Right of wall or turret
+		ct=15
+		can[ct].DrawImage(im[5],0,0)
+		can[ct].Alpha = 0.5
+		can[ct].Color = Color.Black
+		can[ct].DrawRect(0,0,tilew/6,tileh)
+		can[ct].Flush()
+
 	
 		'turret tile (2)
 		ct=2
@@ -797,6 +830,17 @@ Class mainmap
 			End If
 		Next
 		Next
+		
+		'add shading
+		For Local y:Int=1 Until mh-1
+		For Local x:Int=1 Until mw-1
+			If (map[x,y] = 1 Or map[x,y] = 2) And map[x,y+1] = 4 Then tilemap[x,y+1] = 10
+			If (map[x,y] = 1 Or map[x,y] = 2) And map[x+1,y] = 4 Then tilemap[x+1,y] = 11
+			If (map[x,y] = 1 Or map[x,y] = 2) And map[x,y+1] = 5 Then tilemap[x,y+1] = 14
+			If (map[x,y] = 1 Or map[x,y] = 2) And map[x+1,y] = 5 Then tilemap[x+1,y] = 15
+		Next
+		Next
+
 	End Method
 	Method drawmap(canvas:Canvas,px:Int,py:Int,tx:Int,ty:Int)
 		For Local y:Int=0 Until (sh/th)+1
@@ -833,6 +877,21 @@ Class mainmap
 				canvas.Color = Color.White
 				'canvas.DrawRect(dx,dy,tw,th)
 				canvas.DrawImage(im[5],dx,dy)					
+			End Select
+			Select tilemap[x+tx,y+ty]
+				Case 10
+				canvas.Color = Color.White
+				canvas.DrawImage(im[10],dx,dy)
+				Case 11
+				canvas.Color = Color.White
+				canvas.DrawImage(im[11],dx,dy)
+				Case 14
+				canvas.Color = Color.White
+				canvas.DrawImage(im[14],dx,dy)
+				Case 15
+				canvas.Color = Color.White
+				canvas.DrawImage(im[15],dx,dy)
+
 			End Select
 		Next
 		Next
