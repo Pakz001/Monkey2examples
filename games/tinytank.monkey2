@@ -601,13 +601,68 @@ Class mainmap
 	' screen width/height, map width/height, tile width/height
 	Field sw:Int,sh:Int,mw:Int,mh:Int,tw:Float,th:Float
 	Field brushmap:String[]
-	Field map:Int[,]
+	Field map:Int[,] '
+	Field tilemap:Int[,] 'the aactual tile graphics
+	Field im:=New Image[10]
+	Field can:=New Canvas[10]
 	Method New(sw:Int,sh:Int,mw:Int,mh:Int)
 		Self.sw = sw ; Self.sh = sh
 		Self.mw = mw ; Self.mh = mh
 		Self.tw = tilew ; Self.th = tileh
 		map = New Int[mw,mh]
+		tilemap = New Int[mw,mh]
 		createmap(5,5)
+		createtiles()
+	End Method
+	Method createtiles()
+		Local numtiles:Int=9
+		For Local i:Int=0 To numtiles
+			im[i] = New Image(tilew,tileh)
+			can[i] = New Canvas(im[i])
+		Next
+		
+		'create tile 5 (grass tile)
+		Local ct:Int=4
+		can[ct].Color = Color.Green.Blend(Color.Black,.8)
+		can[ct].DrawRect(0,0,tilew,tileh)
+		'noise
+		For Local i:Int=0 Until 30
+			Local x:Int=Rnd(tilew)
+			Local y:Int=Rnd(tileh)
+			can[ct].Color = Color.Green.Blend(Color.Black,Rnd(.7,.8))
+			can[ct].DrawRect(x,y,3,3)
+			can[ct].Color = Color.Green.Blend(Color.Black,Rnd(.6,.7))
+			can[ct].DrawRect(x,y,1,1)
+		Next
+		'grass
+		For Local i:Int=0 Until 8
+			Local h:Int=Rnd(1,3)
+			Local x:Int=Rnd(tilew)
+			Local y:Int=Rnd(tileh)
+			can[ct].Color = Color.Green.Blend(Color.Black,Rnd(0.7,0.8))
+			Local y2:Int
+			For y2=y To y+h
+				can[4].DrawPoint(x,y2)
+			Next
+			can[ct].Color = Color.Green.Blend(Color.Black,Rnd(0.4,0.5))
+			can[ct].DrawPoint(x,y2)
+			can[ct].DrawPoint(x,y2+1)
+		Next
+		can[ct].Flush()
+
+		' sand tile
+		ct=5
+		can[ct].Color = Color.Brown.Blend(Color.Black,.4)
+		can[ct].DrawRect(0,0,tilew,tileh)
+		For Local i:Int=0 Until 40
+			Local x:Int=Rnd(tilew)
+			Local y:Int=Rnd(tileh)
+			can[ct].Color = Color.Brown.Blend(Color.Black,Rnd(.2,.8))
+			can[ct].DrawRect(x,y,Rnd(1,3),Rnd(1,3))
+			can[ct].Color = Color.Brown.Blend(Color.White,Rnd(.3,.6))
+			can[ct].DrawRect(x,y,1,1)
+		Next
+		can[ct].Flush()
 	End Method
 	Method createmap(lx:Int,ly:Int)
 		brushmap = New String[10]
@@ -632,11 +687,13 @@ Class mainmap
 			If brushmap[y][x] = 102 'f-flag
 				map[lx+x,ly+y] = 3
 			End If
-			If brushmap[y][x] = 48 Then '0 - terrain
+			If brushmap[y][x] = 48 Then '0 - terrain (grass)
 				map[lx+x,ly+y] = 4
+				tilemap[lx+x,ly+y] = 4
 			End If
-			If brushmap[y][x] = 50 Then '1 - terrain
+			If brushmap[y][x] = 50 Then '1 - terrain (sand)
 				map[lx+x,ly+y] = 5
+				tilemap[lx+x,ly+y] = 5
 			End If
 		Next
 		Next
@@ -652,17 +709,21 @@ Class mainmap
 				canvas.Color = Color.Brown.Blend(Color.Grey,.5)
 				canvas.DrawRect(dx,dy,tw,th)				
 				Case 2'turret
-				canvas.Color = Color.Blue.Blend(Color.White,.8)
-				canvas.DrawRect(dx,dy,tw,th)				
+				'canvas.Color = Color.Blue.Blend(Color.White,.8)
+				'canvas.DrawRect(dx,dy,tw,th)				
 				Case 3'flag
 				canvas.Color = Color.Grey
 				canvas.DrawRect(dx,dy,tw,th)				
 				Case 4,0'terrain(1)
-				canvas.Color = Color.Green.Blend(Color.Black,.6)
-				canvas.DrawRect(dx,dy,tw,th)
+				'canvas.Color = Color.Green.Blend(Color.Black,.6)
+				'canvas.DrawRect(dx,dy,tw,th)
+				canvas.Color = Color.White
+				canvas.DrawImage(im[4],dx,dy)
 				Case 5'terrain(2)
-				canvas.Color = Color.Brown.Blend(Color.Black,.4)
-				canvas.DrawRect(dx,dy,tw,th)					
+				'canvas.Color = Color.Brown.Blend(Color.Black,.4)
+				canvas.Color = Color.White
+				'canvas.DrawRect(dx,dy,tw,th)
+				canvas.DrawImage(im[5],dx,dy)					
 			End Select
 		Next
 		Next
@@ -678,6 +739,7 @@ End Class
 	
 Class MyWindow Extends Window
 	Method New()
+		SeedRnd(Microsecs())
 		mytank = New playertank(6,10)
 		myturret = New List<turret>
 		mymap = New mainmap(Width,Height,100,100)				
