@@ -522,7 +522,7 @@ Class bullet
 				Local x2:Int=((x1-mytank.tx)*tilew)+mytank.px-16
 				Local y2:Int=((y1-mytank.ty)*tileh)+mytank.py-16
 				If rectsoverlap(x-2,y-2,4,4,x2,y2,tilew,tileh)
-					If mymap.map[x1,y1] = 1 And Rnd()<.2 Then mymap.map[x1,y1] = 0
+					If mymap.map[x1,y1] = 1 And Rnd()<.2 Then mymap.map[x1,y1] = 0 ; mymap.tilemap[x1,y1] = 22
 					canvas.Color = Color.Red.Blend(Color.Yellow,Rnd())
 					canvas.DrawRect(x2,y2,tilew,tileh)			
 					deleteme = True
@@ -535,7 +535,8 @@ Class bullet
 							If i.damage<=0 Then 
 								i.deleteme = True
 								mymap.map[x1,y1] = 0
-							End if
+								mymap.tilemap[x1,y1] = 22
+							End If
 						End If
 					Next
 				End If
@@ -673,8 +674,8 @@ Class mainmap
 	Field brushmap:String[]
 	Field map:Int[,] '
 	Field tilemap:Int[,] 'the aactual tile graphics
-	Field im:=New Image[20]
-	Field can:=New Canvas[20]
+	Field im:=New Image[30]
+	Field can:=New Canvas[30]
 	Method New(sw:Int,sh:Int,mw:Int,mh:Int)
 		Self.sw = sw ; Self.sh = sh
 		Self.mw = mw ; Self.mh = mh
@@ -685,10 +686,14 @@ Class mainmap
 		createtiles()
 	End Method
 	Method createtiles()
-		Local numtiles:Int=19
+		Local numtiles:Int=29
 		For Local i:Int=0 To numtiles
 			im[i] = New Image(tilew,tileh)
 			can[i] = New Canvas(im[i])
+			can[i].Color = Color.Black
+			can[i].DrawRect(0,0,tilew,tileh)
+			
+			can[i].Flush()
 		Next
 		
 		'create tile 5 (grass tile)
@@ -721,8 +726,10 @@ Class mainmap
 		can[ct].Flush()
 		
 		' grass tile below wall (SHADE)
-		ct=10
-		can[ct].DrawImage(im[5],0,0)
+		ct=10		
+		can[ct].Alpha = 1
+		can[ct].Color = Color.White
+		can[ct].DrawImage(im[4],0,0)
 		can[ct].Alpha = 0.5
 		can[ct].Color = Color.Black
 		can[ct].DrawRect(0,0,tilew,tileh/6)
@@ -730,7 +737,9 @@ Class mainmap
 		can[ct].Flush()
 		' grass tile RIGHT of wall (SHADE)
 		ct=11
-		can[ct].DrawImage(im[5],0,0)
+		can[ct].Alpha = 1
+		can[ct].Color = Color.White
+		can[ct].DrawImage(im[4],0,0)
 		can[ct].Alpha = 0.5
 		can[ct].Color = Color.Black		
 		can[ct].DrawRect(0,0,tilew/6,tileh)
@@ -753,17 +762,21 @@ Class mainmap
 	
 		' Sand under wall or turret
 		ct=14
+		can[ct].Color = Color.White
 		can[ct].DrawImage(im[5],0,0)
 		can[ct].Alpha = 0.5
 		can[ct].Color = Color.Black
 		can[ct].DrawRect(0,0,tilew,tileh/6)
+		can[ct].Alpha = 1
 		can[ct].Flush()
 		' Sand Right of wall or turret
 		ct=15
+		can[ct].Color = Color.White
 		can[ct].DrawImage(im[5],0,0)
 		can[ct].Alpha = 0.5
 		can[ct].Color = Color.Black
 		can[ct].DrawRect(0,0,tilew/6,tileh)
+		can[ct].Alpha = 1
 		can[ct].Flush()
 
 	
@@ -808,6 +821,30 @@ Class mainmap
 
 		can[ct].Flush()		
 
+		'broken wall tile
+		ct = 22
+		can[ct].Color = Color.White
+		can[ct].DrawImage(im[4],0,0)
+		For Local i:Int=0 Until 80
+			can[ct].Color = Color.Grey.Blend(Color.Black,Rnd())
+			can[ct].Alpha = Rnd()
+			If Rnd()<.3 Then can[ct].Alpha=1
+			Local x1:Float,y1:Float,x2:Float,y2:Float,x3:Float,y3:Float
+			x1 = Rnd(-3,tilew+3)
+			y1 = Rnd(-3,tileh+3)
+			If Rnd()<.5 And distance(x1,y1,tilew/2,tileh/2) > tilew/2 Then Continue
+			x2 = x1 + Rnd(1,5)
+			y2 = y1 + Rnd(-3,3)
+			x3 = x1 + Rnd(1,6)
+			y3 = y2 + Rnd(1,6)
+			can[ct].DrawTriangle(x1,y1,x2,y2,x3,y3)
+			If Rnd()<.3 Then 
+				can[ct].Color=Color.Black
+				can[ct].DrawTriangle(x1-1,y1-1,x2-1,y2-1,x3-1,y3-1)
+			End If
+		Next
+		can[ct].Alpha=1
+		can[ct].Flush()
 
 		' Flag tile (3) sand+flag
 		ct=3
@@ -934,6 +971,9 @@ Class mainmap
 				Case 15
 				canvas.Color = Color.White
 				canvas.DrawImage(im[15],dx,dy)
+				Case 22
+				canvas.Color = Color.White
+				canvas.DrawImage(im[22],dx,dy)
 
 			End Select
 		Next
