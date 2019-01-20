@@ -8,6 +8,32 @@ Global tilew:Int=24,tileh:Int=24
 Global screenw:Int=640
 Global screenh:Int=480
 
+'
+' Decals are graphics like spraypaints or bullet holes that get added ontop
+' of the game graphics.
+Class decal
+	Field dx:Int,dy:Int
+	Field ox:Int,oy:Int
+	Field type:String="blood"
+	Method New(x:Int,y:Int,type:String)
+		Self.type = type
+		Self.dx = x
+		Self.dy = y
+		ox=Rnd(tilew/8)
+		oy=Rnd(tileh/8)
+	End Method
+	Method draw(canvas:Canvas)
+		Local posx:Int=dx-(mytank.tx*tilew)+mytank.px-tilew/2
+		Local posy:Int=dy-(mytank.ty*tileh)+mytank.py-tileh/2
+
+		Select type
+			Case "blood"				
+				canvas.Color = Color.Red.Blend(Color.Black,.5)
+				canvas.DrawOval(posx+tilew/4+ox,posy+tileh/4+oy,tilew/3,tileh/3)
+		End Select
+	End Method
+End Class
+
 Class soldier
 	Field id:Int
 	Field sx:Float,sy:Float,sw:Float,sh:Float
@@ -15,6 +41,7 @@ Class soldier
 	Field map:Int[,]
 	Field targetx:Int,targety:Int
 	Field targetfound:Bool=False
+	Field deleteme:Bool
 	Method New(id:Int,x:Int,y:Int)
 		Self.id = id
 		map = New Int[mymap.mw,mymap.mh]
@@ -29,6 +56,19 @@ Class soldier
 	End Method
 	Method update()
 		'Return
+
+		 'here we randomly shoot at the player 
+		 ' if there is a chance of hitting. 
+		If Rnd()<.01 
+			If pathblocked() Then
+				Local posx:Int=sx-(mytank.tx*tilew)+mytank.px-tilew/2
+				Local posy:Int=sy-(mytank.ty*tileh)+mytank.py-tileh/2
+				Local angle:Float=getangle(posx,posy,320,200)
+				mybullet.Add(New bullet((posx+Cos(angle)*(tilew))+tilew/2,(posy+Sin(angle)*tileh)+(tileh/2),Cos(angle)*3,Sin(angle)*3,"soldier"))
+			End If
+		End if
+	
+
 		
 		tx = (sx/tilew)
 		ty = (sy/tileh)
@@ -56,7 +96,12 @@ Class soldier
 			
 			'sx+=Float(mx)*3
 			'sy+=Float(my)*3
+			
+			
+			
 		End If
+		
+		' Move towards and If reaches the target position
 		If targetfound = True
 		If sx < targetx Then sx+=1
 		If sx > targetx Then sx-=1
@@ -68,7 +113,73 @@ Class soldier
 		End If
 		End If
 
+
+		collidewithplayer()
+
 	End Method
+	
+	
+	Method pathblocked:Bool()
+		' First check if we are not goint to hit a wall or other turret
+		Local posx:Int=sx-(mytank.tx*tilew)+mytank.px-tilew/2
+		Local posy:Int=sy-(mytank.ty*tileh)+mytank.py-tileh/2
+		Local angle:Float=getangle(posx,posy,320,200)
+		Local ax:Float=posx+tilew/2,ay:Float=posy+tileh/2
+		ax+=Cos(angle)*(tilew*3)
+		ay+=Sin(angle)*(tileh*3)
+		For Local i:Int=0 Until 300 Step 2
+			If collidetile(ax,ay) Then 				
+				Return False
+			End If
+			' Check if we have a chance of hitting the player
+			If rectsoverlap(ax,ay,tilew,tileh,320-tilew*1.5,200-tileh*1.5,tilew*2,tileh*2) = True
+				'Print "w"
+				
+				Return True
+			End If
+			'
+			ax+=Cos(angle)*5
+			ay+=Sin(angle)*5
+			'Print ax+","+ay
+		Next
+		
+		
+		Return False
+	End Method
+	Method collidetile:Bool(posx:Int,posy:Int)
+		Local zx:Int = (posx/tilew) + mytank.tx
+		Local zy:Int = (posy/tileh) + mytank.ty
+		For Local y1:Int=zy-2 To zy+2
+		For Local x1:Int=zx-2 To zx+2
+			If x1<0 Or y1<0 Or x1>=mymap.mw Or y1>=mymap.mh Then Continue			
+			If mymap.map[x1,y1] = 1 Or mymap.map[x1,y1] = 2				
+				Local x2:Int=((x1-mytank.tx)*tilew)+mytank.px-16
+				Local y2:Int=((y1-mytank.ty)*tileh)+mytank.py-16
+				If rectsoverlap(posx-2,posy-2,4,4,x2,y2,tilew,tileh)					
+					Return True
+				End If
+			End If
+		Next
+		Next
+		Return False
+	End Method
+
+	' The player is always at 320*200 so if the soldier
+	' is there then he wil get squashed.
+	'
+	Method collidewithplayer()
+		Local posx:Int=sx-(mytank.tx*tilew)+mytank.px-tilew/2
+		Local posy:Int=sy-(mytank.ty*tileh)+mytank.py-tileh/2
+
+		If rectsoverlap(posx,posy,sw,sh,320,200,mytank.w,mytank.h)
+			deleteme = True
+
+			mydecal.Add(New decal(sx,sy,"blood"))
+		End If
+	End Method
+	
+	
+	
 	Method align(x:Float,y:Float)
 		'sx+=x
 		'sy+=y
@@ -139,8 +250,8 @@ Class soldier
 		'Local posx:Int=((tx-mytank.tx)*tilew)+sx
 		'Local posy:Int=((ty-mytank.ty)*tileh)+sy
 		
-		Local posx:Int=sx-(mytank.tx*tilew)+mytank.px
-		Local posy:Int=sy-(mytank.ty*tileh)+mytank.py
+		Local posx:Int=sx-(mytank.tx*tilew)+mytank.px-tilew/2+sw/2
+		Local posy:Int=sy-(mytank.ty*tileh)+mytank.py-tileh/2+sh/2
 		canvas.Color = Color.Blue
 		canvas.DrawOval(posx-1,posy-1,sw+2,sh+2)
 		canvas.Color = Color.Yellow
@@ -237,7 +348,7 @@ Class turret
 				Return False
 			End If
 			' Check if we have a chance of hitting the player
-			If rectsoverlap(ax,ay,16,16,320-tilew*1.5,200-tileh*1.5,tilew*2,tileh*2) = True
+			If rectsoverlap(ax,ay,tilew,tileh,320-tilew*1.5,200-tileh*1.5,tilew*2,tileh*2) = True
 				Return True
 			End If
 			'
@@ -295,12 +406,15 @@ Class bullet
 	Field owner:String="player"
 	Field deleteme:Bool=False
 	Field mx:Float,my:Float
+	Field radius:Int
 	Field angle:Float
 	Method New(x:Int,y:Int,mx:Float,my:Float,owner:String="player")
 		Self.x = x
 		Self.y = y
 		Self.mx = mx
 		Self.my = my
+		If owner = "player" Or owner="turret" Then radius = 3
+		If owner = "soldier" Then radius = 1
 		Self.owner = owner
 		timeout = 2000
 	End Method
@@ -311,11 +425,19 @@ Class bullet
 		y+=my
 		If owner = "player" Then collidetile(canvas,1,1)
 		If owner = "turret" Then collideplayer()
+		If owner = "soldier" Then collideplayer2()
 	End Method
 	Method align(mmx:Float,mmy:Float)
 		x += mmx
 		y += mmy
 	End Method
+	Method collideplayer2()
+		If rectsoverlap(320-tilew/2,200-tileh/2,tilew,tileh,x-1,y-1,3,3)
+			If Rnd()<.2 And mytank.damage>0 Then mytank.damage-=1
+			deleteme = True
+		End If
+	End Method
+
 	Method collideplayer()
 		If rectsoverlap(320-tilew/2,200-tileh/2,tilew,tileh,x-1,y-1,3,3)
 			If mytank.damage>0 Then mytank.damage-=1
@@ -354,7 +476,7 @@ Class bullet
 	End Method
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.Yellow
-		canvas.DrawCircle(x,y,3)
+		canvas.DrawCircle(x,y,radius)
 	End Method
 End Class
 
@@ -380,6 +502,7 @@ Class playertank
 		If Keyboard.KeyReleased(Key.Down) Then ty +=1		
 	End Method
 	Method controltank()
+		
 		If Keyboard.KeyReleased(Key.Space)
 			mybullet.Add(New bullet(320+tilew/2,200+tileh/2,-Cos(angle)*4,-Sin(angle)*4))
 		End If
@@ -446,7 +569,6 @@ Class playertank
 	End Method
 	
 	Method draw(canvas:Canvas)
-		mymap.drawmap(canvas,px,py,tx,ty)
 		canvas.Color = Color.White
 		canvas.DrawOval(320,200,w,h)
 		canvas.PushMatrix()
@@ -459,8 +581,8 @@ Class playertank
 		canvas.PopMatrix()
 		'draw the damage bar
 		Local dw:Int=w
-		Local dh:Int=h/5
-		Local d:Int=(dw/maxdamage+1)*damage
+		Local dh:Int=h/4
+		Local d:Int=(dw/maxdamage)*damage
 		canvas.Color = Color.Black
 		canvas.DrawRect(320,200-dh,dw,dh)
 		If damage>maxdamage/3 Then 
@@ -551,6 +673,7 @@ End Class
 	Global mybullet:List<bullet>
 	Global myturret:List<turret>
 	Global mysoldier:List<soldier>
+	Global mydecal:List<decal>
 	
 Class MyWindow Extends Window
 	Method New()
@@ -559,6 +682,7 @@ Class MyWindow Extends Window
 		mymap = New mainmap(Width,Height,100,100)				
 		mybullet = New List<bullet>
 		mysoldier = New List<soldier>
+		mydecal = New List<decal>
 		mysoldier.Add(New soldier(1,18,13))
 		mysoldier.Add(New soldier(2,5,9))
 		mysoldier.Add(New soldier(3,18,6))
@@ -590,7 +714,17 @@ Class MyWindow Extends Window
 		
 		'mytank.controlmap()
 		mytank.controltank()
+
+
+
+		mymap.drawmap(canvas,mytank.px,mytank.py,mytank.tx,mytank.ty)
+		For Local i:decal=Eachin mydecal
+			i.draw(canvas)
+		Next
+
 		mytank.draw(canvas)
+
+
 		For Local i:turret = Eachin myturret
 			i.draw(canvas)
 		Next
@@ -605,8 +739,12 @@ Class MyWindow Extends Window
 			i.update(canvas)
 		Next
 		
+		
 		For Local i:soldier = Eachin mysoldier
 			i.update()
+		Next
+		For Local i:soldier = Eachin mysoldier
+			If i.deleteme Then mysoldier.Remove(i)
 		Next
 		For Local i:soldier = Eachin mysoldier
 			i.draw(canvas)
