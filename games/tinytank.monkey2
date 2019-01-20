@@ -356,8 +356,8 @@ Class turret
 	Method pathblocked:Bool()
 		' First check if we are not goint to hit a wall or other turret
 		Local ax:Float=x+tilew/2,ay:Float=y+tileh/2
-		ax+=Cos(angle)*(tilew*3)
-		ay+=Sin(angle)*(tileh*3)
+		ax+=Cos(angle)*(tilew*1.5)
+		ay+=Sin(angle)*(tileh*1.5)
 		For Local i:Int=0 Until 300 Step 2
 			If collidetile(ax,ay) Then 
 				Return False
@@ -423,6 +423,9 @@ Class bullet
 	Field mx:Float,my:Float
 	Field radius:Int
 	Field angle:Float
+	Field glow:Float
+	Field glowtime:Float
+	Field glowinc:Float=0.1
 	Method New(x:Int,y:Int,mx:Float,my:Float,owner:String="player")
 		Self.x = x
 		Self.y = y
@@ -434,6 +437,14 @@ Class bullet
 		timeout = 2000
 	End Method
 	Method update(canvas:Canvas)
+		'glowtime+=.5
+		'If glowtime>1 Then 
+		'	glowtime=0
+			glow+=glowinc
+			If glow>1.0 Then glowinc=-glowinc ; glow=1.0
+			If glow<0 Then glowinc=-glowinc ; glow=0
+		'End If
+		
 		timeout-=1
 		If timeout<0 Then deleteme=True
 		x+=mx
@@ -490,8 +501,10 @@ Class bullet
 		Next
 	End Method
 	Method draw(canvas:Canvas)
-		canvas.Color = Color.Yellow
+		canvas.Color = Color.Yellow.Blend(Color.Black,glow/3)
+		canvas.Alpha = 1.0-glow/3
 		canvas.DrawCircle(x,y,radius)
+		canvas.Alpha = 1
 	End Method
 End Class
 
