@@ -314,16 +314,27 @@ Class turret
 		End If
 	End Method
 	Method draw(canvas:Canvas)
+		canvas.Alpha=.2
+		canvas.Color = Color.Black
+		canvas.DrawOval((x+w/2)-5,(y+h/2)-5,w,h)
+		canvas.Alpha=.2
 		canvas.Color = Color.Black.Blend(Color.Yellow,.2)
 		canvas.DrawOval((x+w/2)-3,(y+h/2)-3,w,h)
-
-		canvas.Color = Color.Grey.Blend(Color.Yellow,.2)
+		
+		canvas.Alpha=.7
+		canvas.Color = Color.Grey.Blend(Color.Yellow,.3)
 		canvas.DrawOval((x+w/2)-2,(y+h/2)-2,w-4,h-4)
+		canvas.Alpha=.5
 		canvas.Color = Color.White
+		canvas.DrawOval((x+tilew/2)+tilew/8-1,(y+tileh/2)+tileh/8-1,w/2,h/2)
+
+		canvas.Color = Color.White
+		canvas.Alpha=1
 		Local x1:Float=x+w/4,y1:Float=y+h/4
 		For Local i:Int=0 Until tilew/2
 			x1+=Cos(angle)
-			y1+=Sin(angle)
+			y1+=Sin(angle)			
+			canvas.Color = Color.White.Blend(Color.Black,1.0-1.0/Float(tilew/2)*i)
 			canvas.DrawRect(x1+tilew/2,y1+tileh/2,3,3)
 		Next
 		' Draw the damage bar
@@ -629,7 +640,7 @@ Class mainmap
 		can[ct].Color = Color.Green.Blend(Color.Black,.8)
 		can[ct].DrawRect(0,0,tilew,tileh)
 		'noise
-		For Local i:Int=0 Until 30
+		For Local i:Int=0 Until 10
 			Local x:Int=Rnd(-3,tilew+6)
 			Local y:Int=Rnd(-3,tileh+6)
 			can[ct].Color = Color.Green.Blend(Color.Black,Rnd(.75,.8))
@@ -707,6 +718,38 @@ Class mainmap
 		Next
 
 		can[ct].Flush()		
+
+
+		' Flag tile (3) sand+flag
+		ct=3
+		can[ct].Color = Color.Brown.Blend(Color.Black,.45)
+		can[ct].DrawRect(0,0,tilew,tileh)
+		For Local i:Int=0 Until 40
+			Local x:Int=Rnd(tilew)
+			Local y:Int=Rnd(tileh)
+			If distance(tilew/2,tileh/2,x,y) < tilew/2 Then continue
+			can[ct].Color = Color.Brown.Blend(Color.Black,Rnd(.2,.8))
+			can[ct].DrawRect(x,y,Rnd(1,3),Rnd(1,3))
+			can[ct].Color = Color.Brown.Blend(Color.Yellow,Rnd(.1,.3))
+			can[ct].DrawRect(x,y,1,1)
+		Next
+		'flag
+		
+		
+		can[ct].Color=Color.Brown.Blend(Color.White,.5)
+		can[ct].DrawRect(tilew/4,0,tilew/10,tileh)
+		can[ct].Color=Color.Brown
+		can[ct].DrawRect((tilew/4)+1,0,tilew/10,tileh)
+		can[ct].Color=Color.Black.Blend(Color.Brown,.3)
+		can[ct].DrawRect(tilew/4+2,0,tilew/10,tileh)
+		can[ct].Color=Color.Red
+		can[ct].DrawRect(tilew/3,0,tilew/3,tileh/3)
+		can[ct].Color=Color.Red.Blend(Color.White,.2)
+		can[ct].DrawRect(tilew/3,tileh/8,tilew/3,tileh/8)
+
+		can[ct].Flush()
+
+
 	End Method
 	Method createmap(lx:Int,ly:Int)
 		brushmap = New String[10]
@@ -762,8 +805,11 @@ Class mainmap
 				canvas.DrawImage(im[2],dx,dy)
 
 				Case 3'flag
-				canvas.Color = Color.Grey
-				canvas.DrawRect(dx,dy,tw,th)				
+'				canvas.Color = Color.Grey
+'				canvas.DrawRect(dx,dy,tw,th)				
+				canvas.Color = Color.White
+				canvas.DrawImage(im[3],dx,dy)
+
 				Case 4,0'terrain(1)
 				'canvas.Color = Color.Green.Blend(Color.Black,.6)
 				'canvas.DrawRect(dx,dy,tw,th)
