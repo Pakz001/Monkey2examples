@@ -125,10 +125,11 @@ Class soldier
 		Local posy:Int=sy-(mytank.ty*tileh)+mytank.py-tileh/2
 		Local angle:Float=getangle(posx,posy,320,200)
 		Local ax:Float=posx+tilew/2,ay:Float=posy+tileh/2
-		ax+=Cos(angle)*(tilew*3)
-		ay+=Sin(angle)*(tileh*3)
+		ax+=Cos(angle)*(tilew*1)
+		ay+=Sin(angle)*(tileh*1)
 		For Local i:Int=0 Until 300 Step 2
 			If collidetile(ax,ay) Then 				
+				
 				Return False
 			End If
 			' Check if we have a chance of hitting the player
@@ -138,8 +139,8 @@ Class soldier
 				Return True
 			End If
 			'
-			ax+=Cos(angle)*5
-			ay+=Sin(angle)*5
+			ax+=Cos(angle)*1
+			ay+=Sin(angle)*1
 			'Print ax+","+ay
 		Next
 		
@@ -504,7 +505,7 @@ Class playertank
 	Method controltank()
 		
 		If Keyboard.KeyReleased(Key.Space)
-			mybullet.Add(New bullet(320+tilew/2,200+tileh/2,-Cos(angle)*4,-Sin(angle)*4))
+			mybullet.Add(New bullet((320+w/2)-(Cos(angle)*w),(200+h/2)-(Sin(angle)*h),-Cos(angle)*4,-Sin(angle)*4))
 		End If
 		If Keyboard.KeyDown(Key.Left)
 			angle-=.1
