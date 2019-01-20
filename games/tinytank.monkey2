@@ -8,6 +8,46 @@ Global tilew:Int=24,tileh:Int=24
 Global screenw:Int=640
 Global screenh:Int=480
 
+
+Class particle
+	Field px:Float,py:Float,pangle:Float
+	Field ps:Float=2.0+Rnd(2)
+	Field pw:Int,ph:Int
+	Field deleteme:Bool
+	Field col:Color
+	Field timeout:Int=200
+	Field fadeout:Float=1
+	Field fadeinc:Float
+	Method New(x:Int,y:Int,angle:Float)
+		Self.px = x
+		Self.py = y
+		col = Color.Red
+		If Rnd()<.2 Then col = Color.Red.Blend(Color.Yellow,Rnd(0.1,0.5))
+		If Rnd()<.2 Then col = Color.Grey.Blend(Color.Black,Rnd())
+		pw = Rnd(1,5)
+		ph = Rnd(1,5)
+		fadeinc=1.0/ps
+		'Self.pangle = angle
+		pangle=Rnd(TwoPi)
+	End Method
+	Method update()
+		
+		fadeout+=fadeinc
+		timeout-=1
+		If timeout<=0 Then deleteme = True
+		px+=Cos(pangle)*ps
+		py+=Sin(pangle)*ps
+		ps-=0.1
+		If ps<0 Then deleteme = True ; Return
+		If Rnd()<.05 Then pangle+=Rnd(-Pi,Pi)
+	End Method
+	Method draw(canvas:Canvas)
+		canvas.Color = col
+		canvas.Alpha = fadeout
+		canvas.DrawRect(px,py,pw,ph)
+		canvas.Alpha = 1
+	End Method
+End Class
 '
 ' Decals are graphics like spraypaints or bullet holes that get added ontop
 ' of the game graphics.
@@ -486,6 +526,9 @@ Class bullet
 					canvas.Color = Color.Red.Blend(Color.Yellow,Rnd())
 					canvas.DrawRect(x2,y2,tilew,tileh)			
 					deleteme = True
+					For Local z:Int=0 Until 20+Rnd(100)
+						myparticle.Add(New particle(x2,y2+tileh/2,angle))
+					Next
 					For Local i:turret = Eachin myturret						
 						If i.mx = x1 And i.my = y1 Then 
 							i.damage-=1
@@ -904,6 +947,7 @@ End Class
 	Global myturret:List<turret>
 	Global mysoldier:List<soldier>
 	Global mydecal:List<decal>
+	Global myparticle:List<particle>
 	
 Class MyWindow Extends Window
 	Method New()
@@ -914,11 +958,15 @@ Class MyWindow Extends Window
 		mybullet = New List<bullet>
 		mysoldier = New List<soldier>
 		mydecal = New List<decal>
+		myparticle = New List<particle>
 		mysoldier.Add(New soldier(1,18,13))
 		mysoldier.Add(New soldier(2,5,9))
 		mysoldier.Add(New soldier(3,18,6))
 		For Local i:Int=0 Until 4
 		mysoldier.Add(New soldier(4+i,10,13))
+		Next
+		For Local i:Int=0 Until 14
+			myparticle.Add(New particle(320,200,Rnd(TwoPi)))
 		Next
 		'inititate the turrets
 		For Local y:Int=0 Until mymap.mh
@@ -981,6 +1029,16 @@ Class MyWindow Extends Window
 			i.draw(canvas)
 		Next
 
+		For Local i:particle = Eachin myparticle
+			i.update()
+		Next
+		For Local i:particle = Eachin myparticle
+			If i.deleteme Then myparticle.Remove(i)
+		Next
+		
+		For Local i:particle = Eachin myparticle
+			i.draw(canvas)
+		Next
 
 		'mymap.drawmap(canvas)
 		' if key escape then quit
