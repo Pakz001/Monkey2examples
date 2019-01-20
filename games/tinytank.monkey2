@@ -314,7 +314,7 @@ Class turret
 		End If
 	End Method
 	Method draw(canvas:Canvas)
-		canvas.Color = Color.Black
+		canvas.Color = Color.Grey.Blend(Color.Yellow,.2)
 		canvas.DrawOval(x+w/2-2,y+h/2-2,w-4,h-4)
 		canvas.Color = Color.White
 		Local x1:Float=x+w/4,y1:Float=y+h/4
@@ -637,8 +637,8 @@ Class mainmap
 		'grass
 		For Local i:Int=0 Until 8
 			Local h:Int=Rnd(1,3)
-			Local x:Int=Rnd(tilew)
-			Local y:Int=Rnd(tileh)
+			Local x:Int=Rnd(-2,tilew+4)
+			Local y:Int=Rnd(-2,tileh+4)
 			can[ct].Color = Color.Green.Blend(Color.Black,Rnd(0.7,0.8))
 			Local y2:Int
 			For y2=y To y+h
@@ -652,7 +652,7 @@ Class mainmap
 
 		' sand tile
 		ct=5
-		can[ct].Color = Color.Brown.Blend(Color.Black,.4)
+		can[ct].Color = Color.Brown.Blend(Color.Black,.65)
 		can[ct].DrawRect(0,0,tilew,tileh)
 		For Local i:Int=0 Until 40
 			Local x:Int=Rnd(tilew)
@@ -663,6 +663,47 @@ Class mainmap
 			can[ct].DrawRect(x,y,1,1)
 		Next
 		can[ct].Flush()
+	
+		'turret tile (2)
+		ct=2
+		can[ct].Color = Color.Grey.Blend(Color.Black,.3)
+		can[ct].DrawRect(0,0,tilew,tileh)
+		'noise
+		For Local i:Int=0 Until 130
+			Local x:Int=Rnd(tilew)
+			Local y:Int=Rnd(tileh)
+			can[ct].Color = Color.Grey.Blend(Color.Black,Rnd())
+			can[ct].DrawRect(x,y,2,2)
+			can[ct].Color = Color.Grey.Blend(Color.White,Rnd(.6,.7))
+			can[ct].DrawRect(x,y,1,1)
+		Next
+		can[ct].Flush()		
+	
+	
+		'wall tile(1)
+		ct=2
+		can[ct].Color = Color.Grey
+		can[ct].DrawRect(0,0,tilew,tileh)
+		can[ct].Color = Color.Grey.Blend(Color.Black,.5)
+		can[ct].DrawLine(0,tileh-1,tilew,tileh-1)
+		can[ct].DrawLine(0,tileh-2,tilew,tileh-2)
+		can[ct].DrawLine(0,tileh-3,tilew,tileh-3)
+		can[ct].DrawLine(tilew-1,0,tilew-1,tileh-1)
+		can[ct].DrawLine(tilew-2,0,tilew-2,tileh-1)
+		can[ct].DrawLine(tilew-3,0,tilew-3,tileh-1)
+		can[ct].Color = Color.Grey.Blend(Color.Black,.3)
+		can[ct].DrawRect(3,3,tilew-6,tileh-6)
+		'noise
+		For Local i:Int=0 Until 30
+			Local x:Int=Rnd(tilew)
+			Local y:Int=Rnd(tileh)
+			can[ct].Color = Color.Grey.Blend(Color.Black,Rnd())
+			can[ct].DrawRect(x,y,2,2)
+			can[ct].Color = Color.Grey.Blend(Color.White,Rnd(.6,.7))
+			can[ct].DrawRect(x,y,1,1)
+		Next
+
+		can[ct].Flush()		
 	End Method
 	Method createmap(lx:Int,ly:Int)
 		brushmap = New String[10]
@@ -706,11 +747,17 @@ Class mainmap
 			Local dy:Int=y*th+py-16
 			Select map[x+tx,y+ty]
 				Case 1'wall
-				canvas.Color = Color.Brown.Blend(Color.Grey,.5)
-				canvas.DrawRect(dx,dy,tw,th)				
+'				canvas.Color = Color.Brown.Blend(Color.Grey,.5)
+'				canvas.DrawRect(dx,dy,tw,th)				
+				canvas.Color = Color.White
+				canvas.DrawImage(im[2],dx,dy)
+
 				Case 2'turret
 				'canvas.Color = Color.Blue.Blend(Color.White,.8)
 				'canvas.DrawRect(dx,dy,tw,th)				
+				canvas.Color = Color.White
+				canvas.DrawImage(im[2],dx,dy)
+
 				Case 3'flag
 				canvas.Color = Color.Grey
 				canvas.DrawRect(dx,dy,tw,th)				
