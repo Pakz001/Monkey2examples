@@ -962,6 +962,41 @@ Class mainmap
 			End If
 		Wend
 
+		'random walls
+		Local cnt:Int=0
+		For Local i:Int=0 Until 150
+			Local x1:Int=Rnd(5,35)
+			Local y1:Int=Rnd(5,35)
+			If cnt<5 And map[x1,y1] = 5 And map[x1-1,y1-1]=5 And map[x1+1,y1+1]=5 Then map[x1,y1] = 1 ; cnt+=1
+		Next
+
+		'lengthen Then roads
+		For Local y1:Int=5 To 40
+		For Local x1:Int=5 To 40
+			If map[x1,y1] = 5 And map[x1,y1-1]=1 And map[x1+1,y1] = 0 Then 
+				For Local x2:Int=0 To 2
+					map[x1+x2,y1] = 5
+				Next
+			End If
+			If map[x1,y1] = 5 And map[x1,y1-1]=1 And map[x1-1,y1] = 0 Then 
+				For Local x2:Int=0 To 2
+					map[x1-x2,y1] = 5
+				Next
+			End If
+			If map[x1,y1] = 5 And map[x1+1,y1]=1 And map[x1,y1-1] = 0 Then 
+				For Local y2:Int=0 To 2
+					map[x1,y1-y2] = 5
+				Next
+			End If
+			If map[x1,y1] = 5 And map[x1+1,y1]=1 And map[x1,y1+1] = 0 Then 
+				For Local y2:Int=0 To 2
+					map[x1,y1+y2] = 5
+				Next
+			End If
+			
+		Next
+		Next
+
 		'add shading
 		For Local y1:Int=1 Until mh-1
 		For Local x1:Int=1 Until mw-1
@@ -1090,7 +1125,7 @@ End Class
 Class MyWindow Extends Window
 	Method New()
 		SeedRnd(Microsecs())
-		mytank = New playertank(6,10)
+		mytank = New playertank(10,10)
 		myturret = New List<turret>
 		mymap = New mainmap(Width,Height,100,100)				
 		mybullet = New List<bullet>
