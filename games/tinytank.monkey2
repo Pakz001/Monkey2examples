@@ -395,10 +395,10 @@ Class turret
 	
 	Method pathblocked:Bool()
 		' First check if we are not goint to hit a wall or other turret
-		Local ax:Float=x+tilew/2,ay:Float=y+tileh/2
+		Local ax:Float=x+tilew/2-w/4,ay:Float=y+tileh/2-h/4
 		ax+=Cos(angle)*(tilew*1.5)
 		ay+=Sin(angle)*(tileh*1.5)
-		For Local i:Int=0 Until 300 Step 2
+		For Local i:Int=0 Until 100 Step 2
 			If collidetile(ax,ay) Then 
 				Return False
 			End If
@@ -682,7 +682,8 @@ Class mainmap
 		Self.tw = tilew ; Self.th = tileh
 		map = New Int[mw,mh]
 		tilemap = New Int[mw,mh]
-		createmap(5,5)
+		'createmap(5,5)
+		createrandommap()
 		createtiles()
 	End Method
 	Method createtiles()
@@ -824,8 +825,8 @@ Class mainmap
 		'broken wall tile
 		ct = 22
 		can[ct].Color = Color.White
-		can[ct].DrawImage(im[4],0,0)
-		For Local i:Int=0 Until 80
+		can[ct].DrawImage(im[5],0,0)
+		For Local i:Int=0 Until 180
 			can[ct].Color = Color.Grey.Blend(Color.Black,Rnd())
 			can[ct].Alpha = Rnd()
 			If Rnd()<.3 Then can[ct].Alpha=1
@@ -877,6 +878,103 @@ Class mainmap
 
 
 	End Method
+	
+	Method createrandommap()
+		'terrain = 5
+		Local x:Int=10
+		Local y:Int=10
+		Local s:Int=1
+		Local l:Int
+		s = Rnd(1,2)
+		l = Rnd(5,15)
+		For Local x1:Int=0 To l
+			For Local i:Int=-s To s
+				map[x+x1,y+i]=5
+			Next
+		Next
+		s = Rnd(1,2)
+		l = Rnd(15)
+		Local ox:Int=Rnd(0,5)
+		Local oy:Int=Rnd(-3,3)
+		For Local y1:Int=0 Until l
+			For Local i:Int=-s To s
+				map[x+i+ox,y+y1+oy]=5				
+			Next
+		Next
+		s = Rnd(1,2)
+		l = Rnd(15)
+		ox=Rnd(0,5)
+		oy=Rnd(-3,3)
+		For Local y1:Int=0 Until l
+			For Local i:Int=-s To s
+				map[x+i+ox,y+y1+oy]=5				
+			Next
+		Next
+
+		' add walls
+		For Local y1:Int=1 Until 40
+		For Local x1:Int=1 Until 40
+			If map[x1,y1] = 5 And map[x1-1,y1] = 0 Then map[x1-1,y1] = 1
+			If map[x1,y1] = 5 And map[x1,y1-1] = 0 Then map[x1,y1-1] = 1
+			If map[x1,y1] = 5 And map[x1,y1+1] = 0 Then map[x1,y1+1] = 1
+			If map[x1,y1] = 5 And map[x1+1,y1] = 0 Then map[x1+1,y1] = 1
+			
+		Next
+		Next
+		'add turrets in corners
+		For Local y1:Int=1 Until 40
+		For Local x1:Int=1 Until 40
+			If map[x1,y1] = 0 And map[x1+1,y1] = 1 And map[x1,y1+1] = 1 Then map[x1,y1] = 2
+			If map[x1,y1] = 0 And map[x1-1,y1] = 1 And map[x1,y1+1]=1 Then map[x1,y1] = 2
+			If map[x1,y1] = 0 And map[x1,y1-1] = 1 And map[x1+1,y1]=1 Then map[x1,y1] = 2
+			If map[x1,y1] = 0 And map[x1,y1-1] = 1 And map[x1-1,y1]=1 Then map[x1,y1] = 2
+		Next
+		Next
+		' add turrets
+		For Local y1:Int=1 Until 40
+		For Local x1:Int=1 Until 40
+			If Rnd()<.5
+				If map[x1,y1]=1 And map[x1+1,y1]=1 And map[x1+2,y1]=1 And map[x1+3,y1]=1 Then map[x1+2,y1] = 2
+			End If
+		Next
+		Next	
+		' add gates
+		For Local y1:Int=1 Until 40
+		For Local x1:Int=1 Until 40
+			If map[x1,y1]=1 And map[x1+1,y1]=1 And map[x1+2,y1]=1 Then map[x1+1,y1] = 5
+		Next
+		Next	
+		
+		'plant flag
+		Local planted:Bool=False
+		While planted=False
+			Local x1:Int=Rnd(5,40)
+			Local y1:Int=Rnd(5,40)
+			Local allsand:Bool=True
+			For Local y2:Int=-1 To 1
+			For Local x2:Int=-1 To 1
+				If map[x1+x2,y1+y2] <> 5 Then allsand=False
+			Next
+			Next
+			If allsand=True Then 
+				map[x1,y1] = 3
+				planted=True
+			End If
+		Wend
+
+		'add shading
+		For Local y1:Int=1 Until mh-1
+		For Local x1:Int=1 Until mw-1
+			If (map[x1,y1] = 1 Or map[x1,y1] = 2) And map[x1,y1+1] = 0 Then tilemap[x1,y1+1] = 10
+			If (map[x1,y1] = 1 Or map[x1,y1] = 2) And map[x1+1,y1] = 0 Then tilemap[x1+1,y1] = 11
+			If (map[x1,y1] = 1 Or map[x1,y1] = 2) And map[x1,y1+1] = 5 Then tilemap[x1,y1+1] = 14
+			If (map[x1,y1] = 1 Or map[x1,y1] = 2) And map[x1+1,y1] = 5 Then tilemap[x1+1,y1] = 15
+		Next
+		Next
+
+
+	End Method
+	
 	Method createmap(lx:Int,ly:Int)
 		brushmap = New String[10]
 		brushmap[0] = "00000000200000000000"
@@ -999,12 +1097,22 @@ Class MyWindow Extends Window
 		mysoldier = New List<soldier>
 		mydecal = New List<decal>
 		myparticle = New List<particle>
-		mysoldier.Add(New soldier(1,18,13))
-		mysoldier.Add(New soldier(2,5,9))
-		mysoldier.Add(New soldier(3,18,6))
-		For Local i:Int=0 Until 4
-		mysoldier.Add(New soldier(4+i,10,13))
-		Next
+		
+		Local solcount:Int=8
+		While solcount>0
+			Local x:Int=Rnd(mymap.mw)
+			Local y:Int=Rnd(mymap.mh)
+			If mymap.map[x,y]=5 
+				mysoldier.Add(New soldier(Microsecs(),x,y))
+				solcount-=1
+			End If
+		Wend
+		'mysoldier.Add(New soldier(1,18,13))
+		'mysoldier.Add(New soldier(2,5,9))
+		'mysoldier.Add(New soldier(3,18,6))
+		'For Local i:Int=0 Until 4
+		'mysoldier.Add(New soldier(4+i,10,13))
+		'Next
 		For Local i:Int=0 Until 14
 			myparticle.Add(New particle(320,200,Rnd(TwoPi)))
 		Next
