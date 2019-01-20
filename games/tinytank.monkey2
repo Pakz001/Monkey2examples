@@ -314,8 +314,11 @@ Class turret
 		End If
 	End Method
 	Method draw(canvas:Canvas)
+		canvas.Color = Color.Black.Blend(Color.Yellow,.2)
+		canvas.DrawOval((x+w/2)-3,(y+h/2)-3,w,h)
+
 		canvas.Color = Color.Grey.Blend(Color.Yellow,.2)
-		canvas.DrawOval(x+w/2-2,y+h/2-2,w-4,h-4)
+		canvas.DrawOval((x+w/2)-2,(y+h/2)-2,w-4,h-4)
 		canvas.Color = Color.White
 		Local x1:Float=x+w/4,y1:Float=y+h/4
 		For Local i:Int=0 Until tilew/2
@@ -627,11 +630,11 @@ Class mainmap
 		can[ct].DrawRect(0,0,tilew,tileh)
 		'noise
 		For Local i:Int=0 Until 30
-			Local x:Int=Rnd(tilew)
-			Local y:Int=Rnd(tileh)
-			can[ct].Color = Color.Green.Blend(Color.Black,Rnd(.7,.8))
+			Local x:Int=Rnd(-3,tilew+6)
+			Local y:Int=Rnd(-3,tileh+6)
+			can[ct].Color = Color.Green.Blend(Color.Black,Rnd(.75,.8))
 			can[ct].DrawRect(x,y,3,3)
-			can[ct].Color = Color.Green.Blend(Color.Black,Rnd(.6,.7))
+			can[ct].Color = Color.Green.Blend(Color.Black,Rnd(.75,.8))
 			can[ct].DrawRect(x,y,1,1)
 		Next
 		'grass
@@ -639,12 +642,12 @@ Class mainmap
 			Local h:Int=Rnd(1,3)
 			Local x:Int=Rnd(-2,tilew+4)
 			Local y:Int=Rnd(-2,tileh+4)
-			can[ct].Color = Color.Green.Blend(Color.Black,Rnd(0.7,0.8))
+			can[ct].Color = Color.Green.Blend(Color.Black,Rnd(0.75,0.8))
 			Local y2:Int
 			For y2=y To y+h
 				can[4].DrawPoint(x,y2)
 			Next
-			can[ct].Color = Color.Green.Blend(Color.Black,Rnd(0.4,0.5))
+			can[ct].Color = Color.Green.Blend(Color.Black,Rnd(0.75,0.8))
 			can[ct].DrawPoint(x,y2)
 			can[ct].DrawPoint(x,y2+1)
 		Next
@@ -652,14 +655,14 @@ Class mainmap
 
 		' sand tile
 		ct=5
-		can[ct].Color = Color.Brown.Blend(Color.Black,.65)
+		can[ct].Color = Color.Brown.Blend(Color.Black,.45)
 		can[ct].DrawRect(0,0,tilew,tileh)
 		For Local i:Int=0 Until 40
 			Local x:Int=Rnd(tilew)
 			Local y:Int=Rnd(tileh)
 			can[ct].Color = Color.Brown.Blend(Color.Black,Rnd(.2,.8))
 			can[ct].DrawRect(x,y,Rnd(1,3),Rnd(1,3))
-			can[ct].Color = Color.Brown.Blend(Color.White,Rnd(.3,.6))
+			can[ct].Color = Color.Brown.Blend(Color.Yellow,Rnd(.1,.3))
 			can[ct].DrawRect(x,y,1,1)
 		Next
 		can[ct].Flush()
