@@ -28,25 +28,40 @@ Class MyWindow Extends Window
 		' Store the water layer
 		Local tm:Int[,] = New Int[tw,th]
 		' create our water layer
-		tm = makelayer(tw,th,Rnd(200,500))
+		tm = makelayer(tw,th,Rnd(200,800))
 		For Local y:Int=0 Until th
 		For Local x:Int=0 Until tw
 			If tm[x,y] = 1 Then
 				can.Color = Color.Blue.Blend(Color.White,.45)
 				can.DrawPoint(x,y)
 				' make tilable
-				If Rnd()<.4
+				If Rnd()<.7
 				If x=tw-1 Then 
+					If Rnd()<.5
 					can.DrawPoint(0,y)
+					Else
+					can.DrawPoint(tw-2,y)
+					End If					
 				End If
 				If x=0 Then 
+					If Rnd()<.5
 					can.DrawPoint(tw-1,y)
+					Else
+					can.DrawPoint(1,y)
+					End If					
 				End If
 				If y=th-1 Then 
+					If Rnd()<.5
 					can.DrawPoint(x,0)
+					Else
+						can.DrawPoint(x,th-2)						
+					End If
 				End If
 				If y=0 Then 
+					If Rnd()<.5
 					can.DrawPoint(x,th-1)
+					Else
+					End If
 				End If
 				End If
 
@@ -62,18 +77,34 @@ Class MyWindow Extends Window
 				can.Color = Color.Blue.Blend(Color.White,.5)
 				If Rnd()<.2 Then can.Color = Color.White
 				' make tilable
-				If Rnd()<.4
+				If Rnd()<.7
 				If x=tw-1 Then 
+					If Rnd()<.5
 					can.DrawPoint(0,y)
+					Else
+					can.DrawPoint(tw-2,y)					
+					End If
 				End If
 				If x=0 Then 
+					If Rnd()<.5
 					can.DrawPoint(tw-1,y)
+					Else
+					can.DrawPoint(1,y)
+					End If
 				End If
 				If y=th-1 Then 
+					If Rnd()<.5
 					can.DrawPoint(x,0)
+					Else
+					can.DrawPoint(x,th-2)
+					End If
 				End If
 				If y=0 Then 
+					If Rnd()<.2
 					can.DrawPoint(x,th-1)
+					Else
+					can.DrawPoint(x,1)
+					End If
 				End If
 				End If
 				can.DrawPoint(x,y)
@@ -96,7 +127,7 @@ Class MyWindow Extends Window
 
 		'create points in some kind of pattern
 		Local lx:Int=0
-		Local st:Int=Rnd(4,8)
+		Local st:Int=6
 		For Local ly:Int=0 Until th Step st
 		For Local i:Int=0 Until 2
 			lx+=Rnd(tw/2)
@@ -106,6 +137,26 @@ Class MyWindow Extends Window
 		Next
 		Next
 
+		For Local z:Int=0 Until 16
+		'fix - make sure no double y
+		For Local i:Int =0 Until px.Length
+		For Local j:Int=0 Until px.Length
+			If i=j Then Continue
+			If distance(py.Get(i),0,py.Get(j),0)<2				
+				py.Set(i,Rnd(th))	
+			End if
+		Next
+		Next
+		'no double x
+		For Local i:Int =0 Until px.Length
+		For Local j:Int=0 Until px.Length
+			If i=j Then Continue
+			If distance(px.Get(i),0,px.Get(j),0)<2				
+				px.Set(i,Rnd(tw))
+			End if
+		Next
+		Next
+		Next
 		'
 		' Here we pick one point and connect it to the nearest next point
 		Local tm:Int[,] = New Int[tw,th]
