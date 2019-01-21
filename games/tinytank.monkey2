@@ -674,8 +674,8 @@ Class mainmap
 	Field brushmap:String[]
 	Field map:Int[,] '
 	Field tilemap:Int[,] 'the aactual tile graphics
-	Field im:=New Image[30]
-	Field can:=New Canvas[30]
+	Field im:=New Image[40]
+	Field can:=New Canvas[40]
 	Method New(sw:Int,sh:Int,mw:Int,mh:Int)
 		Self.sw = sw ; Self.sh = sh
 		Self.mw = mw ; Self.mh = mh
@@ -687,7 +687,7 @@ Class mainmap
 		createtiles()
 	End Method
 	Method createtiles()
-		Local numtiles:Int=29
+		Local numtiles:Int=39
 		For Local i:Int=0 To numtiles
 			im[i] = New Image(tilew,tileh)
 			can[i] = New Canvas(im[i])
@@ -877,8 +877,132 @@ Class mainmap
 		can[ct].Flush()
 
 
+		' Tree tile
+		ct = 30
+		can[ct].Alpha = 1
+		can[ct].Color = Color.White
+		can[ct].DrawImage(im[4],0,0)
+		Local tmp:Image = New Image(32,32)
+		tmp = createtree()
+		can[ct].DrawImage(tmp,0,0,0,.5,.5)
+		can[ct].Flush()
 	End Method
-	
+	Method createtree:Image()
+		Local im:Image
+		Local can:Canvas
+		im = New Image(32,32)
+		can = New Canvas(im)
+		can.Clear(Color.Green.Blend(Color.Black,.8))
+		can.Flush()
+		
+		Local m:Int[,] = New Int[32,32]
+		'create spot
+		Local a:Float
+
+		Local posx:Float
+		Local posy:Float
+		For Local ii:Int=0 Until 15
+		Local x1:Float=Rnd(10,25)
+		Local y1:Float=Rnd(1,16)
+		a = 0
+		For Local i:Int=0 Until 20
+			x1+=Cos(a)
+			y1+=Sin(a)
+			a+=Rnd(0.1,0.2)
+			If x1<1 Or y1<0 Or x1>=31 Or y1>=32 Then Continue
+			m[x1,y1] = 1			
+			If y1>29 Then Exit
+			If (y1+2)<29 And Rnd()<.5 Then m[x1,y1+1] = 2	Else m[x1,y1+1] = 1
+			If (y1+3)<29 And Rnd()<.5 Then m[x1,y1+2] = 3 Else m[x1,y1+2] = 2
+			If (y1+4)<29 And Rnd()<.5 Then m[x1,y1+3] = 1 Else m[x1,y1+3] = 2
+		Next
+		Next
+		For Local ii:Int=0 Until 15
+		Local x1:Float=Rnd(7,24)
+		Local y1:Float=Rnd(1,16)
+		a = -Pi
+		For Local i:Int=0 Until 20
+			x1+=Cos(a)
+			y1+=Sin(a)
+			a-=Rnd(0.1,0.2)
+			If x1<1 Or y1<0 Or x1>=31 Or y1>=31 Then Continue
+			m[x1,y1] = 1			
+			If y1>28 Then Exit
+			If y1+1<=30 And Rnd()<.5 Then m[x1,y1+1] = 2	Else m[x1,y1+1] = 1
+			If y1+2<=29 And Rnd()<.5 Then m[x1,y1+2] = 3 Else m[x1,y1+2] = 2
+			If y1+3<=27 And Rnd()<.5 Then m[x1,y1+3] = 1 Else m[x1,y1+3] = 2
+		Next
+		Next
+
+		'make dark edges
+		Local tmpm:Int[,] = New Int[32,32]
+		For Local y1:Int=0 Until 32
+		For Local x1:Int=0 Until 32
+			If m[x1,y1] <> 0 Then Continue
+			
+			For Local y2:Int=-1 To 1
+			For Local x2:Int=-1 To 1
+				Local x3:Int=x1+x2
+				Local y3:Int=y1+y2
+				If x3<0 Or y3<0 Or x3>=32 Or y3>=32 Then Continue
+				If m[x3,y3] <> 0 Then tmpm[x1,y1] = 1			
+				
+			Next
+			Next
+		Next
+		Next
+		For Local y1:Int=0 Until 32
+		For Local x1:Int=0 Until 32
+			If tmpm[x1,y1] = 1 Then m[x1,y1] = 99
+		Next
+		Next
+
+		'turn into image
+		Local col:Color = New Color(Color.Green.Blend(New Color(Rnd(),Rnd(),Rnd()),Rnd(0.0,.4)))
+		For Local y:Int=0 Until 32
+		For Local x:Int=0 Until 32
+			
+			If m[x,y] = 0 Then Continue
+			If m[x,y] = 1
+				can.Color = col.Blend(Color.Black,.5)
+				If distance(16,16,x,y) > 10 Then can.Color = col.Blend(Color.Black,.7)
+				If distance(10,10,x,y) < 10 Then can.Color = col.Blend(Color.Black,.1)
+				
+				can.DrawPoint(x,y)
+			End If
+			If m[x,y] = 2
+				can.Color = col.Blend(Color.White,.1)
+				If distance(16,16,x,y) > 10 Then can.Color = col.Blend(Color.Black,.1)
+				If distance(10,10,x,y) < 10 Then can.Color = col.Blend(Color.White,.3)
+				
+				can.DrawPoint(x,y)
+			End If
+			If m[x,y] = 3
+				can.Color = col.Blend(Color.White,.4)
+				If distance(16,16,x,y) > 10 Then can.Color = col.Blend(Color.Black,.4)
+				If distance(10,10,x,y) < 10 Then can.Color = col.Blend(Color.White,.6)
+				
+				can.DrawPoint(x,y)
+			End If
+			If Rnd()<.3 Then  'white speckels
+				If Rnd()<.2 
+					can.Color = col.Blend(Color.White,Rnd())
+					Else
+					can.Color = col.Blend(Color.Black,Rnd(0.5,1))
+				End If
+				can.DrawPoint(x,y)
+			End if
+
+			If m[x,y] = 99
+				can.Color = col.Blend(Color.Black,Rnd(.5,1))
+				can.DrawPoint(x,y)
+			End If
+		Next
+		Next
+		can.Flush()
+		Return im
+	End Method
+		
 	Method createrandommap()
 		'terrain = 5
 		Local x:Int=10
@@ -1007,6 +1131,12 @@ Class mainmap
 		Next
 		Next
 
+		'add trees
+		For Local i:Int=0 Until 100
+			Local x:Int=Rnd(mw)
+			Local y:Int=Rnd(mh)
+			If map[x,y] = 0 Then map[x,y]=30
+		Next
 
 	End Method
 	
@@ -1089,7 +1219,12 @@ Class mainmap
 				'canvas.Color = Color.Brown.Blend(Color.Black,.4)
 				canvas.Color = Color.White
 				'canvas.DrawRect(dx,dy,tw,th)
-				canvas.DrawImage(im[5],dx,dy)					
+				canvas.DrawImage(im[5],dx,dy)
+				Case 30'tree
+				canvas.Color = Color.White
+				'canvas.DrawRect(dx,dy,tw,th)
+				canvas.DrawImage(im[30],dx,dy)
+
 			End Select
 			Select tilemap[x+tx,y+ty]
 				Case 10
