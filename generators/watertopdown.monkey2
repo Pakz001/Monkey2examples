@@ -28,23 +28,54 @@ Class MyWindow Extends Window
 		' Store the water layer
 		Local tm:Int[,] = New Int[tw,th]
 		' create our water layer
-		tm = makelayer(tw,th,0)	
+		tm = makelayer(tw,th,Rnd(200,500))
 		For Local y:Int=0 Until th
 		For Local x:Int=0 Until tw
 			If tm[x,y] = 1 Then
-				can.Color = Color.Blue.Blend(Color.White,.3)
+				can.Color = Color.Blue.Blend(Color.White,.45)
 				can.DrawPoint(x,y)
+				' make tilable
+				If Rnd()<.4
+				If x=tw-1 Then 
+					can.DrawPoint(0,y)
+				End If
+				If x=0 Then 
+					can.DrawPoint(tw-1,y)
+				End If
+				If y=th-1 Then 
+					can.DrawPoint(x,0)
+				End If
+				If y=0 Then 
+					can.DrawPoint(x,th-1)
+				End If
+				End If
+
 			End If
 		Next
 		Next
-		' Create our top layer (lighter)
+'		' Create our top layer (lighter)
 		tm = New Int[tw,th]
-		tm = makelayer(tw,th,0)
+		tm = makelayer(tw,th,Rnd(200,500))
 		For Local y:Int=0 Until th
 		For Local x:Int=0 Until tw
 			If tm[x,y] = 1 Then
 				can.Color = Color.Blue.Blend(Color.White,.5)
 				If Rnd()<.2 Then can.Color = Color.White
+				' make tilable
+				If Rnd()<.4
+				If x=tw-1 Then 
+					can.DrawPoint(0,y)
+				End If
+				If x=0 Then 
+					can.DrawPoint(tw-1,y)
+				End If
+				If y=th-1 Then 
+					can.DrawPoint(x,0)
+				End If
+				If y=0 Then 
+					can.DrawPoint(x,th-1)
+				End If
+				End If
 				can.DrawPoint(x,y)
 			End If
 		Next
@@ -58,16 +89,16 @@ Class MyWindow Extends Window
 	'
 	' This creates a pattern of water reflection
 	' depth is the blurry thickness (defaulted at making to 400)
-	Method makelayer:Int[,](tw:Int,th:Int,deep:Int)	
+	Method makelayer:Int[,](tw:Int,th:Int,deep:Int=500)	
 		' We want to create points and connect those
 		Local px:Stack<Int> = New Stack<Int>
 		Local py:Stack<Int> = New Stack<Int>
 
 		'create points in some kind of pattern
 		Local lx:Int=0
-		Local st:Int=Rnd(2,4)
+		Local st:Int=Rnd(4,8)
 		For Local ly:Int=0 Until th Step st
-			For Local i:Int=0 Until 2
+		For Local i:Int=0 Until 2
 			lx+=Rnd(tw/2)
 			If lx>=tw Then lx=Rnd(0,5)
 			px.Push(lx)
@@ -135,19 +166,20 @@ Class MyWindow Extends Window
 
 		' tm holds the starting point of the back layer of the water
 		' we now are going to grow them a little bit(edge grow)
-		
-		For Local zi:Int=0 Until deep
+		Local zi:Int
+		For zi=0 To deep
 			Local x1:Int=Rnd(tw)
 			Local y1:Int=Rnd(th)
-			If tm[x1,y1]<>1 Then Continue
-			Local x2:Int=x1+Rnd(-2,2)
-			Local y2:Int=y1+Rnd(-2,2)			
+			If Not tm[x1,y1]=1 Then Continue
+			Local x2:Int=x1+Int(Rnd(-2,2))
+			Local y2:Int=y1+Int(Rnd(-2,2))
 			If x2<0 Then x2=tw-1
 			If x2>=tw Then x2=0
 			If y2<0 Then y2=th-1
 			If y2>=th Then y2=0
 			tm[x2,y2] = 1
 		Next
+		
 		Return tm
 	End Method
 
