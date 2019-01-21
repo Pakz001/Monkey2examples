@@ -28,7 +28,7 @@ Class MyWindow Extends Window
 		' Store the water layer
 		Local tm:Int[,] = New Int[tw,th]
 		' create our water layer
-		tm = makelayer(tw,th,Rnd(200,800))
+		tm = makelayer(tw,th,Rnd(100,800))
 		For Local y:Int=0 Until th
 		For Local x:Int=0 Until tw
 			If tm[x,y] = 1 Then
@@ -70,7 +70,7 @@ Class MyWindow Extends Window
 		Next
 '		' Create our top layer (lighter)
 		tm = New Int[tw,th]
-		tm = makelayer(tw,th,Rnd(200,500))
+		tm = makelayer(tw,th,Rnd(100,800))
 		For Local y:Int=0 Until th
 		For Local x:Int=0 Until tw
 			If tm[x,y] = 1 Then
@@ -217,6 +217,7 @@ Class MyWindow Extends Window
 
 		' tm holds the starting point of the back layer of the water
 		' we now are going to grow them a little bit(edge grow)
+		
 		Local zi:Int
 		For zi=0 To deep
 			Local x1:Int=Rnd(tw)
