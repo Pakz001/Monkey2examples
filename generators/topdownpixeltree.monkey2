@@ -18,13 +18,11 @@ Class MyWindow Extends Window
 			tmpim[y] = createtree()
 		Next
 		' make the treemap
-		treemap[4,4] = 1
-		treemap[10,9] = 1
-		treemap[14,9] = 1
-		treemap[18,9] = 1
-		treemap[19,9] = 1
+		For Local i:Int=0 To 10
+			treemap[Rnd(20),Rnd(20)] = 1
+		Next
 		'grow
-		For Local i:Int=0 Until 2900
+		For Local i:Int=0 Until 900
 			Local x:Int=Rnd(1,19)
 			Local y:Int=Rnd(1,19)
 			If treemap[x,y] > 0 Then treemap[x+Rnd(-1,2),y+Rnd(-1,2)] = Rnd(20)
@@ -120,7 +118,7 @@ Class MyWindow Extends Window
 		Next
 
 		'turn into image
-		Local col:Color = New Color(Color.Green.Blend(New Color(Rnd()/2,Rnd()/4,Rnd()/4),Rnd(0.0,.5)))
+		Local col:Color = New Color(Color.Green.Blend(New Color(Rnd(),Rnd(),Rnd()),Rnd(0.0,.4)))
 		For Local y:Int=0 Until 32
 		For Local x:Int=0 Until 32
 			
@@ -146,8 +144,12 @@ Class MyWindow Extends Window
 				
 				can.DrawPoint(x,y)
 			End If
-			If Rnd()<.09 Then  'white speckels
-				can.Color = Color.White.Blend(col,Rnd())
+			If Rnd()<.3 Then  'white speckels
+				If Rnd()<.2 
+					can.Color = col.Blend(Color.White,Rnd())
+					Else
+					can.Color = col.Blend(Color.Black,Rnd(0.5,1))
+				End If
 				can.DrawPoint(x,y)
 			End if
 
@@ -168,7 +170,7 @@ Class MyWindow Extends Window
 		For Local y:Int=0 Until 20
 		For Local x:Int=0 Until 20
 			canvas.DrawImage(gi,x*32,y*32)
-			If treemap[x,y]>0 Then canvas.DrawImage(tmpim[treemap[x,y]],x*32,y*32,0,0.7,0.7)
+			If treemap[x,y]>0 Then canvas.DrawImage(tmpim[treemap[x,y]],x*32,y*32,0,.9,.9)
 			
 		Next
 		Next
