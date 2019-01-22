@@ -683,12 +683,6 @@ Class mainmap
 		map = New Int[mw,mh]
 		tilemap = New Int[mw,mh]
 		'createmap(5,5)
-		tilemap[20,20]=40
-		tilemap[21,20]=40
-		tilemap[20,21]=40
-		tilemap[21,21]=40
-		tilemap[22,20]=40
-		tilemap[22,19]=40
 		createrandommap()
 		createtiles()
 '		tilemap[20,20] = 41'left
@@ -1357,6 +1351,74 @@ Class mainmap
 		Next
 		can[ct].Flush()
 
+		' left and right grass center water
+		ct=69
+		' Right side edge is grass right side is sand
+		can[ct].Alpha = 1
+		can[ct].Color = Color.White
+		can[ct].DrawImage(im[60],0,0)
+		For Local y:Int=0 Until th
+			Local l:Int=Rnd(4,7)
+			Local x:Int
+			For x=tw Until tw-l Step -1
+				can[ct].Color = can[4].GetPixel(x,y)
+				can[ct].DrawPoint(x,y)
+			Next
+			can[ct].Color = can[4].GetPixel(x,y).Blend(Color.White,.1)
+			can[ct].DrawPoint(x-1,y)
+			can[ct].Color = can[4].GetPixel(x,y).Blend(Color.White,.3)
+			can[ct].DrawPoint(x-2,y)
+		Next				
+		' Left side edge is grass right side is sand
+		For Local y:Int=0 Until th
+			Local l:Int=Rnd(4,7)
+			Local x:Int
+			For x=0 Until l
+				can[ct].Color = can[4].GetPixel(x,y)
+				can[ct].DrawPoint(x,y)
+			Next
+			can[ct].Color = can[4].GetPixel(x,y).Blend(Color.Black,.5)
+			can[ct].DrawPoint(x+1,y)
+			can[ct].Color = can[4].GetPixel(x,y).Blend(Color.Black,.8)
+			can[ct].DrawPoint(x+2,y)
+		Next				
+		can[ct].Flush()
+		
+		
+		' top and bottom grass center water
+		ct=70
+		can[ct].Alpha = 1
+		can[ct].Color = Color.White
+		can[ct].DrawImage(im[60],0,0)
+		'bottom
+		For Local x:Int=0 Until tw
+			Local l:Int=Rnd(4,7)
+			Local y:Int
+			For y=th Until th-l Step -1
+				can[ct].Color = can[4].GetPixel(x,y)
+				can[ct].DrawPoint(x,y)
+			Next
+			can[ct].Color = can[4].GetPixel(x,y).Blend(Color.White,.2)
+			can[ct].DrawPoint(x,y-1)
+			can[ct].Color = can[4].GetPixel(x,y).Blend(Color.White,.2)
+			can[ct].DrawPoint(x,y-2)
+		Next				
+		'top
+		For Local x:Int=0 Until tw
+			Local l:Int=Rnd(4,7)
+			Local y:Int
+			For y=0 Until l
+				can[ct].Color = can[4].GetPixel(x,y)
+				can[ct].DrawPoint(x,y)
+			Next
+			can[ct].Color = can[4].GetPixel(x,y).Blend(Color.Black,.5)
+			can[ct].DrawPoint(x,y+1)
+			can[ct].Color = can[4].GetPixel(x,y).Blend(Color.Black,.8)
+			can[ct].DrawPoint(x,y+2)
+		Next				
+		can[ct].Flush()	
+
+
 		
 	End Method
 	Method createtree:Image()
@@ -1826,7 +1888,7 @@ Class mainmap
 
 		' create the sand tiles that are in the grass
 		If 1=1
-			For Local i:Int=0 Until 30
+			For Local i:Int=0 Until 10
 				Local t:Int[,] = New Int[mw,mh]
 				Local x:Float=Rnd(25,mw)
 				Local y:Float=Rnd(25,mh)
@@ -1839,8 +1901,8 @@ Class mainmap
 					If Rnd()<.2 Then angle+=m
 					If x<0 Or y<0 Or x>=mw Or y>=mh Then Exit
 					Local ex:Bool=False
-					For Local x2:Int=x-3 To x+3
-					For Local y2:Int=y-3 To y+3
+					For Local x2:Int=x-5 To x+5
+					For Local y2:Int=y-5 To y+5
 						If x2<0 Or y2<0 Or x2>=mw Or y2>=mh Then Continue
 						If tilemap[x2,y2] <> 0 Then ex=True
 					Next
@@ -1858,7 +1920,7 @@ Class mainmap
 					
 				Next
 				'grow
-				For Local i:Int=0 Until 30000
+				For Local i:Int=0 Until 0'30000
 					Local x:Int=Rnd(mw)
 					Local y:Int=Rnd(mh)
 					If t[x,y] = 40
@@ -1934,72 +1996,118 @@ Class mainmap
 '			Next
 		End If
 
-'		' create the water tiles that are in the grass
-'		If 1=1
-'			For Local i:Int=0 Until 25
-'				Local x:Float=Rnd(25,mw)
-'				Local y:Float=Rnd(25,mh)
-'				Local rx:Int=Rnd(2,5)
-'				Local ry:Int=Rnd(2,5)
-'
-'				Local skip:Bool=False
-'				For Local x2:Int=x-(rx+1) To x+(rx+1)
-'				For Local y2:Int=y-(ry+1) To y+(ry+1)
-'					If x2<0 Or y2<0 Or x2>=mw Or y2>=mh Then Continue
-'					If tilemap[x2,y2] <> 0 Then skip=True
-'				Next
-'				Next
-'				
-'				
-'				If skip=False
-'				For Local x2:Int=x-(rx+1) To x+(rx+1)
-'				For Local y2:Int=y-(ry+1) To y+(ry+1)
-'					If x2<0 Or y2<0 Or x2>=mw Or y2>=mh Then Continue
-'					tilemap[x2,y2] = 0
-'				Next
-'				Next
-'
-'				For Local x2:Int=x-rx To x+rx
-'				For Local y2:Int=y-ry To y+ry
-'					If x2<0 Or y2<0 Or x2>=mw Or y2>=mh Then Continue
-'					tilemap[x2,y2] = 50
-'				Next
-'				Next
-'				End If
-'			Next 
-'			' add edges
-''		tilemap[20,20] = 41'left
-''		tilemap[21,20] = 40'center
-''		tilemap[22,20] = 42'right
-''		tilemap[21,19] = 43'top
-''		tilemap[21,21] = 44'bottom
-''		tilemap[20,19] = 45 'left top
-''		tilemap[22,19] = 46 'Right top
-''		tilemap[20,21] = 47 'left bottom
-''		tilemap[22,21] = 48 'right bottom
+		' create the water tiles that are in the grass
+		If 1=1
+			For Local i:Int=0 Until 10
+				Local t:Int[,] = New Int[mw,mh]
+				Local x:Float=Rnd(25,mw)
+				Local y:Float=Rnd(25,mh)
+				Local angle:Float=Rnd(TwoPi)
+				Local m:Float=Rnd(-1,1)
+				Local l:Int=Rnd(6,25)
+				For Local j:Int=0 Until l
+					x+=Cos(angle)
+					y+=Sin(angle)
+					If Rnd()<.2 Then angle+=m
+					If x<0 Or y<0 Or x>=mw Or y>=mh Then Exit
+					Local ex:Bool=False
+					For Local x2:Int=x-7 To x+7
+					For Local y2:Int=y-7 To y+7
+						If x2<0 Or y2<0 Or x2>=mw Or y2>=mh Then Continue
+						If tilemap[x2,y2] <> 0 Then ex=True
+					Next
+					Next
+					If ex = True Then Continue
+					Local rad:Int=Rnd(1,2)
+					If Rnd()<.2 Then rad+=Rnd(2,3)
+					For Local y3:Int=y-rad To y+rad
+					For Local x3:Int=x-rad To x+rad
+						If x3<0 Or y3<0 Or x3>=mw Or y3>=mh Then Continue
+						t[x3,y3] = 60
+					Next
+					Next
+					
+					
+				Next
+				'grow
+				For Local i:Int=0 Until 0'30000
+					Local x:Int=Rnd(mw)
+					Local y:Int=Rnd(mh)
+					If t[x,y] = 60
+						Local x2:Int=x+Rnd(-2,2)
+						Local y2:Int=y+Rnd(-2,2)
+						If x2<0 Or y2<0 Or x2>=mw Or y2>=mh Then Continue
+						t[x2,y2] = 60
+					Endif
+				Next
+				
+				For Local y2:Int=0 Until mh
+				For Local x2:Int=0 Until mw
+					If t[x2,y2] = 60 Then 
+						tilemap[x2,y2] = 60
+											
+					End If
+				Next
+				Next
+			
+			Next 
+			
+			Local tr:Int[,] = New Int[mw,mh]
+			For Local y:Int=1 Until mh-1
+			For Local x:Int=1 Until mw-1
+				Local value:Int=0
+				If tilemap[x,y] = 60 Then 
+					If tilemap[x,y-1] = 0 Then value+=1
+					If tilemap[x+1,y] = 0 Then value+=2
+					If tilemap[x,y+1] = 0 Then value+=4
+					If tilemap[x-1,y] = 0 Then value+=8
+					'Print value
+					tr[x,y] = value
+				End If
+			Next
+			Next
+			For Local y:Int=1 Until mh-1
+			For Local x:Int=1 Until mw-1
+				If tr[x,y] <>0 Then  tilemap[x,y] = tr[x,y]+300
+			Next
+			Next			
+			
+			' add edges
+'		tilemap[20,20] = 41'left
+'		tilemap[21,20] = 40'center
+'		tilemap[22,20] = 42'right
+'		tilemap[21,19] = 43'top
+'		tilemap[21,21] = 44'bottom
+'		tilemap[20,19] = 45 'left top
+'		tilemap[22,19] = 46 'Right top
+'		tilemap[20,21] = 47 'left bottom
+'		tilemap[22,21] = 48 'right bottom
 '			
 '			For Local y:Int=1 Until mh-1
 '			For Local x:Int=1 Until mw-1
-'				If tilemap[x,y] = 50
-'					If tilemap[x-1,y] = 0 Then tilemap[x-1,y] = 51
-'					If tilemap[x+1,y] = 0 Then tilemap[x+1,y] = 52
-'					If tilemap[x,y-1] = 0 Then tilemap[x,y-1] = 53
-'					If tilemap[x,y+1] = 0 Then tilemap[x,y+1] = 54
+'				If tilemap[x,y] = 40
+'					If tilemap[x-1,y] = 0 Then tilemap[x-1,y] = 41
+'					If tilemap[x+1,y] = 0 Then tilemap[x+1,y] = 42
+'					If tilemap[x,y-1] = 0 Then tilemap[x,y-1] = 43
+'					If tilemap[x,y+1] = 0 Then tilemap[x,y+1] = 44
 '					'
 '					' xxx
 '					' xxx
 '					' xxx
-'					If tilemap[x-1,y] = 51 And tilemap[x,y-1] = 53 Then tilemap[x-1,y-1]=55
-'					If tilemap[x+1,y] = 52 And tilemap[x,y-1] = 53 Then tilemap[x+1,y-1]=56
-'					If tilemap[x-1,y] = 51 And tilemap[x,y+1] = 54 Then tilemap[x-1,y+1]=57
-'					If tilemap[x+1,y] = 52 And tilemap[x,y+1] = 54 Then tilemap[x+1,y+1]=58
+'					'If tilemap[x-1,y] = 41 And tilemap[x,y-1] = 43 Then tilemap[x-1,y-1]=45
+'					'If tilemap[x+1,y] = 42 And tilemap[x,y-1] = 43 Then tilemap[x+1,y-1]=46
+'					'If tilemap[x-1,y] = 41 And tilemap[x,y+1] = 44 Then tilemap[x-1,y+1]=47
+'					'If tilemap[x+1,y] = 42 And tilemap[x,y+1] = 44 Then tilemap[x+1,y+1]=48
+'				
+'					
 '					
 '				End If
 '			Next
 '			Next
-'		End If
-'
-'
+		End If
+
+
+
 
 		'add trees
 		For Local i:Int=0 Until 200
@@ -2173,40 +2281,54 @@ Class mainmap
 				canvas.Color = Color.White
 				canvas.DrawImage(im[4],dx,dy)				
 
-				' grass/water edges
 				Case 60
 				canvas.Color = Color.White
-				canvas.DrawImage(im[60],dx,dy)				
-				Case 61
+				canvas.DrawImage(im[60],dx,dy)
+				Case 301''''''
 				canvas.Color = Color.White
-				canvas.DrawImage(im[61],dx,dy)				
-				Case 62
+				canvas.DrawImage(im[63],dx,dy)
+				Case 302''''
 				canvas.Color = Color.White
-				canvas.DrawImage(im[62],dx,dy)				
-				Case 63
-				canvas.Color = Color.White
-				canvas.DrawImage(im[63],dx,dy)				
-				Case 64
-				canvas.Color = Color.White
-				canvas.DrawImage(im[64],dx,dy)				
-				Case 65
-				canvas.Color = Color.White
-				canvas.DrawImage(im[65],dx,dy)				
-				Case 66
+				canvas.DrawImage(im[62],dx,dy)
+				Case 303''''
 				canvas.Color = Color.White
 				canvas.DrawImage(im[66],dx,dy)				
-				Case 67
+				Case 304''''
 				canvas.Color = Color.White
-				canvas.DrawImage(im[67],dx,dy)				
-				Case 68
+				canvas.DrawImage(im[64],dx,dy)				
+				Case 305''''
 				canvas.Color = Color.White
-				canvas.DrawImage(im[68],dx,dy)				
-				Case 69
+				canvas.DrawImage(im[60],dx,dy)
+				Case 306''''''
+				canvas.Color = Color.White
+				canvas.DrawImage(im[68],dx,dy)
+				Case 307'toprightbottom
+				canvas.Color = Color.White
+				canvas.DrawImage(im[60],dx,dy)				
+				Case 308''''''
+				canvas.Color = Color.White
+				canvas.DrawImage(im[61],dx,dy)				
+				Case 309''''
+				canvas.Color = Color.White	
+				canvas.DrawImage(im[65],dx,dy)				
+				Case 310''''
 				canvas.Color = Color.White
 				canvas.DrawImage(im[69],dx,dy)				
-				Case 70
+				Case 311'lefttopright
 				canvas.Color = Color.White
-				canvas.DrawImage(im[70],dx,dy)				
+				canvas.DrawImage(im[69],dx,dy)				
+				Case 312''''
+				canvas.Color = Color.White
+				canvas.DrawImage(im[67],dx,dy)				
+				Case 313'topleftbottom
+				canvas.Color = Color.White
+				canvas.DrawImage(im[60],dx,dy)				
+				Case 314'test leftbottomright
+				canvas.Color = Color.White
+				canvas.DrawImage(im[69],dx,dy)				
+				Case 315'solo water
+				canvas.Color = Color.White
+				canvas.DrawImage(im[4],dx,dy)				
 					
 			End Select
 		Next
