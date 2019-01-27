@@ -14,6 +14,7 @@ Class wfc
 	Field tilewidth:Float,tileheight:Float
 	Field map:Int[,]
 	Method New(sw:Int,sh:Int)
+		'Print "1"[0]
 		map = New Int[5,5]
 		map = mapinit()
 		mapwidth = map.GetSize(0)
@@ -22,6 +23,13 @@ Class wfc
 		screenheight = sh
 		tilewidth = Float(screenwidth)/Float(mapwidth)
 		tileheight = Float(screenheight)/Float(mapheight)
+		collapse()
+	End Method
+	Method collapse()
+		Local side:Stack<Stack<Int>> = New Stack<Stack<Int>>
+		side.Push(New Stack<Int>)
+		
+		side.Get(0).Push(10)
 	End Method
 	Method mapinit:Int[,]()
 		Local s:String[] = New String[15]		
@@ -35,12 +43,36 @@ Class wfc
 		s[7] ="000081500000000"
 		s[8] ="000081500000000"
 		s[9] ="000081500000000"
-		s[11]="000081500000000"
-		s[12]="007444444446000"
-		s[13]="338111111115333"
-		s[14]="228111111115222"
-		s[15]="441111111111444"
+		s[10]="000081500000000"
+		s[11]="007444444446000"
+		s[12]="338111111115333"
+		s[13]="228111111115222"
+		s[14]="441111111111444"
 		Local m:Int[,] = New Int[15,15]
+		For Local y:Int=0 Until s.GetSize(0)
+		For Local x:Int=0 Until s[0].Length
+			Select s[y][x]
+				Case 48
+					m[x,y] = 0
+				Case 49
+					m[x,y] = 1
+				Case 50
+					m[x,y] = 2
+				Case 51
+					m[x,y] = 3
+				Case 52
+					m[x,y] = 4
+				Case 53
+					m[x,y] = 5
+				Case 54
+					m[x,y] = 6
+				Case 55
+					m[x,y] = 7
+				Case 56
+					m[x,y] = 8
+			End Select
+		Next
+		Next
 		Return m
 	End Method
 	Method drawmap(canvas:Canvas)
@@ -78,7 +110,7 @@ Class wfc
 					canvas.DrawRect(x1,y1,tilewidth+1,tileheight+1)
 					canvas.Color = Color.Green.Blend(Color.Black,.3)
 					canvas.DrawRect(x1,y1,tilewidth+1,3)
-					canvas.DrawRect(x1,y1,tilewidth-3,tileheight+1)					
+					canvas.DrawRect(x1+tilewidth-3,y1,3,tileheight+1)					
 				Case 7 'sand left top
 					canvas.Color = Color.Brown
 					canvas.DrawRect(x1,y1,tilewidth+1,tileheight+1)
