@@ -71,11 +71,12 @@ Class wfc
 		Next
 		Next		
 
-		map[10,10] = 4
+		map[7,7] = 4
 		
-		For Local i:Int=0 Until 10
-		For Local y:Int=0 Until mapheight
-		For Local x:Int=0 Until mapwidth
+		' loop until we have a map (4)
+		For Local i:Int=0 Until 4
+		For Local y:Int=7-i Until 7+i
+		For Local x:Int=7-i Until 7+i
 			If map[x,y] <> -1
 				Local ctile:Int=map[x,y]
 				Local cnt:Int=0
@@ -92,14 +93,64 @@ Class wfc
 						Continue
 					End If
 
-					If map[x3,y3] = -1
-					Local num:Int=tile.Get(ctile).Get(cnt).Length
-					map[x3,y3] = tile.Get(ctile).Get(cnt).Get(Rnd(num))
+					If map[x3,y3] = -1 ' if the current position is a none
+						' Here we pick a number to place
+						Local num:Int=tile.Get(ctile).Get(cnt).Length
+						Local newt:Int=tile.Get(ctile).Get(cnt).Get(Rnd(num))
+						
+						' Here we check around the tile that is to be placed
+						' if the value is valid for each side. (broken)
+						Local valid:Bool=False
+						'
+						While valid=False
+							Local cnt2:Int
+							Local allgo:Int=0
+							For Local y4:Int=y3-1 To y3+1
+							For Local x4:Int=x3-1 To x3+1
+								If x4<0 Or x4>=mapwidth Or y4<0 Or y4>=mapheight Then 
+									cnt2+=1
+									Continue
+								End If
+								If (x4=0 And y4=0 )
+									cnt2+=1
+									Continue
+								End If
+								Local isnot:Bool=True
+								If map[x4,y4] = -1 Then 
+									isnot=False
+								Else
+									For Local j:Int=0 Until tile.Get(map[x4,y4]).Get(cnt2).Length
+										If tile.Get(map[x4,y4]).Get(cnt2).Get(j) = newt Then 
+											isnot=false
+											Exit																					
+										End If
+									Next
+								End If
+								If isnot=False Then allgo +=1
+								cnt2+=1
+							Next
+							Next
+							
+							If allgo>=8 Then 
+								valid=True								
+							Else
+								'newt = tile.Get(ctile).Get(cnt).Get(Rnd(num))
+								newt=0
+								valid=True
+								'Print newt
+							End if
+							
+						Wend
+						
+						map[x3,y3] = newt
+					
+					
 					End if
 					cnt+=1
 				Next
 				Next
 			End If
+			
 		Next
 		Next
 		Next		
