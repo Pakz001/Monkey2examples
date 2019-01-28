@@ -98,53 +98,8 @@ Class wfc
 						Local num:Int=tile.Get(ctile).Get(cnt).Length
 						Local newt:Int=tile.Get(ctile).Get(cnt).Get(Rnd(num))
 						
-						' Here we check around the tile that is to be placed
-						' if the value is valid for each side. (broken)
-						Local valid:Bool=False
-						'
-						While valid=False
-							Local cnt2:Int
-							Local allgo:Int=0
-							For Local y4:Int=y3-1 To y3+1
-							For Local x4:Int=x3-1 To x3+1
-								If x4<0 Or x4>=mapwidth Or y4<0 Or y4>=mapheight Then 
-									cnt2+=1
-									Continue
-								End If
-								If (x4=0 And y4=0 )
-									cnt2+=1
-									Continue
-								End If
-								Local isnot:Bool=True
-								If map[x4,y4] = -1 Then 
-									isnot=False
-								Else
-									For Local j:Int=0 Until tile.Get(map[x4,y4]).Get(cnt2).Length
-										If tile.Get(map[x4,y4]).Get(cnt2).Get(j) = newt Then 
-											isnot=false
-											Exit																					
-										End If
-									Next
-								End If
-								If isnot=False Then allgo +=1
-								cnt2+=1
-							Next
-							Next
-							
-							If allgo>=8 Then 
-								valid=True								
-							Else
-								'newt = tile.Get(ctile).Get(cnt).Get(Rnd(num))
-								newt=0
-								valid=True
-								'Print newt
-							End if
-							
-						Wend
-						
 						map[x3,y3] = newt
-					
-					
+									
 					End if
 					cnt+=1
 				Next
@@ -155,6 +110,60 @@ Class wfc
 		Next
 		Next		
 
+
+		'remove illegal tiles
+		Local damned:Bool=True
+		Local xit:Int=0
+		While damned=True
+			xit+=1
+			
+			damned=False
+			For Local y1:Int=0 Until mapheight
+			For Local x1:Int=0 Until mapwidth
+				If map[x1,y1] = -1 Then Continue
+				Local cnt:Int=0
+				Local t:Int=map[x1,y1]
+				Local valids:Int
+				For Local y2:Int=-1 To 1
+				For Local x2:Int=-1 To 1
+					Local x3:Int=x1+x2
+					Local y3:Int=y1+y2
+					If x3<0 Or y3<0 Or x3>=mapwidth Or y3>=mapheight
+						cnt+=1
+						Continue
+					End If
+					If (x2=0 And y2=0)
+						cnt+=1
+						Continue
+					End If
+					Local isin:Bool=False
+					If map[x3,y3] <> -1				
+					For Local i:Int=0 Until tile.Get(map[x3,y3]).Get(cnt).Length
+						If tile.Get(map[x3,y3]).Get(cnt).Get(i) = t Then isin=True ; Exit
+					Next
+					Else
+						isin=True
+					End If
+					If isin=False						
+						'map[x1,y1] = Rnd(numtiles)
+						'damned=True
+					Else
+						valids+=1
+					End If
+					cnt+=1
+				Next
+				Next				
+				
+				If valids<8 Then 
+					Local v:Int=Rnd(numtiles)
+					If Rnd()<.3 Then v=0
+					map[x1,y1] = v
+					damned=True					
+				End If
+			Next
+			Next
+			If xit>100 Then damned=False			
+		Wend
 
 	End Method
 	Method mapinit:Int[,]()
