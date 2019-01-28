@@ -26,10 +26,85 @@ Class wfc
 		collapse()
 	End Method
 	Method collapse()
-		Local side:Stack<Stack<Int>> = New Stack<Stack<Int>>
-		side.Push(New Stack<Int>)
+		Local numtiles:Int=9
+		Local tile:Stack<Stack<Stack<Int>>> = New Stack<Stack<Stack<Int>>>
 		
-		side.Get(0).Push(10)
+		For Local i:Int=0 Until numtiles
+			tile.Add(New Stack<Stack<Int>>)
+			For Local ii:Int=0 Until 9
+				tile.Get(i).Add(New Stack<Int>)
+			Next
+		Next
+
+		'
+		' here we are going to read each position on the map. We have a number
+		' of unique tiles. Each tile has 8 neighbours. For each tile based on the
+		' input map has a number of valid neighbour tiles.
+		'
+		For Local y:Int=0 Until mapheight
+		For Local x:Int=0 Until mapwidth
+			Local ctile:Int=map[x,y]
+			Local cnt:Int=0
+			For Local y2:Int=-1 To 1
+			For Local x2:Int=-1 To 1
+				If x+x2<0 Or x+x2>=mapwidth Or y+y2<0 Or y+y2>=mapheight Then 
+					cnt+=1
+					Continue
+				End If
+				If (x+x2 = 0 And y+y2=0)
+					cnt+=1
+					Continue
+				End If
+				Local btile:Int=map[x+x2,y+y2]
+				tile.Get(ctile).Get(cnt).Push(btile)
+				cnt+=1
+			Next
+			Next
+		Next
+		Next
+
+		' generate new map
+		map = New Int[mapwidth,mapheight]
+		For Local y:Int=0 Until mapheight
+		For Local x:Int=0 Until mapwidth
+			map[x,y] = -1
+		Next
+		Next		
+
+		map[10,10] = 4
+		
+		For Local i:Int=0 Until 10
+		For Local y:Int=0 Until mapheight
+		For Local x:Int=0 Until mapwidth
+			If map[x,y] <> -1
+				Local ctile:Int=map[x,y]
+				Local cnt:Int=0
+				For Local y2:Int=-1 To 1
+				For Local x2:Int=-1 To 1
+					Local x3:Int=x+x2
+					Local y3:Int=y+y2
+					If x3<0 Or x3>=mapwidth Or y3<0 Or y3>=mapheight Then 
+						cnt+=1
+						Continue
+					End If
+					If (x2=0 And y2=0)
+						cnt+=1
+						Continue
+					End If
+
+					If map[x3,y3] = -1
+					Local num:Int=tile.Get(ctile).Get(cnt).Length
+					map[x3,y3] = tile.Get(ctile).Get(cnt).Get(Rnd(num))
+					End if
+					cnt+=1
+				Next
+				Next
+			End If
+		Next
+		Next
+		Next		
+
+
 	End Method
 	Method mapinit:Int[,]()
 		Local s:String[] = New String[15]		
