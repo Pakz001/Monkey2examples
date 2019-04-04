@@ -19,11 +19,42 @@ Class basegenerator
 		phase1(1,0)
 		phase1(0,1)
 		phase1(-1,0)
-		phase1(0,-1)
+		phase1(0,-1)		
 		phase2()
 	End Method
 	'walls
 	Method phase2()
+		' Here we thicken the map so the walls are a little
+		' bit away from the roads
+		
+		' First keep a copy of the map
+		Local tmpmap:Int[,] = New Int[w,h]
+		For Local y:Int=0 Until h
+		For Local x:Int=0 Until w
+			tmpmap[x,y] = map[x,y]
+		Next
+		Next
+		'
+		' here we find the edges for spacing the walls		
+		Local tmpmap2:Int[,] = New Int[w,h]
+		For Local x:Int=0 Until w
+		For Local y:Int=0 Until h
+			If map[x,y] = 1 Then
+			For Local x2:Int=x-1 To x+1
+			For Local y2:Int=y-1 To y+1
+				tmpmap2[x2,y2] = 1
+			Next
+			Next
+			End If
+		Next
+		Next
+		For Local x:Int=0 Until w
+		For Local y:Int=0 Until h
+			map[x,y] = tmpmap2[x,y]
+		Next
+		Next
+		
+		
 		'flood fill to find edges and turn these into walls(2)
 		Local ox:Stack<Int> = New Stack<Int>
 		Local oy:Stack<Int> = New Stack<Int>
@@ -45,12 +76,11 @@ Class basegenerator
 					ox.Push(nx)
 					oy.Push(ny)
 					cmap[nx,ny] = 1		
-					Print Microsecs()
 				End If
 			Next
 			Next
 		Wend
-		'
+		' He we actually place the walls
 		For Local y:Int=0 Until h
 		For Local x:Int=0 Until w
 			If map[x,y]=1 
@@ -64,6 +94,20 @@ Class basegenerator
 			End If
 		Next
 		Next
+		
+		'erase roads
+		For Local x:Int=0 Until w
+		For Local y:Int=0 Until h
+			If map[x,y] = 1 Then map[x,y] = 0
+		Next
+		Next
+		'pu told roads back
+		For Local x:Int=0 Until w
+		For Local y:Int=0 Until h
+			If tmpmap[x,y] = 1 Then map[x,y] = 1
+		Next
+		Next
+		
 	End Method
 	' roads
 	' randomly draw lines into 1 of four directions and keep
