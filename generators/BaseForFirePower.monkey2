@@ -21,6 +21,58 @@ Class basegenerator
 		phase1(-1,0)
 		phase1(0,-1)		
 		phase2()
+		phase3()
+	End Method
+	' Find road points that must be extended to go through walls
+	Method phase3()
+		For Local y:Int=2 Until h-2
+		For Local x:Int=2 Until w-2
+			If map[x,y] = 1
+				Local cnt:Int=0
+				For Local y2:Int=y-1 To y+1
+				For Local x2:Int=x-1 To x+1
+					If map[x2,y2] = 1 Then cnt+=1
+				Next
+				Next				
+				'if the count is 2 that means we have a end point road
+				'we will extend it for a few steps so it goes through the wall
+				' creating a gate
+				If cnt=2
+					If map[x+1,y]=1 
+						If map[x-2,y] = 2 And map[x-3,y] = 0
+							map[x-1,y]=1
+							map[x-2,y]=1
+							map[x-3,y]=1
+						End if
+						Exit
+					End If
+					If map[x-1,y]=1 
+						If map[x+2,y] = 2 And map[x+3,y] = 0
+							map[x+1,y]=1
+							map[x+2,y]=1
+							map[x+3,y]=1
+						End If
+						Exit					
+					End If
+					If map[x,y+1]=1
+						If map[x,y-2] = 2 And map[x,y-3] = 0
+							map[x,y-1] = 1
+							map[x,y-2] = 1
+							map[x,y-3] = 1
+						End If
+					End if
+					If map[x,y-1]=1
+						If map[x,y+2] = 2 And map[x,y+3] = 0
+							map[x,y+1] = 1
+							map[x,y+2] = 1
+							map[x,y+3] = 1
+						End If
+					End if
+
+				End If
+			End If				
+		Next
+		Next
 	End Method
 	'walls
 	Method phase2()
@@ -143,12 +195,14 @@ Class basegenerator
 	Method drawmap(canvas:Canvas)
 		For Local y:Int=0 Until h
 		For Local x:Int=0 Until w
-			If map[x,y] = 0 Then Continue
+			'If map[x,y] = 0 Then Continue
 			Select map[x,y]
-				Case 1
-				canvas.Color = Color.White
-				Case 2
+				Case 0 'ground
+				canvas.Color = Color.Brown.Blend(Color.Green,.5)
+				Case 1 'roads
 				canvas.Color = Color.Grey
+				Case 2 'walls or water
+				canvas.Color = Color.Blue
 			End Select
 			Local dx:Int=x*tw
 			Local dy:Int=y*th
@@ -165,7 +219,7 @@ Class MyWindow Extends Window
 	Method New()
 		SeedRnd(Microsecs())
 		sw = Width
-		sh = Height
+		sh = Height		
 		mymap = New basegenerator(50,50)
 	End method
 	
@@ -176,8 +230,8 @@ Class MyWindow Extends Window
 		
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
+		If Keyboard.KeyReleased(Key.Space) Then mymap = New basegenerator(50,50)
 	End Method	
-	
 End	Class
 
 Function Main()
