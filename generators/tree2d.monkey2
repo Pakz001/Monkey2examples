@@ -19,10 +19,12 @@ Class MyWindow Extends Window
 		'Local x:Int=320,y:Int=200
 		For Local y:Int=0 Until Height Step 80
 		For Local x:Int=0 Until Width Step 80
-		brush(can,x,y,40,New Color(0,.5,0),1)		
+		brush(can,x,y,40,New Color(0,.2,0),1)		
+		'brush(can,x,y,40,New Color(0,.5,0),1)
 		For Local i:Int=0 Until 5
 '			SeedRnd(1)
-			brush(can,x+Rnd(-10,10),y+Rnd(-10,10),Rnd(20,40),New Color(0,.2,0),.5)		
+			brush(can,x+Rnd(-10,10),y+Rnd(-10,10),Rnd(20,40),New Color(0,Rnd(.5,1),0),.5)		
+			'brush(can,x+Rnd(-10,10),y+Rnd(-10,10),Rnd(20,40),New Color(0,.2,0),.5)		
 			
 		Next
 		Next
