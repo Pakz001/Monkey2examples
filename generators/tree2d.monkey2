@@ -17,12 +17,13 @@ Class MyWindow Extends Window
 		can = New Canvas(im)
 
 		'Local x:Int=320,y:Int=200
-		For Local y:Int=0 Until Height Step 64
-		For Local x:Int=0 Until Width Step 64
-		brush(can,x,y,40,New Color(Rnd(),1,Rnd()),1)		
+		For Local y:Int=0 Until Height Step 80
+		For Local x:Int=0 Until Width Step 80
+		brush(can,x,y,40,New Color(0,.5,0),1)		
 		For Local i:Int=0 Until 5
 '			SeedRnd(1)
-			brush(can,x+Rnd(-10,10),y+Rnd(-10,10),Rnd(20,40),New Color(Rnd(),1,Rnd()),.5)		
+			brush(can,x+Rnd(-10,10),y+Rnd(-10,10),Rnd(20,40),New Color(0,.2,0),.5)		
+			
 		Next
 		Next
 		Next
@@ -87,6 +88,27 @@ Class MyWindow Extends Window
 			If cnt<0 
 				dir=-dir
 			End If
+			
+			
+			'leaf
+			If Rnd()<.2
+			Local la:Float=Rnd(TwoPi)
+			Local lx:Float=sx,ly:Float=sy
+			Local s:Float=3.0'Float(r)/10.0
+			Local di:Float=Rnd(-.3,.3)
+			For Local i:Int=0 Until 10
+				lx+=Cos(la)
+				ly+=Sin(la)
+				s-=3.0/10.0
+				la+=di*(Float(i)/2)
+				For Local cx:Int=lx-s Until lx+s
+				For Local cy:Int=ly-s Until ly+s
+					If cx<0 Or cy<0 Or cx>=r*2 Or cy>=r*2 Then Continue
+					map[cx,cy] = 1
+				Next
+				Next
+			Next
+			End If
 		Next
 		
 		' connect last two points
@@ -122,7 +144,7 @@ Class MyWindow Extends Window
 		Wend
 
 		canvas.Alpha = alp
-		canvas.Color = Color.White.Blend(col,.5)
+		canvas.Color = Color.White.Blend(col,.9)
 		
 		For Local zy:Int=0 Until r*2
 		For Local zx:Int=0 Until r*2
