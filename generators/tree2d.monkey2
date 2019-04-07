@@ -10,27 +10,11 @@ Global screenwidth:Int,screenheight:Int
 Class MyWindow Extends Window
 	Field im:Image
 	Field can:Canvas	
+	Field time:Int=0
 	Method New()
 		SeedRnd(Microsecs())
 		screenwidth = Width ; screenheight = Height
-		im = New Image(Width,Height)
-		can = New Canvas(im)
-
-		'Local x:Int=320,y:Int=200
-		For Local y:Int=0 Until Height Step 80
-		For Local x:Int=0 Until Width Step 80
-		brush(can,x,y,40,New Color(0,.2,0),1)		
-		'brush(can,x,y,40,New Color(0,.5,0),1)
-		For Local i:Int=0 Until 5
-'			SeedRnd(1)
-			brush(can,x+Rnd(-10,10),y+Rnd(-10,10),Rnd(20,40),New Color(0,Rnd(.5,1),0),.5)		
-			'brush(can,x+Rnd(-10,10),y+Rnd(-10,10),Rnd(20,40),New Color(0,.2,0),.5)		
-			
-		Next
-		Next
-		Next
-
-
+		newtree()
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -41,9 +25,32 @@ Class MyWindow Extends Window
 		canvas.Alpha=1
 		canvas.DrawImage(im,0,0)		
 		
+		time+=1
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
+		If Keyboard.KeyReleased(Key.Space) Or time>120 Then newtree() ; time=0
 	End Method	
+	Method newtree()
+		im = New Image(Width,Height)
+		can = New Canvas(im)
+		can.Clear(New Color(0,0,0,1))
+		can.Flush()
+		'Local x:Int=320,y:Int=200
+		
+		For Local y:Int=0 Until Height Step 100
+		For Local x:Int=0 Until Width Step 100
+		Local maxsize:Int=Rnd(20,40)
+		brush(can,x,y,maxsize,New Color(0,.2,0),1)		
+		'brush(can,x,y,40,New Color(0,.5,0),1)
+		For Local i:Int=0 Until 5
+'			SeedRnd(1)
+			brush(can,x+Rnd(-10,10),y+Rnd(-10,10),Rnd(20,maxsize),New Color(0,Rnd(.5,1),0),.5)		
+			'brush(can,x+Rnd(-10,10),y+Rnd(-10,10),Rnd(20,40),New Color(0,.2,0),.5)					
+		Next
+		Next
+		Next
+	End Method	
+
 	Method brush(canvas:Canvas,x:Int,y:Int,r:Int,col:Color,alp:Float)		
 		Local ax:Int,ay:Int,bx:Int,by:Int 'connect last two points
 		Local dx:Int=x,dy:Int=y
