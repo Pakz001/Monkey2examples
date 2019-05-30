@@ -370,7 +370,7 @@ Global myworker:List<worker> = New List<worker>
 Class MyWindow Extends Window
 
 	Method New()
-		'SeedRnd(Microsecs())
+		SeedRnd(Microsecs())
 		newmap()
 	End method
 	
@@ -388,7 +388,8 @@ Class MyWindow Extends Window
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 	Method newmap()
-		myfarm = New farm(32,32)
+		Local s:Int=Rnd(20,60)
+		myfarm = New farm(s,s)
 		myworker.Clear()
 		myworker.Add(New worker(myfarm.housex,myfarm.housey))
 		
