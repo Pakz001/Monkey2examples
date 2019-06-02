@@ -55,6 +55,7 @@ Class MyWindow Extends Window
 		canvas.DrawRect(px,py,pw,ph)
 		canvas.DrawLine(px+pw/2,py,ax,ay)
 		
+		canvas.DrawText("Press cursor left and right to apply force..",0,0)
 		
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
