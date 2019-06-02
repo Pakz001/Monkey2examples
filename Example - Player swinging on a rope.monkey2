@@ -36,8 +36,12 @@ Class MyWindow Extends Window
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
 		
+		' swing harder
 		If Keyboard.KeyReleased(Key.Right) Then vel+=.005
 		If Keyboard.KeyReleased(Key.Left) Then vel-=.005
+		' CLimb up or down..
+		If Keyboard.KeyDown(Key.Up) Then r-=2
+		If Keyboard.KeyDown(Key.Down) Then r+=2
 		
 		' Do the swing math
 		acc=(-1*gravity/r)*Sin(angle)
@@ -56,6 +60,7 @@ Class MyWindow Extends Window
 		canvas.DrawLine(px+pw/2,py,ax,ay)
 		
 		canvas.DrawText("Press cursor left and right to apply force..",0,0)
+		canvas.DrawText("Hold cursor Up Down to climb or Lower yourself..",0,20)
 		
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
