@@ -21,20 +21,28 @@ Class MyWindow Extends Window
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
 		
-		' These lines below get the distance between 2 vectors!
-
+		' Get the mouse position in poitn 2
 		point2.x = Mouse.X
 		point2.Y = Mouse.Y
 
+		' get point2 into dir
 		dir = point2
+		'substract position of the point1 from the dir
 		dir-= point1
+		' normalize the dir
 		dir.Normalize()
+		' multi ply the dir
 		dir*=.05
+		' copy the dir into the acceleration vector
 		acc=dir
 		
+		
+		' Set our velocity
 		velocity+=acc
+		' Limit our velocity
 		velocity.x = Clamp(velocity.x,-4.0,4.0)
 		velocity.y = Clamp(velocity.y,-4.0,4.0)
+		' Move our point1
 		point1+=velocity
 		
 		
