@@ -141,7 +141,19 @@ Class game
 		If swingrelease>0 Then swingrelease-=1
 		If swingkey And swingrelease<=0 Then 			
 			standswing=True
-			rax = px+pw
+			rax = px+pw/2
+			'
+			' move the anchor to the top most part of the map
+			'
+			ray=0
+			For Local y:Int=py Until 0 Step -1
+				If mapcollide(px,y,0,0) Then 
+					ray=y
+					Exit
+				End If
+			Next
+			Print ray
+		
 			lockswing()
 		End If
 		
@@ -183,7 +195,7 @@ Class game
 			Local oldx:Float=px
 			Local oldy:Float=py
 
-			px = rax+Sin(rangle)*r
+			px = rax-pw/2+Sin(rangle)*r
 			py = ray+Cos(rangle)*r
 
 			If playermapcollide(0,0)
@@ -217,7 +229,7 @@ Class game
 			Local a:Float=-5
 			Repeat
 				a+=.1
-				zx = rax+Sin(a)*r
+				zx = rax-pw/2+Sin(a)*r
 				zy = ray+Cos(a)*r
 				If rectsoverlap(zx-1,zy-1,2,2,px-1,py-1,2,2) Then Exit
 			Forever
@@ -246,6 +258,24 @@ Class game
 	    Next
 	    Return False
 	End Method		
+	
+	Method mapcollide:Bool(xa:Int,ya:Int,x1:Int,y1:Int)
+	    Local cx:Int = (xa)/tw+x1
+	    Local cy:Int = (ya)/th+y1
+	    For Local y2:Int=cy-1 Until cy+2
+	    For Local x2:Int=cx-1 Until cx+2
+	        If x2>=0 And x2<mw And y2>=0 And y2<mh
+	            If map[x2,y2] > 0
+	                If rectsoverlap(xa+x1,ya+y1,pw,ph,x2*tw,y2*th,tw,th) = True
+		                Return True
+	    	        End If
+	    	   	End If
+	        End If
+	    Next
+	    Next
+	    Return False
+	End Method		
+	
 	Method draw(canvas:Canvas)
 		Local tx:Int=camerax/tw
 		Local ty:Int=cameray/th
@@ -271,8 +301,10 @@ Class game
 		canvas.DrawOval(px-camerax,py-cameray,pw,ph)
 		'draw the rope
 		If inswing Or standswing
-		canvas.Color = Color.Yellow
-		canvas.DrawLine(px-camerax+pw/2,py-cameray,rax-camerax,ray-cameray)
+			canvas.Color = Color.Brown
+			canvas.DrawLine(px-camerax+pw/2,py-cameray,rax-camerax,ray-cameray)
+			canvas.Color = Color.Black
+			canvas.DrawLine(px-camerax+pw/2+1,py-cameray,rax-camerax+1,ray-cameray)
 		End If
 	End Method
 End Class
