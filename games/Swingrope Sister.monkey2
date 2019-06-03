@@ -85,6 +85,12 @@ Class game
 	End Method
 	Method update()
 		
+		'align the map
+		For Local i:Int=0 Until 3
+			If px>camerax+(tilesx/2*tw) Then camerax+=1
+			If px<camerax+(tilesx/2*tw) Then camerax-=1
+		Next
+		
 		Local swingkey:Bool=False
 		If Keyboard.KeyReleased(Key.R) Then swingkey = True
 		
@@ -213,8 +219,8 @@ Class game
 			Local ax:Float=rax,ay:Float=ray
 			'get the reverse angle
 			Local revangle:Float=getangle(ax,ay,px,py)
-			ax+=Cos(revangle)*pw
-			ay+=Sin(revangle)*ph
+			ax+=Cos(revangle)*pw/2
+			ay+=Sin(revangle)*ph/2
 			While rectsoverlap(ax,ay,10,10,px,py,pw,ph)=False
 				ax+=Cos(revangle)*1
 				ay+=Sin(revangle)*1
