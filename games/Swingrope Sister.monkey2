@@ -1,4 +1,11 @@
 '
+' Todo - PLayer aims rope and shoots it to ceiling
+' 		player jumps and can swing
+'       player can release rope
+'       
+
+
+'
 '  Thanks to Daniel SHiffman (book - nature of code)
 '
 ' This example might be usable in platformer games (rope and swing)
@@ -215,7 +222,7 @@ Class game
 		canvas.DrawOval(px-camerax,py-cameray,pw,ph)
 		'draw the rope
 		canvas.Color = Color.Yellow
-		canvas.DrawLine(px,py,rax,ray)
+		canvas.DrawLine(px-camerax,py-cameray,rax-camerax,ray-cameray)
 	End Method
 End Class
 
