@@ -147,7 +147,7 @@ Class game
 			'
 			ray=0
 			For Local y:Int=py Until 0 Step -1
-				If mapcollide(px,y,0,0) Then 
+				If mapcollide(px,y,0,0,pw,ph) Then 
 					ray=y
 					Exit
 				End If
@@ -197,7 +197,8 @@ Class game
 
 			px = rax-pw/2+Sin(rangle)*r
 			py = ray+Cos(rangle)*r
-
+			
+			' if we are inside a object than restore to previous position
 			If playermapcollide(0,0)
 				px = oldx
 				py = oldy
@@ -205,6 +206,20 @@ Class game
 				rvel = -rvel/10
 				racc=0
 			End If
+			
+			'if the rope is inside a block then drop rope.
+			' we do this by checking each position of the rope with 
+			' the map
+			Local ax:Float=rax,ay:Float=ray
+			'get the reverse angle
+			Local revangle:Float=getangle(ax,ay,px,py)
+			ax+=Cos(revangle)*pw
+			ay+=Sin(revangle)*ph
+			While rectsoverlap(ax,ay,10,10,px,py,pw,ph)=False
+				ax+=Cos(revangle)*1
+				ay+=Sin(revangle)*1
+				If mapcollide(ax,ay,0,0,1,1) Then inswing=False
+			Wend
 			
 '			If playermapcollide(0,1)
 '				px = oldx
@@ -259,14 +274,14 @@ Class game
 	    Return False
 	End Method		
 	
-	Method mapcollide:Bool(xa:Int,ya:Int,x1:Int,y1:Int)
+	Method mapcollide:Bool(xa:Int,ya:Int,x1:Int,y1:Int,w:Int,h:Int)
 	    Local cx:Int = (xa)/tw+x1
 	    Local cy:Int = (ya)/th+y1
 	    For Local y2:Int=cy-1 Until cy+2
 	    For Local x2:Int=cx-1 Until cx+2
 	        If x2>=0 And x2<mw And y2>=0 And y2<mh
 	            If map[x2,y2] > 0
-	                If rectsoverlap(xa+x1,ya+y1,pw,ph,x2*tw,y2*th,tw,th) = True
+	                If rectsoverlap(xa+x1,ya+y1,w,h,x2*tw,y2*th,tw,th) = True
 		                Return True
 	    	        End If
 	    	   	End If
@@ -305,7 +320,11 @@ Class game
 			canvas.DrawLine(px-camerax+pw/2,py-cameray,rax-camerax,ray-cameray)
 			canvas.Color = Color.Black
 			canvas.DrawLine(px-camerax+pw/2+1,py-cameray,rax-camerax+1,ray-cameray)
+
 		End If
+
+
+
 	End Method
 End Class
 
