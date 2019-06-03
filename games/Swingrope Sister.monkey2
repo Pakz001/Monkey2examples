@@ -304,8 +304,8 @@ Class MyWindow Extends Window
 
 
 		
-		canvas.DrawText("Press cursor left and right to apply force..",0,0)
-		canvas.DrawText("Hold cursor Up Down to climb or Lower yourself..",0,20)
+		canvas.DrawText("Press cursor left and right to sccroll map - r to rope...",0,0)
+		canvas.DrawText("w/a/s/d movement...",0,20)
 		
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
