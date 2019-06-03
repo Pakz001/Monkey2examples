@@ -141,7 +141,7 @@ Class game
 		If swingrelease>0 Then swingrelease-=1
 		If swingkey And swingrelease<=0 Then 			
 			standswing=True
-			rax = px
+			rax = px+pw
 			lockswing()
 		End If
 		
@@ -189,6 +189,7 @@ Class game
 			If playermapcollide(0,0)
 				px = oldx
 				py = oldy
+				lockswing()
 				rvel = -rvel/10
 				racc=0
 			End If
@@ -271,7 +272,7 @@ Class game
 		'draw the rope
 		If inswing Or standswing
 		canvas.Color = Color.Yellow
-		canvas.DrawLine(px-camerax,py-cameray,rax-camerax,ray-cameray)
+		canvas.DrawLine(px-camerax+pw/2,py-cameray,rax-camerax,ray-cameray)
 		End If
 	End Method
 End Class
