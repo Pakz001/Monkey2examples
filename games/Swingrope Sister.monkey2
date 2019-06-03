@@ -1,4 +1,4 @@
-'
+
 ' Todo - PLayer aims rope and shoots it to ceiling
 ' 		player jumps and can swing
 '       player can release rope
@@ -29,9 +29,11 @@ Class game
 
 	'our rope variabes
 	'our anchor x and y
-	Field rax:Double=320,ray:Double=0
+	Field rax:Double=600,ray:Double=0
 
-	Field inswing:Bool=True
+	Field swingrelease:Int
+	Field standswing:Bool=False
+	Field inswing:Bool=False
 	Field rangle:Double 'our angle between anchor and player	
 	Field rdist:Double 'distance between anchor and player
 	Field racc:Double,rvel:Double 'acceleration and velocity
@@ -77,24 +79,15 @@ Class game
 		tilesx = screenwidth/tw
 		tilesy = screenheight/th
 
-		
-		' Get the angle betweem the player and the anchor
-		px=0
-		py=200
-		
-		rangle = getangle(px,py,rax,ray)
-		' Get the distgance between the player and anchor
-		r = distance(px,py,rax,ray)
-
-		'Local npx:Int = rax+(Cos(rangle)*r)
-		'Local npy:Int = ray+(Sin(rangle)*r)
-		'npx+=rax
-		'npy+=ray
-
-		'If Not(npx=px) And Not(npy=py) Then RuntimeError("not equal")
+		px = 500
+		camerax = 500
 
 	End Method
 	Method update()
+		
+		Local swingkey:Bool=False
+		If Keyboard.KeyReleased(Key.R) Then swingkey = True
+		
 		' scroll the map
 		If Keyboard.KeyDown(Key.Right)  Then camerax+=3 
 		If Keyboard.KeyDown(Key.Left)  Then camerax-=3 
@@ -144,14 +137,81 @@ Class game
 		End If
 		
 		
-		'the rope
-		If inswing=True
+		' Activate the rope
+		If swingrelease>0 Then swingrelease-=1
+		If swingkey And swingrelease<=0 Then 			
+			standswing=True
+			rax = px
+			lockswing()
+		End If
+		
+		'the rop
+		
+		If standswing=True
+		
+			If playermapcollide(0,1) = True
+				If Keyboard.KeyDown(Key.D) And playermapcollide(1,0)=False Then px+=1
+				If Keyboard.KeyDown(Key.A) And playermapcollide(-1,0)=False Then px-=1
+				If Keyboard.KeyDown(Key.W) Then py-=5
+			Else
+				inswing=True
+				standswing=False	
+				lockswing()
+			End If
+		End If
+		If inswing=True	
+		
+			If swingkey Then inswing=False ; swingrelease=100 
+			
+			If playermapcollide(0,0)=False 
+			If Keyboard.KeyDown(Key.W) And r>th
+				If playermapcollide(0,-1) = False Then r-=1
+				
+			End if
+			If Keyboard.KeyDown(Key.S) And playermapcollide(0,1)=False Then r+=1
+			If Keyboard.KeyReleased(Key.D) Then rvel+=0.005
+			If Keyboard.KeyReleased(Key.A) Then rvel-=0.005
+			End If
+			
 			' Do the swing math
-			If Keyboard.KeyReleased(Key.P) Then 
-			px = Mouse.X ; py = Mouse.Y
+			racc=(-1*rgravity/r)*Sin(rangle)
+			rvel+=racc
+			rangle+=rvel		
+			rvel*=rdamping
+			
+			' update our position
+			Local oldx:Float=px
+			Local oldy:Float=py
+
+			px = rax+Sin(rangle)*r
+			py = ray+Cos(rangle)*r
+
+			If playermapcollide(0,0)
+				px = oldx
+				py = oldy
+				rvel = -rvel/10
+				racc=0
+			End If
+			
+'			If playermapcollide(0,1)
+'				px = oldx
+'				py = oldy
+'				'inswing=false
+'			End If
+			
+			'px = r*Sin(rangle)		
+			'py = r*Cos(rangle)
+			'px+=rax
+			'py+=ray
+			
+		End If		
+		
+	End Method
+	Method lockswing()
+			'px = Mouse.X ; py = Mouse.Y
 			r = distance(px,py,rax,ray)
 			' Get the angle betweem the player and the anchor
-			'rangle = getangle(px,py,rax,ray)*180/Pi
+			'rangle = getangle(rax,ray,px,py)
 			Local zx:Float=0,zy:Float=0
 			Local a:Float=-5
 			Repeat
@@ -160,27 +220,15 @@ Class game
 				zy = ray+Cos(a)*r
 				If rectsoverlap(zx-1,zy-1,2,2,px-1,py-1,2,2) Then Exit
 			Forever
+			'Print rangle+"=="+a+"=="+TwoPi
 			rangle=a
 			' Get the distgance between the player and anchor
 			
 			rvel=0
 			racc=0
-			End If
-			racc=(-1*rgravity/r)*Sin(rangle)
-			rvel+=racc
-			rangle+=rvel		
-			rvel*=rdamping
-			
-			' update our position
-			px = rax+Sin(rangle)*r
-			py = ray+Cos(rangle)*r
-			'px = r*Sin(rangle)		
-			'py = r*Cos(rangle)
-			'px+=rax
-			'py+=ray
-		End If		
-		
-	End Method
+	
+	End Method 
+	
 	Method playermapcollide:Bool(x1:Int,y1:Int)
 	    Local cx:Int = (px)/tw+x1
 	    Local cy:Int = (py)/th+y1
@@ -221,8 +269,10 @@ Class game
 		canvas.Color = Color.Blue
 		canvas.DrawOval(px-camerax,py-cameray,pw,ph)
 		'draw the rope
+		If inswing Or standswing
 		canvas.Color = Color.Yellow
 		canvas.DrawLine(px-camerax,py-cameray,rax-camerax,ray-cameray)
+		End If
 	End Method
 End Class
 
@@ -231,62 +281,27 @@ Class MyWindow Extends Window
 
 	Field mygame:game
 
-	' player x and y and width and height
-	Field px:Float=320,py:Float=200
-	Field pw:Int=32,ph:Int=32
-	
-	'our anchor x and y
-	Field rax:Int=320,ray:Int=0
-
-	Field rangle:Float 'our angle between anchor and player	
-	Field rdist:Float 'distance between anchor and player
-	Field racc:Float,rvel:Float 'acceleration and velocity
-	Field rgravity:Float=0.4 ' 
-	Field rdamping:Float=0.995 'slowdown
-	Field r:Float 'distance between anchor and player
 	Method New()
 		
 		mygame = New game()
 		
-		' Get the angle betweem the player and the anchor
-		rangle = getangle(px,py,rax,ray)+Pi/2
-		
-		' Get the distgance between the player and anchor
-		r = distance(px,py,rax,ray)
-	End method
+	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
 		
 		' swing harder
-		If Keyboard.KeyReleased(Key.Right) Then rvel+=.005
-		If Keyboard.KeyReleased(Key.Left) Then rvel-=.005
-		' CLimb up or down..
-		If Keyboard.KeyDown(Key.Up) Then r-=2
-		If Keyboard.KeyDown(Key.Down) Then r+=2
-		
-		' Do the swing math
-		racc=(-1*rgravity/r)*Sin(rangle)
-		rvel+=racc
-		rangle+=rvel		
-		rvel*=rdamping
-		
-		' update our position
-		px = rax+Cos(rangle)*r
-		py = ray+Sin(rangle)*r
-		'px = r*Sin(rangle)		
-		'py = r*Cos(rangle)
-		'px+=rax
-		'py+=ray
-
+'		If Keyboard.KeyReleased(Key.Right) Then rvel+=.005
+'		If Keyboard.KeyReleased(Key.Left) Then rvel-=.005
+'		' CLimb up or down..
+'		If Keyboard.KeyDown(Key.Up) Then r-=2
+'		If Keyboard.KeyDown(Key.Down) Then r+=2
+'		
 		' draw our map
 		mygame.update()
 		mygame.draw(canvas)
 
 
-		' Draw our player
-		canvas.DrawRect(px,py,pw,ph)
-		canvas.DrawLine(px+pw/2,py,rax,ray)
 		
 		canvas.DrawText("Press cursor left and right to apply force..",0,0)
 		canvas.DrawText("Hold cursor Up Down to climb or Lower yourself..",0,20)
