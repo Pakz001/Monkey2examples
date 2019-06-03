@@ -79,6 +79,13 @@ Class game
 		' Get the distgance between the player and anchor
 		r = distance(px,py,rax,ray)
 
+		'Local npx:Int = rax+(Cos(rangle)*r)
+		'Local npy:Int = ray+(Sin(rangle)*r)
+		'npx+=rax
+		'npy+=ray
+
+		'If Not(npx=px) And Not(npy=py) Then RuntimeError("not equal")
+
 	End Method
 	Method update()
 		' scroll the map
@@ -135,10 +142,20 @@ Class game
 			' Do the swing math
 			If Keyboard.KeyReleased(Key.P) Then 
 			px = Mouse.X ; py = Mouse.Y
-			' Get the angle betweem the player and the anchor
-			rangle = getangle(px,py,rax,ray)/2
-			' Get the distgance between the player and anchor
 			r = distance(px,py,rax,ray)
+			' Get the angle betweem the player and the anchor
+			'rangle = getangle(px,py,rax,ray)*180/Pi
+			Local zx:Float=0,zy:Float=0
+			Local a:Float=-5
+			Repeat
+				a+=.1
+				zx = rax+Sin(a)*r
+				zy = ray+Cos(a)*r
+				If rectsoverlap(zx-1,zy-1,2,2,px-1,py-1,2,2) Then Exit
+			Forever
+			rangle=a
+			' Get the distgance between the player and anchor
+			
 			rvel=0
 			racc=0
 			End If
@@ -148,10 +165,12 @@ Class game
 			rvel*=rdamping
 			
 			' update our position
-			px = r*Sin(rangle)		
-			py = r*Cos(rangle)
-			px+=rax
-			py+=ray
+			px = rax+Sin(rangle)*r
+			py = ray+Cos(rangle)*r
+			'px = r*Sin(rangle)		
+			'py = r*Cos(rangle)
+			'px+=rax
+			'py+=ray
 		End If		
 		
 	End Method
@@ -246,10 +265,12 @@ Class MyWindow Extends Window
 		rvel*=rdamping
 		
 		' update our position
-		px = r*Sin(rangle)		
-		py = r*Cos(rangle)
-		px+=rax
-		py+=ray
+		px = rax+Cos(rangle)*r
+		py = ray+Sin(rangle)*r
+		'px = r*Sin(rangle)		
+		'py = r*Cos(rangle)
+		'px+=rax
+		'py+=ray
 
 		' draw our map
 		mygame.update()
