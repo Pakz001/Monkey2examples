@@ -9,6 +9,8 @@ Using std..
 Using mojo..
 
 
+Global runatstart:Bool=true
+
 Global mapwidth:Int=40
 Global mapheight:Int=40
 Global numturtles:Int=50 'how big a new maps
@@ -16,7 +18,8 @@ Global numturtles:Int=50 'how big a new maps
 Global numturtlesteps:Int=1000 'how many steps on a map
 Global halllow:Float=0.1 ' Num Steps straight forward modifier
 Global halllong:Float=0.3
-Global fullsurface:Bool=True
+Global fullsurface:Bool=True ' score for more surface used
+Global surfaceaddscore:Float=0.001 ' add this score per tile used
 
 Class MyWindow Extends Window
 
@@ -25,7 +28,7 @@ Class MyWindow Extends Window
 		Field x:List<Int> = New List<Int>
 		Field y:List<Int> = New List<Int>		
 		Field map:Int[,] = New Int[mapwidth,mapheight]
-		Field score:Int
+		Field score:Float
 	End Class
 
 	' This holds our genetic algorithm data
@@ -34,6 +37,7 @@ Class MyWindow Extends Window
 	Field sx:Int,sy:Int,ex:Int,ey:Int
 
 	Field working:Bool=False
+	
 	
 	Method New()
 		SeedRnd(Microsecs())
@@ -69,7 +73,8 @@ Class MyWindow Extends Window
 		If working=True Then geneticcreatemaps()
 			
 		' create new maps
-		If Keyboard.KeyReleased(Key.Space) Then 
+		If Keyboard.KeyReleased(Key.Space) Or runatstart Then 
+			runatstart=False
 			If working=True Then working=False Else working=True
 			If working=True Then 
 				createourmaps()
@@ -239,7 +244,7 @@ Class MyWindow Extends Window
 						Local surfacescore:Float=0
 						For Local y2:Int=y-1 To y+1
 						For Local x2:Int=x-1 To x+1
-							If banana[i].map[x2,y2] = 1 Then surfacescore+=.01
+							If banana[i].map[x2,y2] = 1 Then surfacescore+=surfaceaddscore
 						Next
 						Next
 						banana[i].score += surfacescore
@@ -336,7 +341,7 @@ Class MyWindow Extends Window
 						Local surfacescore:Float=0
 						For Local y2:Int=y-1 To y+1
 						For Local x2:Int=x-1 To x+1
-							If maps[j].map[x2,y2] = 1 Then surfacescore+=0.01
+							If maps[j].map[x2,y2] = 1 Then surfacescore+=surfaceaddscore
 						Next
 						Next
 						maps[j].score += surfacescore
