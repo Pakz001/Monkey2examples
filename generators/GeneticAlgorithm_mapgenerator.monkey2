@@ -31,7 +31,8 @@ Class MyWindow Extends Window
 	' might not be needed
 	Field sx:Int,sy:Int,ex:Int,ey:Int
 
-
+	Field working:Bool=False
+	
 	Method New()
 		SeedRnd(Microsecs())
 		
@@ -63,8 +64,15 @@ Class MyWindow Extends Window
 		canvas.DrawText("This can take a while. When done the top 3 maps are the result.",0,440)
 		canvas.DrawText("The lower maps are random junk ones....",0,460)
 			
+		If working=True Then geneticcreatemaps()
+			
 		' create new maps
-		If Keyboard.KeyReleased(Key.Space) Then createourmaps()
+		If Keyboard.KeyReleased(Key.Space) Then 
+			If working=True Then working=False Else working=True
+			If working=True Then 
+				createourmaps()
+			End If
+		End if
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
@@ -79,18 +87,18 @@ Class MyWindow Extends Window
 		ex = mapwidth-3
 		ey = mapheight=3
 		maps = New turtle[numturtles]
-
-		geneticcreatemaps()
-		
-	End Method
-
-	Method geneticcreatemaps()
 		' create numturtles maps
 		For Local i:Int=0 Until numturtles
 			maps[i] = New turtle()
 		Next
+
+		
+		
+	End Method
+
+	Method geneticcreatemaps()
 		' How many passes with creating new maps and storing the best scoring maps
-		For Local cycle:Int=0 Until numcycles
+		'For Local cycle:Int=0 Until numcycles
 			
 			newmaps()
 			
@@ -233,7 +241,7 @@ Class MyWindow Extends Window
 			Print "....."
 			End If
 			
-		Next
+		'Next
 		
 		
 			
