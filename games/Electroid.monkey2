@@ -1,6 +1,12 @@
 'Genetic algorithm map generator
 
+'ideas - 
+' If open surface is large then turn it into cave(cavetileset)
 
+' hose to poor water in the map to drown baddies.
+
+' hallow <.1 = 
+' halllow >.25 = rocky
 
 #Import "<std>"
 #Import "<mojo>"
@@ -17,7 +23,7 @@ Global numturtles:Int=50 'how big a new maps
 'Global numcycles:Int=10000
 Global numturtlesteps:Int=1000 'how many steps on a map
 Global halllow:Float=0.1 ' Num Steps straight forward modifier
-Global halllong:Float=0.3
+Global halllong:Float=0.5
 Global fullsurface:Bool=True ' score for more surface used
 Global surfaceaddscore:Float=0.001 ' add this score per tile used
 
@@ -95,7 +101,7 @@ Class MyWindow Extends Window
 			End If
 			If working=False
 				For Local i:Int=0 Until 3
-					modifymap(i)
+					If Rnd()<.5 Then modifymap(i)
 				Next
 			End If
 		End if
@@ -165,14 +171,14 @@ Class MyWindow Extends Window
 	End Method
 
 	Method createourmaps()
-'		sx = Rnd(5,mapwidth-5)
-'		sy = Rnd(5,mapheight-5)
-'		ex = Rnd(5,mapwidth-5)
-'		ey = Rnd(5,mapheight-5)
-		sx = 3
-		sy = 3
-		ex = mapwidth-3
-		ey = mapheight=3
+		sx = Rnd(5,mapwidth-5)
+		sy = Rnd(5,mapheight-5)
+		ex = Rnd(5,mapwidth-5)
+		ey = Rnd(5,mapheight-5)
+'		sx = 3
+'		sy = 3
+'		ex = mapwidth-3
+'		ey = mapheight=3
 		maps = New turtle[numturtles]
 		' create numturtles maps
 		For Local i:Int=0 Until numturtles
@@ -316,7 +322,7 @@ Class MyWindow Extends Window
 					End If
 				Next
 				banana[i].score = banana[i].x.Count()
-				If banana[i].map[ex,ey] = 1 Then banana[i].score += 100
+				If banana[i].map[ex,ey] = 1 Then banana[i].score += 30
 				' Go for a map surface that is more covered?
 				If fullsurface = True					
 					For Local y:Int=1 Until mapheight-2 Step 2
@@ -412,7 +418,7 @@ Class MyWindow Extends Window
 				' add one for length of tunnels
 				maps[j].score+=score
 				' if we step on the destination point then add to score
-				If nx=ex And ny=ey Then maps[j].score+=100 ; Exit
+				If nx=ex And ny=ey Then maps[j].score+=30 ; Exit
 				' 
 				' Go for a map surface that is more covered?
 				If fullsurface = True
