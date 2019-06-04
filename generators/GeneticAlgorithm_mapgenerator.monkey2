@@ -132,6 +132,27 @@ Class MyWindow Extends Window
 				maps[highestnum].score=0
 			Next
 			
+			'copy 0 until 3 into 7 to 10
+			Local cnt:Int=0
+			For Local i:Int=7 Until 10
+				For Local y:Int=0 Until mapheight
+				For Local x:Int=0 Until mapwidth
+					banana[i].map[x,y] = banana[cnt].map[x,y]
+				Next
+				Next
+				banana[i].x.Clear()
+				banana[i].y.Clear()
+				For Local j:=Eachin banana[cnt].x
+					banana[i].x.AddLast(j)
+				Next
+				For Local j:=Eachin banana[cnt].y
+					banana[i].y.AddLast(j)
+				Next
+				banana[i].score = banana[cnt].score
+				cnt+=1
+			Next
+			
+			
 			'Mutate 3 to 10
 			For Local i:Int=3 Until 10
 				
