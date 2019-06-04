@@ -12,8 +12,8 @@ Using mojo..
 Global mapwidth:Int=40
 Global mapheight:Int=40
 Global numturtles:Int=50
-Global numcycles:Int=100
-Global numturtlesteps:Int=500
+Global numcycles:Int=10000
+Global numturtlesteps:Int=1000
 
 
 Class MyWindow Extends Window
@@ -36,14 +36,14 @@ Class MyWindow Extends Window
 		SeedRnd(Microsecs())
 		
 		' Create our random maps
-		createourmaps()		
+		'createourmaps()		
 		
 	End Method
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
 
-
+		If maps
 		Local cnt:Int=0
 		canvas.Color = Color.White
 		For Local y:Int=0 Until 2
@@ -58,8 +58,10 @@ Class MyWindow Extends Window
 			cnt+=1 
 		Next
 		Next
-
-		canvas.DrawText("Press space to generate new(genetic algorithm) maps...",0,460)
+		End If
+		canvas.DrawText("Press space to generate new(genetic algorithm) maps...",0,420)
+		canvas.DrawText("This can take a while. When done the top 3 maps are the result.",0,440)
+		canvas.DrawText("The lower maps are random junk ones....",0,460)
 			
 		' create new maps
 		If Keyboard.KeyReleased(Key.Space) Then createourmaps()
@@ -159,7 +161,7 @@ Class MyWindow Extends Window
 		
 					Local score:Int=0
 					Local store:Bool=False
-					If Rnd()<.2 Then lastdir=Rnd(0,4)
+					If Rnd()<Rnd(0.1,0.3) Then lastdir=Rnd(0,4)
 					Select lastdir
 						Case 0			
 							If banana[i].map[nx,ny-2] = 0 Then 						
@@ -223,12 +225,13 @@ Class MyWindow Extends Window
 				End If
 			Next
 			
+			If Rnd()<0.01
 			' print scores
 			For Local i:Int=0 Until 10
 				Print banana[i].score
 			Next
-				Print "....."
-
+			Print "....."
+			End If
 			
 		Next
 		
@@ -251,7 +254,7 @@ Class MyWindow Extends Window
 		For Local i:Int=0 To numturtlesteps
 			Local score:Int=0
 			Local store:Bool=False
-			If Rnd()<.2 Then lastdir=Rnd(0,4)
+			If Rnd()<Rnd(0.1,0.3) Then lastdir=Rnd(0,4)
 			Select lastdir
 				Case 0			
 					If maps[j].map[nx,ny-2] = 0 Then 						
