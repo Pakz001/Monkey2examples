@@ -11,9 +11,11 @@ Using mojo..
 
 Global mapwidth:Int=40
 Global mapheight:Int=40
-Global numturtles:Int=50
-Global numcycles:Int=10000
-Global numturtlesteps:Int=1000
+Global numturtles:Int=50 'how big a new maps
+'Global numcycles:Int=10000
+Global numturtlesteps:Int=1000 'how many steps on a map
+Global halllow:Float=0.1 ' Num Steps straight forward modifier
+Global halllong:Float=0.5
 
 
 Class MyWindow Extends Window
@@ -165,7 +167,7 @@ Class MyWindow Extends Window
 				
 				' erase from pos to length (turtle)
 				Local llen:Int=banana[i].x.Count()
-				Local start:Int=Rnd(5,llen/2)
+				Local start:Int=Rnd(5,llen-llen/6)
 				For Local j:Int=start Until llen
 					banana[i].x.RemoveLast()
 					banana[i].y.RemoveLast()
@@ -190,7 +192,7 @@ Class MyWindow Extends Window
 		
 					Local score:Int=0
 					Local store:Bool=False
-					If Rnd()<Rnd(0.1,0.3) Then lastdir=Rnd(0,4)
+					If Rnd()<Rnd(halllow,halllong) Then lastdir=Rnd(0,4)
 					Select lastdir
 						Case 0			
 							If banana[i].map[nx,ny-2] = 0 Then 						
@@ -283,7 +285,7 @@ Class MyWindow Extends Window
 		For Local i:Int=0 To numturtlesteps
 			Local score:Int=0
 			Local store:Bool=False
-			If Rnd()<Rnd(0.1,0.3) Then lastdir=Rnd(0,4)
+			If Rnd()<Rnd(halllow,halllong) Then lastdir=Rnd(0,4)
 			Select lastdir
 				Case 0			
 					If maps[j].map[nx,ny-2] = 0 Then 						
