@@ -94,7 +94,7 @@ Class MyWindow Extends Window
 			If working=True Then 
 				If Rnd()<.5 Then fullsurface = False Else fullsurface = True
 				numturtlesteps = 1000 + Rnd(-300,300)		
-				halllow = Rnd(0.05,0.2)
+				halllow = Rnd(0.06,0.2)
 				halllong = Rnd(halllow+0.1,halllow*2)
 
 				createourmaps()
