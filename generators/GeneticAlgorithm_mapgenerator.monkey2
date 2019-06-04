@@ -1,5 +1,5 @@
 'Genetic algorithm map generator
-' No mutation function...
+
 
 
 #Import "<std>"
@@ -11,6 +11,10 @@ Using mojo..
 
 Global mapwidth:Int=40
 Global mapheight:Int=40
+Global numturtles:Int=50
+Global numcycles:Int=100
+Global numturtlesteps:Int=500
+
 
 Class MyWindow Extends Window
 
@@ -72,19 +76,19 @@ Class MyWindow Extends Window
 		sy = 3
 		ex = mapwidth-3
 		ey = mapheight=3
-		maps = New turtle[32]
+		maps = New turtle[numturtles]
 
 		geneticcreatemaps()
 		
 	End Method
 
 	Method geneticcreatemaps()
-		' create 32 maps
-		For Local i:Int=0 Until 32
+		' create numturtles maps
+		For Local i:Int=0 Until numturtles
 			maps[i] = New turtle()
 		Next
 		' How many passes with creating new maps and storing the best scoring maps
-		For Local cycle:Int=0 Until 140
+		For Local cycle:Int=0 Until numcycles
 			
 			newmaps()
 			
@@ -111,15 +115,97 @@ Class MyWindow Extends Window
 					banana[winners].x.AddLast(z)
 				Next
 				For Local z:=Eachin maps[highestnum].y
-					banana[winners].x.AddLast(z)
+					banana[winners].y.AddLast(z)
 				Next
 				banana[winners].score = maps[highestnum].score
 				'reset score of highestnum
 				maps[highestnum].score=0
 			Next
 			
+			'Mutate 3 to 10
+			For Local i:Int=3 Until 10
+				
+				' first erase the map
+				For Local y:Int=0 Until mapheight
+				For Local x:Int=0 Until mapwidth
+					banana[i].map[x,y] = 0
+				Next
+				Next
+				
+				' erase from pos to length (turtle)
+				Local llen:Int=banana[i].x.Count()
+				Local start:Int=Rnd(5,llen/2)
+				For Local j:Int=start Until llen
+					banana[i].x.RemoveLast()
+					banana[i].y.RemoveLast()
+				Next
+				
+				' rebuild map to erased position
+				Local lx:Int[] = banana[i].x.ToArray()
+				
+				Local ly:Int[] = banana[i].y.ToArray()
+				
+				
+				For Local j:Int=0 Until lx.GetSize(0)
+					banana[i].map[lx[j],ly[j]] = 1
+				Next
+				
+				' create new map from
+				Local lastdir:Int=0
+				Local nx:Int=banana[i].x.Last,ny:Int=banana[i].y.Last
+				
+				
+				For Local j:Int=0 Until numturtlesteps-start
+		
+					Local score:Int=0
+					Local store:Bool=False
+					If Rnd()<.2 Then lastdir=Rnd(0,4)
+					Select lastdir
+						Case 0			
+							If banana[i].map[nx,ny-2] = 0 Then 						
+								If ny>2 Then 
+									ny-=1 ; score+=1 ; lastdir=0
+									store=True
+								End If
+							End If
+						Case 1
+							If banana[i].map[nx+2,ny] = 0 Then 		
+								If nx<mapwidth-3 Then 
+									nx+=1; score+=1; lastdir=1
+									store=True
+								End if
+							End If
+						Case 2
+							If banana[i].map[nx,ny+2] = 0 Then 		
+								If ny<mapheight-3 Then 
+									ny+=1; score+=1; lastdir=2
+									store=true
+								End If
+							End If
+						Case 3
+							If banana[i].map[nx-2,ny] = 0 Then 		
+								If nx>2 Then 
+									nx-=1; score+=1; lastdir=3
+									store=true
+								End If
+							End If
+					End Select
+					If store=True
+						' store the new map data
+						banana[i].map[nx,ny] = 1
+						banana[i].x.AddLast(nx)
+						banana[i].y.AddLast(ny)								
+					End If
+				Next
+				banana[i].score = banana[i].x.Count()
+				If banana[i].map[ex,ey] = 1 Then banana[i].score += 100
+				
+				
+			Next			
+			
+			
 			' put the best 10 into the maps
-			For Local i:Int=0 Until 32
+			For Local i:Int=0 Until numturtles
 				maps[i] = New turtle()
 				If i<10 Then 
 					For Local y:Int=0 Until mapheight
@@ -136,13 +222,23 @@ Class MyWindow Extends Window
 					maps[i].score = banana[i].score
 				End If
 			Next
+			
+			' print scores
+			For Local i:Int=0 Until 10
+				Print banana[i].score
+			Next
+				Print "....."
 
-		Next	
+			
+		Next
+		
+		
+			
 	End Method
 
-	' Create 32 new random maps.
+	' Create numturtles new random maps.
 	Method newmaps()			
-		For Local j:Int=0 Until 32
+		For Local j:Int=0 Until numturtles
 		' if previously higher scoring maps are still present then keep these
 		If maps[j].score>0 Then Continue 
 		Local nx:Int=sx
@@ -152,36 +248,39 @@ Class MyWindow Extends Window
 		maps[j].map[nx,ny] = 1
 		'step into new direction if possible to create map
 		Local lastdir:Int
-		For Local i:Int=0 To 500
+		For Local i:Int=0 To numturtlesteps
 			Local score:Int=0
+			Local store:Bool=False
 			If Rnd()<.2 Then lastdir=Rnd(0,4)
 			Select lastdir
 				Case 0			
 					If maps[j].map[nx,ny-2] = 0 Then 						
-						If ny>2 Then ny-=1 ; score+=1 ; lastdir=0
+						If ny>2 Then ny-=1 ; score+=1 ; lastdir=0;store=True
 					End If
 				Case 1
 					If maps[j].map[nx+2,ny] = 0 Then 		
-						If nx<mapwidth-3 Then nx+=1; score+=1; lastdir=1
+						If nx<mapwidth-3 Then nx+=1; score+=1; lastdir=1;store=true
 					End If
 				Case 2
 					If maps[j].map[nx,ny+2] = 0 Then 		
-						If ny<mapheight-3 Then ny+=1; score+=1; lastdir=2
+						If ny<mapheight-3 Then ny+=1; score+=1; lastdir=2;store=true
 					End If
 				Case 3
 					If maps[j].map[nx-2,ny] = 0 Then 		
-						If nx>2 Then nx-=1; score+=1; lastdir=3
+						If nx>2 Then nx-=1; score+=1; lastdir=3;store=true
 					End If
 			End Select
-			' store the new map data
-			maps[j].map[nx,ny] = 1
-			maps[j].x.AddLast(nx)
-			maps[j].y.AddLast(ny)
-			' keep score
-			' add one for length of tunnels
-			maps[j].score+=score
-			' if we step on the destination point then add to score
-			If nx=ex And ny=ey Then maps[j].score+=100 ; Exit
+			If store = True
+				' store the new map data
+				maps[j].map[nx,ny] = 1
+				maps[j].x.AddLast(nx)
+				maps[j].y.AddLast(ny)
+				' keep score
+				' add one for length of tunnels
+				maps[j].score+=score
+				' if we step on the destination point then add to score
+				If nx=ex And ny=ey Then maps[j].score+=100 ; Exit
+			End If
 		Next
 		'Print "score : " + maps[j].score
 		Next
