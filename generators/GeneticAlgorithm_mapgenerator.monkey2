@@ -66,6 +66,13 @@ Class MyWindow Extends Window
 		Next
 		Next
 		End If
+		
+		Local fs:String
+		If fullsurface Then fs = "Surface score" Else fs = "No surface score"
+		canvas.DrawText(fs,0,400)		
+		canvas.DrawText("Hall Length = " + halllow + " To " + halllong,320,400)
+		canvas.DrawText("Steps : "+numturtlesteps,200,400)
+	
 		canvas.DrawText("Press space to generate new(or stop)(genetic algorithm) maps...",0,420)
 		canvas.DrawText("The top 3 on screen are the best results.",0,440)
 		canvas.DrawText("The lower maps are random junk ones....",0,460)
@@ -75,6 +82,12 @@ Class MyWindow Extends Window
 		' create new maps
 		If Keyboard.KeyReleased(Key.Space) Or runatstart Then 
 			runatstart=False
+			
+			If Rnd()<.5 Then fullsurface = False Else fullsurface = True
+			numturtlesteps = 1000 + Rnd(-300,300)		
+			halllow = Rnd(0.05,0.2)
+			halllong = Rnd(halllow+0.1,halllow*2)
+			
 			If working=True Then working=False Else working=True
 			If working=True Then 
 				createourmaps()
