@@ -15,8 +15,8 @@ Global numturtles:Int=50 'how big a new maps
 'Global numcycles:Int=10000
 Global numturtlesteps:Int=1000 'how many steps on a map
 Global halllow:Float=0.1 ' Num Steps straight forward modifier
-Global halllong:Float=0.5
-
+Global halllong:Float=0.3
+Global fullsurface:Bool=True
 
 Class MyWindow Extends Window
 
@@ -62,8 +62,8 @@ Class MyWindow Extends Window
 		Next
 		Next
 		End If
-		canvas.DrawText("Press space to generate new(genetic algorithm) maps...",0,420)
-		canvas.DrawText("This can take a while. When done the top 3 maps are the result.",0,440)
+		canvas.DrawText("Press space to generate new(or stop)(genetic algorithm) maps...",0,420)
+		canvas.DrawText("The top 3 on screen are the best results.",0,440)
 		canvas.DrawText("The lower maps are random junk ones....",0,460)
 			
 		If working=True Then geneticcreatemaps()
@@ -232,7 +232,21 @@ Class MyWindow Extends Window
 				Next
 				banana[i].score = banana[i].x.Count()
 				If banana[i].map[ex,ey] = 1 Then banana[i].score += 100
-				
+				' Go for a map surface that is more covered?
+				If fullsurface = True					
+					For Local y:Int=1 Until mapheight-2 Step 2
+					For Local x:Int=1 Until mapwidth-2 Step 2						
+						Local surfacescore:Float=0
+						For Local y2:Int=y-1 To y+1
+						For Local x2:Int=x-1 To x+1
+							If banana[i].map[x2,y2] = 1 Then surfacescore+=.01
+						Next
+						Next
+						banana[i].score += surfacescore
+					Next
+					Next
+				End If
+								
 				
 			Next			
 			
@@ -314,6 +328,22 @@ Class MyWindow Extends Window
 				maps[j].score+=score
 				' if we step on the destination point then add to score
 				If nx=ex And ny=ey Then maps[j].score+=100 ; Exit
+				' 
+				' Go for a map surface that is more covered?
+				If fullsurface = True
+					For Local y:Int=1 Until mapheight-2 Step 2
+					For Local x:Int=1 Until mapwidth-2 Step 2
+						Local surfacescore:Float=0
+						For Local y2:Int=y-1 To y+1
+						For Local x2:Int=x-1 To x+1
+							If maps[j].map[x2,y2] = 1 Then surfacescore+=0.01
+						Next
+						Next
+						maps[j].score += surfacescore
+					Next
+					Next
+				End If
+				
 			End If
 		Next
 		'Print "score : " + maps[j].score
