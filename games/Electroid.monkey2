@@ -151,6 +151,12 @@ Class MyWindow Extends Window
 						maps[m].map[x2,y2] = 1
 					Next
 					Next
+					'add a pltform in the center
+					If Rnd()<.5
+					For Local x2:Int=x+1 Until x+w-1
+						maps[m].map[x2,y+h-2] = 0
+					Next
+					End if
 				End If
 
 				
