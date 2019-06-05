@@ -60,7 +60,7 @@ Class spriteeditor
 		spritewidth = 8
 		spriteheight = 8
 		map = New Int[spritewidth,spriteheight]		
-		canvaswidth=640-100
+		canvaswidth=320
 		canvasheight=320
 		gridwidth = canvaswidth/spritewidth		
 		gridheight = canvasheight/spriteheight
