@@ -7,6 +7,16 @@ Using mojo..
 Global instance:AppInstance
 
 Class spriteeditor
+
+	' sprite library
+	Field spritelibx:Int,spriteliby:Int
+	Field spritelibwidth:Int,spritelibheight:Int
+	Field numspritelib:Int
+	Field spritelibim:Image[]
+	Field spritelibcan:Canvas[]
+	Field spritelibmap:Int[,,]
+	Field spritelibselected:Int=0
+	Field spritelibscale:Float
 	
 	'preview
 	Field previewim:Image
@@ -31,6 +41,9 @@ Class spriteeditor
 	Field palettecellwidth:Float,palettecellheight:Float 'cell width and height of color
 	Field numpalette:Int 'number of colors
 	Method New()
+		
+		
+		
 		'palette setup
 		inic64colors()
 		palettex = 640-100
@@ -51,7 +64,24 @@ Class spriteeditor
 		canvasheight=320
 		gridwidth = canvaswidth/spritewidth		
 		gridheight = canvasheight/spriteheight
-		
+
+		'spritelib setup
+		spritelibx = 0
+		spriteliby = canvasheight
+		spritelibwidth = 640
+		spritelibheight = 480
+		numspritelib = 32
+		spritelibselected = 0
+		spritelibscale = 5
+		spritelibim = New Image[numspritelib]
+		spritelibcan = New Canvas[numspritelib]		
+		For Local i:Int=0 Until numspritelib
+			spritelibim[i] = New Image(spritewidth*spritelibscale,spriteheight*spritelibscale)
+			spritelibcan[i] = New Canvas(spritelibim[i])
+			spritelibcan[i].Clear(Color.Black)
+			spritelibcan[i].Flush()
+		Next	
+		spritelibmap = New Int[numspritelib,spritewidth,spriteheight]	
 		' previewview setup
 		previewx = 640-100
 		previewy = 200
@@ -63,6 +93,69 @@ Class spriteeditor
 		previewcan = New Canvas(previewim)
 		updatepreview()
 		
+	End Method
+
+	Method spritelibview(canvas:Canvas)
+		canvas.Color = Color.Yellow
+		canvas.DrawRect(spritelibx,spriteliby,spritelibwidth,spritelibheight)
+		canvas.Color = Color.White
+		Local num:Int=0
+		For Local y:Int=spriteliby Until spriteliby+spritelibheight-spriteheight*spritelibscale Step spriteheight*spritelibscale
+		For Local x:Int=spritelibx Until spritelibx+spritelibwidth Step spritewidth*spritelibscale
+			Local pointx:Int=x
+			Local pointy:Int=y
+
+			If num = spritelibselected
+				canvas.Color = Color.White
+				canvas.DrawRect(pointx,pointy,spritewidth*spritelibscale,spriteheight*spritelibscale)
+				canvas.Scissor = New Recti(pointx+2,pointy+2,pointx+spritewidth*spritelibscale-3,pointy+spriteheight*spritelibscale-3)
+				'canvas.Scissor(z1)
+				canvas.DrawImage(spritelibim[num],pointx,pointy)	
+				'Local z2:=New Recti(0,0,640,480)
+				canvas.Scissor = New Recti(0,0,640,480)
+			Else
+				canvas.Color = Color.White
+				canvas.DrawImage(spritelibim[num],pointx,pointy)	
+				
+			End If
+
+			
+
+
+			
+			If Mouse.ButtonDown(MouseButton.Left)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,spritewidth*spritelibscale,spriteheight*spritelibscale)
+					spritelibselected = num
+					spritelibcopytocanvas()
+				End If					
+			End If
+					
+			num+=1
+			If num>=numspritelib Then Exit
+		Next
+			If num>=numspritelib Then Exit
+		Next
+	End Method
+
+	Method updatespritelib()
+		For Local y:Int=0 Until spriteheight
+		For Local x:Int=0 Until spritewidth
+			Local pointx:Float=x*spritelibscale
+			Local pointy:Float=y*spritelibscale
+			spritelibcan[spritelibselected].Color = c64color[map[x,y]]
+			spritelibcan[spritelibselected].DrawRect(pointx,pointy,spritelibscale,spritelibscale)
+			spritelibmap[spritelibselected,x,y] = map[x,y]
+		Next
+		Next
+		spritelibcan[spritelibselected].Flush()
+	End Method
+
+	Method spritelibcopytocanvas()
+		For Local y:Int=0 Until spriteheight
+		For Local x:Int=0 Until spritewidth
+			map[x,y] = spritelibmap[spritelibselected,x,y]
+		Next
+		Next		
 	End Method
 
 	Method spriteview(canvas:Canvas)
@@ -99,6 +192,7 @@ Class spriteeditor
 		Next
 		Next
 		updatepreview()
+		updatespritelib()
 	End Method
 	
 	Method spritegrid(canvas:Canvas)
@@ -177,6 +271,7 @@ Class spriteeditor
 		spritegrid(canvas)
 		paletteview(canvas)
 		previewview(canvas)
+		spritelibview(canvas)
 	End Method
 	Method inic64colors()
 		c64color = New Color[16]
