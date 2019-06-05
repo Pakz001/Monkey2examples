@@ -75,15 +75,40 @@ Class spriteeditor
 	Field palettewidth:Float,paletteheight:Float ' our palette screen w and h
 	Field palettecellwidth:Float,palettecellheight:Float 'cell width and height of color
 	Field numpalette:Int 'number of colors
+	
+	'
+	' Top Bar
+	Field topbarx:Int,topbary:Int
+	Field topbarwidth:Int,topbarheight:Int
+	Field topbarcolor:Color
+	'
+	' Bottom Bar
+	Field bottombarx:Int,bottombary:Int
+	Field bottombarwidth:Int,bottombarheight:Int
+	Field bottombarcolor:Color
+	
 	Method New()
+
+		'Bottom bar (global)
+		bottombarx = 0
+		bottombary = 480-24
+		bottombarwidth = 640
+		bottombarheight = 24	
+		bottombarcolor = Color.Puce
+
 		
-		
+		'Top bar (global)
+		topbarx = 0
+		topbary = 0
+		topbarwidth = 640
+		topbarheight = 24
+		topbarcolor = Color.Puce
 		
 		'palette setup
 		inic64colors()
 		paletteeraser = 0
 		palettex = 640-150
-		palettey = 0
+		palettey = 32
 		palettewidth = 150
 		paletteheight = 150
 		numpalette = 16
@@ -91,13 +116,13 @@ Class spriteeditor
 		palettecellheight = 32		
 
 		'sprite canvas setup
-		canvasx = 0
-		canvasy = 0
+		canvasx = 32
+		canvasy = 32
 		spritewidth = 8
 		spriteheight = 8
 		map = New Int[spritewidth,spriteheight]		
-		canvaswidth=320
-		canvasheight=320
+		canvaswidth=256
+		canvasheight=256
 		gridwidth = canvaswidth/spritewidth		
 		gridheight = canvasheight/spriteheight
 
@@ -120,10 +145,10 @@ Class spriteeditor
 			
 		'spritelib setup
 		spritelibx = 0
-		spriteliby = canvasheight+32
+		spriteliby = canvasheight+32+32
 		spritelibwidth = 640
-		spritelibheight = 480
-		numspritelib = 32
+		spritelibheight = 128
+		numspritelib = 48
 		spritelibselected = 0
 		spritelibscale = 5
 		spritelibim = New Image[numspritelib]
@@ -610,7 +635,23 @@ Class spriteeditor
 		canvas.DrawImage(previewim,previewx+1,previewy+1,0,.95,.95)		
 	End Method
 	
+	Method topbarview(canvas:Canvas)
+		canvas.Color = topbarcolor
+		canvas.DrawRect(topbarx,topbary,topbarwidth,topbarheight)
+		canvas.Color = topbarcolor/2
+		canvas.DrawRect(topbarx,topbary+topbarheight/2,topbarwidth,topbarheight/2)
+	End Method
+
+	Method bottombarview(canvas:Canvas)
+		canvas.Color = bottombarcolor
+		canvas.DrawRect(bottombarx,bottombary,bottombarwidth,bottombarheight)
+		canvas.Color = bottombarcolor/2
+		canvas.DrawRect(bottombarx,bottombary+bottombarheight/2,bottombarwidth,bottombarheight/2)
+	End Method
+	
 	Method draw(canvas:Canvas)
+		bottombarview(canvas)
+		topbarview(canvas)
 		spriteview(canvas)
 		previewline(canvas)
 		spritegrid(canvas)
