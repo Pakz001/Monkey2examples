@@ -37,7 +37,11 @@ Class spriteeditor
 	Field toolcopyid:Int=5
 	Field toolpasteid:Int=6
 	Field toolcutid:Int=7
+	Field toolflipverticalid:Int=8
+	Field toolfliphorizontalid:Int=9
 	Field numtools:Int
+	Field delay:Int
+	Field delaydefault:Int=20
 	
 	'
 	' sprite library
@@ -160,8 +164,8 @@ Class spriteeditor
 		toolx = 340
 		tooly = 200
 		toolwidth = 32*4
-		toolheight = 32*2
-		numtools = 8
+		toolheight = 32*3
+		numtools = 10
 		toolim = New Image[numtools]
 		toolcan = New Canvas[numtools]
 		For Local i:Int=0 Until numtools
@@ -207,7 +211,7 @@ Class spriteeditor
 		canvas.Color=Color.Black
 		canvas.DrawRect(toolx,tooly,toolwidth,toolheight)
 		canvas.Color=Color.White
-		
+		If delay>0 Then delay-=1
 		Local num:Int=0
 		For Local y:Int=tooly Until tooly+toolheight Step 32
 		For Local x:Int=toolx Until toolx+toolwidth Step 32
@@ -272,6 +276,40 @@ Class spriteeditor
 						Next
 						toolselected = toolpencilid
 					End If
+					
+					' Mirror vertically
+					If toolselected = toolflipverticalid And delay <= 0
+						Local tempmap:Int[,] = New Int[map.GetSize(0),map.GetSize(1)]
+						For Local y1:Int=0 Until map.GetSize(1)
+						For Local x1:Int=0 Until map.GetSize(0)
+							tempmap[x1,y1] = map[x1,y1]
+						Next
+						Next
+						For Local y1:Int=0 Until map.GetSize(1)
+						For Local x1:Int=0 Until map.GetSize(0)							
+							map[x1,y1] = tempmap[x1,map.GetSize(1)-1-y1]
+						Next
+						Next
+						delay = delaydefault
+						toolselected = toolpencilid
+					End If
+					' Mirror Horizontal
+					If toolselected = toolfliphorizontalid And delay <= 0
+						Local tempmap:Int[,] = New Int[map.GetSize(0),map.GetSize(1)]
+						For Local y1:Int=0 Until map.GetSize(1)
+						For Local x1:Int=0 Until map.GetSize(0)
+							tempmap[x1,y1] = map[x1,y1]
+						Next
+						Next
+						For Local y1:Int=0 Until map.GetSize(1)
+						For Local x1:Int=0 Until map.GetSize(0)							
+							map[x1,y1] = tempmap[map.GetSize(0)-1-x1,y1]
+						Next
+						Next
+						delay = delaydefault
+						toolselected = toolpencilid
+					End If
+					
 				End If								
 			End If				
 			num+=1
@@ -459,6 +497,39 @@ Class spriteeditor
 		toolcan[toolcutid].Flush()
 
 
+		Local flipvertical := New Int[][] (
+		New Int[](12,12,12,1,1,12,12,12),
+		New Int[](12,12,1,1,1,1,12,12),
+		New Int[](12,1,1,1,1,1,1,12),
+		New Int[](12,12,12,1,1,12,12,12),
+		New Int[](12,12,12,1,1,12,12,12),
+		New Int[](12,1,1,1,1,1,1,12),
+		New Int[](12,12,1,1,1,1,12,12),
+		New Int[](12,12,12,1,1,12,12,12))
+		For Local y:Int=0 Until 8
+		For Local x:Int=0 Until 8
+			toolcan[toolflipverticalid].Color = c64color[flipvertical[y][x]]
+			toolcan[toolflipverticalid].DrawRect(x*4,y*4,4,4)
+		Next
+		Next
+		toolcan[toolflipverticalid].Flush()
+		
+		Local fliphorizontal := New Int[][] (
+		New Int[](12,12,12,12,12,12,12,12),
+		New Int[](12,12,1,12,12,1,12,12),
+		New Int[](12,1,1,12,12,1,1,12),
+		New Int[](1,1,1,1,1,1,1,1),
+		New Int[](1,1,1,1,1,1,1,1),
+		New Int[](12,1,1,12,12,1,1,12),
+		New Int[](12,12,1,12,12,1,12,12),
+		New Int[](12,12,12,12,12,12,12,12))		
+		For Local y:Int=0 Until 8
+		For Local x:Int=0 Until 8
+			toolcan[toolfliphorizontalid].Color = c64color[fliphorizontal[y][x]]
+			toolcan[toolfliphorizontalid].DrawRect(x*4,y*4,4,4)
+		Next
+		Next
+		toolcan[toolfliphorizontalid].Flush()
 		
 	End Method
 
