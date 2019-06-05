@@ -4,6 +4,7 @@
 Using std..
 Using mojo..
 
+Global instance:AppInstance
 
 Class spriteeditor
 	'sprite view
@@ -69,6 +70,8 @@ Class spriteeditor
 				paletteselected = map[x,y]
 			End If
 			End if
+			' Copy to clipboard
+			copytoclipboard()
 
 		Next
 		Next
@@ -159,6 +162,23 @@ Class spriteeditor
 		Return 1.0/255.0*a
 	End Function
 
+	Method copytoclipboard()
+		Local out:String="Field map := New Int[][] ("+String.FromChar(10)
+		For Local y:Int=0 Until spriteheight
+			Local a:String
+		For Local x:Int=0 Until spritewidth
+			a+=map[x,y]+","
+		Next
+		Local l:Int=a.Length
+		a=a.Slice(0,a.Length-1)
+		out += "New Int[]("+a+"),"+String.FromChar(10)
+		Next
+		out=out.Slice(0,out.Length-2)
+		out+=")"
+		instance.ClipboardText = out
+	End Method
+
+
 End Class
 
 
@@ -183,8 +203,10 @@ Class MyWindow Extends Window
 End	Class
 
 Function Main()
-	New AppInstance		
+'	New AppInstance		
+	instance = New AppInstance
 	New MyWindow
+	
 	App.Run()
 End Function
 
