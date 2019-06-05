@@ -22,6 +22,7 @@ Class spriteeditor
 			Self.y = y
 		End Method
 	End Class
+	'
 	'tool view
 	Field toolx:Int,tooly:Int
 	Field toolwidth:Int,toolheight:Int
@@ -38,7 +39,7 @@ Class spriteeditor
 	Field toolcutid:Int=7
 	Field numtools:Int
 	
-
+	'
 	' sprite library
 	Field spritelibx:Int,spriteliby:Int
 	Field spritelibwidth:Int,spritelibheight:Int
@@ -49,6 +50,7 @@ Class spriteeditor
 	Field spritelibselected:Int=0
 	Field spritelibscale:Float
 	
+	'
 	'preview
 	Field previewim:Image
 	Field previewcan:Canvas
@@ -56,18 +58,28 @@ Class spriteeditor
 	Field previewwidth:Int,previewheight:Int
 	Field previewcellwidth:Int,previewcellheight:Int
 	
+	'
 	'sprite view
 	Field map:Int[,]
 	Field canvasx:Int,canvasy:Int 'canvas x and y position on the scrern
 	Field canvaswidth:Float,canvasheight:Float 'width and height of our canvas
 	Field gridwidth:Float,gridheight:Float	 ' grids width and height
 	Field spritewidth:Int,spriteheight:Int ' our main sprite width and height
+	' line tool fields
 	Field linepressed:Bool=False
 	Field lineactive:Bool=False
 	Field linestartx:Int,linestarty:Int
 	Field lineendx:Int,lineendy:Int	
-	' palette
-	
+	' Selection fields
+	Field selectionpressed:Bool=False 
+	Field selectionactive:Bool=False
+	Field selectionstartx:Int,selectionstarty:Int
+	Field selectionendx:Int,selectionendy:Int
+	Field selectionbuffer:Int[,] 'our copy paste buffer
+	Field selectionbufferstartx:Int,selectionbufferstarty:Int
+	Field selectionbufferendx:Int,selectionbufferendy:Int
+	'
+	' palette	
 	Field c64color:Color[] ' our colors
 	Field paletteselected:Int ' our selected color from palette
 	Field paletteeraser:Int
@@ -120,7 +132,9 @@ Class spriteeditor
 		canvasy = 32
 		spritewidth = 8
 		spriteheight = 8
-		map = New Int[spritewidth,spriteheight]		
+		map = New Int[spritewidth,spriteheight]	
+		selectionbuffer = New Int[spritewidth,spriteheight]	
+		
 		canvaswidth=256
 		canvasheight=256
 		gridwidth = canvaswidth/spritewidth		
@@ -193,13 +207,60 @@ Class spriteeditor
 			Else
 				canvas.DrawImage(toolim[num],pointx,pointy)
 			End If
+			'
+			' Interaction with the tool area
+			'
 			If Mouse.ButtonDown(MouseButton.Left)
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,32,32)
 					toolselected = num
-				End If
+
+
+					' Pastethe selected area
+					If toolselected = toolpasteid						
+						For Local y1:Int=selectionbufferstarty To selectionbufferendy
+						For Local x1:Int=selectionbufferstartx To selectionbufferendx
+							Local destx:Int=selectionstartx+x1-selectionbufferstartx
+							Local desty:Int=selectionstarty+y1-selectionbufferstarty
+							If x1<0 Or y1<0 Or x1>=map.GetSize(0) Or y1>=map.GetSize(1) Then Continue
+							If destx<0 Or desty<0 Or destx>=map.GetSize(0) Or desty>=map.GetSize(1) Then Continue
+							If destx>selectionendx Or desty>selectionendy Then Continue
+							map[destx,desty] = selectionbuffer[x1,y1]
+						Next
+						Next
+						toolselected = toolpencilid
+						
+					End If
+				
+					
+					' Copy the selected area
+					If toolselected = toolcopyid
+						selectionbufferstartx = selectionstartx
+						selectionbufferstarty = selectionstarty
+						selectionbufferendx = selectionendx
+						selectionbufferendy = selectionendy
+						For Local y1:Int=selectionstarty To selectionendy
+						For Local x1:Int=selectionstartx To selectionendx
+							selectionbuffer[x1,y1] = map[x1,y1]
+						Next
+						Next
+						toolselected = toolpencilid
+						
+					End If
+					' Cut the selected area		
+					If toolselected = toolcutid
+						
+						For Local y1:Int=selectionstarty To selectionendy
+						For Local x1:Int=selectionstartx To selectionendx
+							map[x1,y1] = paletteeraser
+						Next
+						Next
+						toolselected = toolpencilid
+					End If
+				End If								
 			End If				
 			num+=1
 			If num>=numtools Then Exit
+			
 		Next
 		Next
 	End Method
@@ -464,6 +525,42 @@ Class spriteeditor
 				End If
 			End if
 			
+			' Selection Tool
+			If Mouse.ButtonDown(MouseButton.Left)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,gridwidth,gridheight)
+					If toolselected = toolselectionid
+						If selectionpressed = False And selectionactive = False
+							selectionactive = True
+							selectionpressed = True
+							selectionstartx = x
+							selectionstarty = y														
+						End If
+						If selectionactive = True
+							selectionendx = x
+							selectionendy = y							
+						End If						
+					End If
+				End If
+			End If
+			If Mouse.ButtonDown(MouseButton.Left) = False
+				If toolselected = toolselectionid
+					If selectionactive = True						
+						'previewselection(canvas,True)
+						selectionactive = False
+						selectionpressed = False						
+					End If
+				End If
+			End if
+
+			' Remove the selection with rmb
+			If Mouse.ButtonDown(MouseButton.Right) = True
+				selectionstartx=0
+				selectionstarty=0
+				selectionendx=0
+				selectionendy=0
+			End If
+					
+			
 			' Mouse down (MIDDLE)
 			If Mouse.ButtonDown(MouseButton.Middle)
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,gridwidth,gridheight)
@@ -479,6 +576,32 @@ Class spriteeditor
 		Next
 		updatepreview()
 		updatespritelib()
+	End Method
+	
+	Method previewselection(canvas:Canvas,drawit:Bool=False)
+		
+		Local x1:Int=canvasx+(selectionstartx*gridwidth)
+		Local y1:Int=canvasy+(selectionstarty*gridheight)
+		Local x2:Int=canvasx+((selectionendx+1)*gridwidth)
+		Local y2:Int=canvasy+((selectionendy+1)*gridheight)		
+		
+		canvas.Color = Color.White
+		canvas.DrawLine(x1,y1,x2,y1)
+		canvas.DrawLine(x1,y1,x1,y2)
+		canvas.DrawLine(x1,y2,x2,y2)
+		canvas.DrawLine(x2,y1,x2,y2)
+		canvas.Color = Color.Black
+		x1+=1;y1+=1;x2-=1;y2-=1
+		canvas.DrawLine(x1,y1,x2,y1)
+		canvas.DrawLine(x1,y1,x1,y2)
+		canvas.DrawLine(x1,y2,x2,y2)
+		canvas.DrawLine(x2,y1,x2,y2)
+		x1+=2;y1+=2;x2-=2;y2-=2
+		canvas.DrawLine(x1,y1,x2,y1)
+		canvas.DrawLine(x1,y1,x1,y2)
+		canvas.DrawLine(x1,y2,x2,y2)
+		canvas.DrawLine(x2,y1,x2,y2)
+		
 	End Method
 	
 	Method previewline(canvas:Canvas,drawit:Bool=False)
@@ -655,6 +778,7 @@ Class spriteeditor
 		spriteview(canvas)
 		previewline(canvas)
 		spritegrid(canvas)
+		previewselection(canvas)		
 		paletteview(canvas)
 		previewview(canvas)
 		spritelibview(canvas)
