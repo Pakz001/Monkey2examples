@@ -52,7 +52,10 @@ Class spriteeditor
 	Field canvaswidth:Float,canvasheight:Float 'width and height of our canvas
 	Field gridwidth:Float,gridheight:Float	 ' grids width and height
 	Field spritewidth:Int,spriteheight:Int ' our main sprite width and height
-	
+	Field linepressed:Bool=False
+	Field lineactive:Bool=False
+	Field linestartx:Int,linestarty:Int
+	Field lineendx:Int,lineendy:Int	
 	' palette
 	
 	Field c64color:Color[] ' our colors
@@ -139,7 +142,7 @@ Class spriteeditor
 		canvas.Color=Color.Black
 		canvas.DrawRect(toolx,tooly,toolwidth,toolheight)
 		canvas.Color=Color.White
-		'Print toolx+","+tooly
+		
 		Local num:Int=0
 		For Local x:Int=toolx Until toolx+toolwidth Step 32
 			Local pointx:Int=x
@@ -325,8 +328,37 @@ Class spriteeditor
 					If toolselected = toolfillid
 						fillatposition(x,y)
 					End If
+	
 				End If					
 			End If
+	
+			' Line tool
+			If Mouse.ButtonDown(MouseButton.Left)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,gridwidth,gridheight)
+					If toolselected = toollineid
+						If linepressed = False And lineactive = False
+							lineactive = True
+							linepressed = True
+							linestartx = x
+							linestarty = y							
+						End If
+						If lineactive = True
+							lineendx = x
+							lineendy = y
+							
+						End If					
+					End If
+				End If
+			End If
+			If Mouse.ButtonDown(MouseButton.Left) = False
+				If toolselected = toollineid
+					If lineactive = True						
+						previewline(canvas,True)
+						lineactive = False
+						linepressed = False						
+					End If
+				End If
+			End if
 			
 			' Mouse down (MIDDLE)
 			If Mouse.ButtonDown(MouseButton.Middle)
@@ -343,6 +375,49 @@ Class spriteeditor
 		Next
 		updatepreview()
 		updatespritelib()
+	End Method
+	
+	Method previewline(canvas:Canvas,drawit:Bool=False)
+		If lineactive = False Then Return
+		Local x1:Int=linestartx,y1:Int=linestarty
+		Local x2:Int=lineendx,y2:Int=lineendy		
+	    Local dx:Int, dy:Int, sx:Int, sy:Int, e:Int
+	    dx = Abs(x2 - x1)
+	    sx = -1
+	    If x1 < x2 Then sx = 1      
+	    dy = Abs(y2 - y1)
+	    sy = -1
+	    If y1 < y2 Then sy = 1
+	    If dx < dy Then 
+	        e = dx / 2 
+	    Else 
+	        e = dy / 2          
+	    End If
+	    Local exitloop:Bool=False
+	    While exitloop = False
+		    Local pointx:Int=canvasx+(x1*gridwidth)
+		    Local pointy:Int=canvasy+(y1*gridheight)
+		    canvas.Color = c64color[paletteselected]
+			canvas.DrawRect(pointx,pointy,gridwidth,gridheight)  
+			If drawit=True Then 				
+				If x1<0 Or y1<0 Or x1>=spritewidth Or y1>=spriteheight Then Exit
+				map[x1,y1] = paletteselected
+			End If
+	      If x1 = x2 
+	          If y1 = y2
+	              exitloop = True
+	          End If
+	      End If
+	      If dx > dy Then
+	          x1 += sx ; e -= dy 
+	           If e < 0 Then e += dx ; y1 += sy
+	      Else
+	          y1 += sy ; e -= dx 
+	          If e < 0 Then e += dy ; x1 += sx
+	      Endif
+	
+	    Wend
+			
 	End Method
 	
 	Method fillatposition(x:Int,y:Int)
@@ -458,6 +533,7 @@ Class spriteeditor
 	
 	Method draw(canvas:Canvas)
 		spriteview(canvas)
+		previewline(canvas)
 		spritegrid(canvas)
 		paletteview(canvas)
 		previewview(canvas)
