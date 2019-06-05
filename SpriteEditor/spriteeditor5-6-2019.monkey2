@@ -7,15 +7,25 @@ Using mojo..
 Global instance:AppInstance
 
 Class spriteeditor
-
+	' This is a class that holds x and y variables.
+	' used for : floodfill
+	Class pathnode
+		Field x:Int,y:Int
+		Method New(x:Int,y:Int)
+			Self.x = x
+			Self.y = y
+		End Method
+	End Class
 	'tool view
 	Field toolx:Int,tooly:Int
 	Field toolwidth:Int,toolheight:Int
 	Field toolim:Image[]
 	Field toolcan:Canvas[]
+	Field toolselected:Int=0
 	Field toolpencilid:Int=0
 	Field tooleraserid:Int=1
 	Field toolfillid:Int=2
+	Field toollineid:Int=3
 	Field numtools:Int
 	
 
@@ -47,6 +57,7 @@ Class spriteeditor
 	
 	Field c64color:Color[] ' our colors
 	Field paletteselected:Int ' our selected color from palette
+	Field paletteeraser:Int
 	Field palettex:Int,palettey:Int 'screen x and y
 	Field palettewidth:Float,paletteheight:Float ' our palette screen w and h
 	Field palettecellwidth:Float,palettecellheight:Float 'cell width and height of color
@@ -57,6 +68,7 @@ Class spriteeditor
 		
 		'palette setup
 		inic64colors()
+		paletteeraser = 0
 		palettex = 640-150
 		palettey = 0
 		palettewidth = 150
@@ -95,7 +107,7 @@ Class spriteeditor
 			
 		'spritelib setup
 		spritelibx = 0
-		spriteliby = canvasheight
+		spriteliby = canvasheight+32
 		spritelibwidth = 640
 		spritelibheight = 480
 		numspritelib = 32
@@ -131,9 +143,22 @@ Class spriteeditor
 		Local num:Int=0
 		For Local x:Int=toolx Until toolx+toolwidth Step 32
 			Local pointx:Int=x
-			canvas.Scissor = New Recti(pointx+1,tooly+1,pointx+30,tooly+30)
-			canvas.DrawImage(toolim[num],pointx,tooly)
-			canvas.Scissor = New Recti(0,0,640,480)
+			Local pointy:Int=tooly
+			If toolselected = num 
+				canvas.Color = Color.Yellow
+				canvas.DrawRect(pointx,pointy,32,32)
+				canvas.Color = Color.White
+				canvas.Scissor = New Recti(pointx+2,pointy+2,pointx+30,pointy+30)
+				canvas.DrawImage(toolim[num],pointx,pointy)
+				canvas.Scissor = New Recti(0,0,640,480)
+			Else
+				canvas.DrawImage(toolim[num],pointx,pointy)
+			End If
+			If Mouse.ButtonDown(MouseButton.Left)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,32,32)
+					toolselected = num
+				End If
+			End If				
 			num+=1
 			If num>=numtools Then Exit
 		Next
@@ -192,6 +217,23 @@ Class spriteeditor
 		Next
 		Next
 		toolcan[toolfillid].Flush()
+
+		Local line := New Int[][] (
+		New Int[](12,12,12,12,12,12,12,12),
+		New Int[](12,1,12,12,12,12,12,12),
+		New Int[](12,12,1,12,12,12,12,12),
+		New Int[](12,12,12,1,12,12,12,12),
+		New Int[](12,12,12,12,1,12,12,12),
+		New Int[](12,12,12,12,12,1,12,12),
+		New Int[](12,12,12,12,12,12,1,12),
+		New Int[](12,12,12,12,12,12,12,12))
+		For Local y:Int=0 Until 8
+		For Local x:Int=0 Until 8
+			toolcan[toollineid].Color = c64color[line[y][x]]
+			toolcan[toollineid].DrawRect(x*4,y*4,4,4)
+		Next
+		Next
+		toolcan[toollineid].Flush()
 		
 	End Method
 
@@ -274,7 +316,15 @@ Class spriteeditor
 			' Mouse down (LEFT)
 			If Mouse.ButtonDown(MouseButton.Left)
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,gridwidth,gridheight)=True								
-					map[x,y] = paletteselected
+					If toolselected = toolpencilid
+						map[x,y] = paletteselected
+					End If
+					If toolselected = tooleraserid
+						map[x,y] = paletteeraser
+					End If
+					If toolselected = toolfillid
+						fillatposition(x,y)
+					End If
 				End If					
 			End If
 			
@@ -293,6 +343,46 @@ Class spriteeditor
 		Next
 		updatepreview()
 		updatespritelib()
+	End Method
+	
+	Method fillatposition(x:Int,y:Int)
+		Local ol:List<pathnode> = New List<pathnode>
+	 	' Add the start position on the list
+	 	ol.AddLast(New pathnode(x,y))
+	 	' set the cloes map at the start position to distance 1
+	 	Local colorundermouse:Int=map[x,y]
+	 	map[x,y] = paletteselected
+	 	
+	 	' some helper arrays. We can determine the top,right,and bottom
+	 	' and left position cells with these numbers.
+	 	Local dx:Int[] = New Int[](0,1,0,-1)
+	 	Local dy:Int[] = New Int[](-1,0,1,0)
+	 	' While there is contents in the list
+	 	While ol.Count() <> 0
+		 	
+	 		' Get the current location
+	 		Local x1:Int=ol.First.x
+	 		Local y1:Int=ol.First.y
+	 		' Remove the current location from the list
+	 		ol.RemoveFirst()
+	 		' Get 4 new positions around the current positions
+			For Local i:=0 Until 4
+				' Set new x and y
+				Local nx:Int=x1+dx[i]
+				Local ny:Int=y1+dy[i]
+				' If the coordinates are inside the map
+				If nx>=0 And ny>=0 And nx<spritewidth And ny<spriteheight
+					' If the closedmap is not written to yet
+		 			If map[nx,ny] = colorundermouse And map[nx,ny] <> paletteselected
+		 				' Set the new distance based on the current distance
+		 				map[nx,ny] = paletteselected
+		 				' Add new position to the list
+		 				ol.AddLast(New pathnode(nx,ny))
+		 			End If
+	 			End If
+			Next
+	 	Wend
+ 	 		
 	End Method
 	
 	Method spritegrid(canvas:Canvas)
