@@ -10,12 +10,15 @@ Class spriteeditor
 	Field canvaswidth:Float,canvasheight:Float
 	Field gridwidth:Float,gridheight:Float	
 	Field spritewidth:Int,spriteheight:Int
+	
 	' palette
-	Field c64color:Color[]
-	Field palettex:Int,palettey:Int
-	Field palettewidth:Float,paletteheight:Float
-	Field palettecellwidth:Float,palettecellheight:Float
-	Field numpalette:Int
+	
+	Field c64color:Color[] ' our colors
+	Field paletteselected:Int ' our selected color from palette
+	Field palettex:Int,palettey:Int 'screen x and y
+	Field palettewidth:Float,paletteheight:Float ' our palette screen w and h
+	Field palettecellwidth:Float,palettecellheight:Float 'cell width and height of color
+	Field numpalette:Int 'number of colors
 	Method New()
 		'palette setup
 		inic64colors()
@@ -25,7 +28,8 @@ Class spriteeditor
 		paletteheight = 100
 		numpalette = 16
 		palettecellwidth = 16
-		palettecellheight = 16
+		palettecellheight = 16		
+
 		'sprite canvas setup
 		canvasx = 0
 		canvasy = 0
@@ -59,8 +63,34 @@ Class spriteeditor
 			If cc>=numpalette Then Exit			
 			Local pointx:Float=x+palettex
 			Local pointy:Float=y+palettey
+			'
+			' Draw our color
 			canvas.Color = c64color[cc]
 			canvas.DrawRect(pointx,pointy,palettecellwidth,palettecellheight)
+			'
+			' Draw a white bar around the currently selected color
+			If paletteselected = cc
+			canvas.OutlineMode = OutlineMode.Solid
+			canvas.OutlineWidth = 3
+			canvas.OutlineColor = Color.Black
+			canvas.DrawRect(pointx+2,pointy+2,palettecellwidth-4,palettecellheight-4)
+			canvas.OutlineMode = OutlineMode.Solid
+			canvas.OutlineWidth = 1
+			canvas.OutlineColor = Color.Yellow
+			canvas.DrawRect(pointx+2,pointy+2,palettecellwidth-4,palettecellheight-4)
+
+			canvas.OutlineMode = OutlineMode.None
+			End If
+			'
+			' Select our color
+			If Mouse.ButtonDown(MouseButton.Left)
+			
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,palettecellwidth,palettecellheight) = true
+				Print Microsecs()
+				paletteselected = cc
+			End If
+			End if
+			'
 			cc+=1			
 		Next
 		Next
@@ -122,3 +152,9 @@ Function Main()
 	New MyWindow
 	App.Run()
 End Function
+
+Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+    Return True
+End
