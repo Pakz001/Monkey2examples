@@ -1,3 +1,9 @@
+'
+' press 'c' to copy currently selected sprite data as a [][] array into the 
+' clipboard buffer.
+'
+
+
 #Import "<std>"
 #Import "<mojo>"
 
@@ -26,6 +32,10 @@ Class spriteeditor
 	Field tooleraserid:Int=1
 	Field toolfillid:Int=2
 	Field toollineid:Int=3
+	Field toolselectionid:Int=4
+	Field toolcopyid:Int=5
+	Field toolpasteid:Int=6
+	Field toolcutid:Int=7
 	Field numtools:Int
 	
 
@@ -94,8 +104,8 @@ Class spriteeditor
 		' tool view
 		toolx = 340
 		tooly = 200
-		toolwidth = 100
-		toolheight = 100
+		toolwidth = 32*4
+		toolheight = 32*2
 		numtools = 8
 		toolim = New Image[numtools]
 		toolcan = New Canvas[numtools]
@@ -144,9 +154,10 @@ Class spriteeditor
 		canvas.Color=Color.White
 		
 		Local num:Int=0
+		For Local y:Int=tooly Until tooly+toolheight Step 32
 		For Local x:Int=toolx Until toolx+toolwidth Step 32
 			Local pointx:Int=x
-			Local pointy:Int=tooly
+			Local pointy:Int=y
 			If toolselected = num 
 				canvas.Color = Color.Yellow
 				canvas.DrawRect(pointx,pointy,32,32)
@@ -165,7 +176,7 @@ Class spriteeditor
 			num+=1
 			If num>=numtools Then Exit
 		Next
-		
+		Next
 	End Method
 
 	Method setuptoolview()
@@ -237,6 +248,74 @@ Class spriteeditor
 		Next
 		Next
 		toolcan[toollineid].Flush()
+
+		Local selection := New Int[][] (
+		New Int[](12,12,12,12,12,12,12,12),
+		New Int[](12,1,12,1,1,12,1,12),
+		New Int[](12,12,12,12,12,12,12,12),
+		New Int[](12,1,12,12,12,12,1,12),
+		New Int[](12,1,12,12,12,12,1,12),
+		New Int[](12,12,12,12,12,12,12,12),
+		New Int[](12,1,12,1,1,12,1,12),
+		New Int[](12,12,12,12,12,12,12,12))
+		For Local y:Int=0 Until 8
+		For Local x:Int=0 Until 8
+			toolcan[toolselectionid].Color = c64color[selection[y][x]]
+			toolcan[toolselectionid].DrawRect(x*4,y*4,4,4)
+		Next
+		Next
+		toolcan[toolselectionid].Flush()
+
+		Local copy := New Int[][] (
+		New Int[](1,12,12,12,12,12,12,12),
+		New Int[](1,1,12,1,1,12,1,12),
+		New Int[](1,1,1,12,12,12,12,12),
+		New Int[](1,1,1,1,12,12,1,12),
+		New Int[](1,1,1,12,12,12,1,12),
+		New Int[](1,1,12,12,12,12,12,12),
+		New Int[](1,12,12,1,1,12,1,12),
+		New Int[](12,12,12,12,12,12,12,12))
+		For Local y:Int=0 Until 8
+		For Local x:Int=0 Until 8
+			toolcan[toolcopyid].Color = c64color[copy[y][x]]
+			toolcan[toolcopyid].DrawRect(x*4,y*4,4,4)
+		Next
+		Next
+		toolcan[toolcopyid].Flush()
+
+		Local paste := New Int[][] (
+		New Int[](12,12,12,1,12,12,12,12),
+		New Int[](12,12,1,1,1,12,1,12),
+		New Int[](12,1,1,1,12,12,12,12),
+		New Int[](1,1,1,1,12,12,1,12),
+		New Int[](12,1,1,1,12,12,1,12),
+		New Int[](12,12,1,1,12,12,12,12),
+		New Int[](12,12,12,1,1,12,1,12),
+		New Int[](12,12,12,12,12,12,12,12))
+		For Local y:Int=0 Until 8
+		For Local x:Int=0 Until 8
+			toolcan[toolpasteid].Color = c64color[paste[y][x]]
+			toolcan[toolpasteid].DrawRect(x*4,y*4,4,4)
+		Next
+		Next
+		toolcan[toolpasteid].Flush()
+
+		Local cut := New Int[][] (
+		New Int[](12,12,12,12,12,12,12,12),
+		New Int[](12,12,12,1,12,12,12,12),
+		New Int[](12,12,12,12,1,12,12,12),
+		New Int[](12,1,12,12,1,12,12,12),
+		New Int[](12,12,1,1,12,1,1,12),
+		New Int[](12,12,12,12,1,12,1,1),
+		New Int[](12,12,12,12,1,1,12,12),
+		New Int[](12,12,12,12,12,1,1,12))
+		For Local y:Int=0 Until 8
+		For Local x:Int=0 Until 8
+			toolcan[toolcutid].Color = c64color[cut[y][x]]
+			toolcan[toolcutid].DrawRect(x*4,y*4,4,4)
+		Next
+		Next
+		toolcan[toolcutid].Flush()
 		
 	End Method
 
@@ -596,7 +675,7 @@ Class MyWindow Extends Window
 	
 	Method OnRender( canvas:Canvas ) Override
 		App.RequestRender() ' Activate this method 
-		canvas.Clear(New Color(0,0,0,1))		
+		canvas.Clear(New Color(.2,.2,.2,1))		
 		myspriteeditor.draw(canvas)
 
 		
