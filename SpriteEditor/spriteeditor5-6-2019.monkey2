@@ -6,6 +6,8 @@ Using mojo..
 
 
 Class spriteeditor
+	'sprite view
+	Field map:Int[,]
 	Field canvasx:Int,canvasy:Int
 	Field canvaswidth:Float,canvasheight:Float
 	Field gridwidth:Float,gridheight:Float	
@@ -34,13 +36,45 @@ Class spriteeditor
 		canvasx = 0
 		canvasy = 0
 		spritewidth = 8
-		spriteheight = 8		
+		spriteheight = 8
+		map = New Int[spritewidth,spriteheight]		
 		canvaswidth=320
 		canvasheight=240
 		gridwidth = canvaswidth/spritewidth		
 		gridheight = canvasheight/spriteheight
 		
 	End Method
+	Method spriteview(canvas:Canvas)
+		
+		canvas.Color = Color.Grey
+		
+		For Local y:Int=0 Until spriteheight
+		For Local x:Int=0 Until spritewidth
+			Local pointx:Int=(x*gridwidth)+canvasx
+			Local pointy:Int=(y*gridheight)+canvasy
+			'canvas.DrawRect()
+			canvas.Color = c64color[map[x,y]]
+			canvas.DrawRect(pointx,pointy,gridwidth,gridheight)
+			
+			'
+			' Mouse down (LEFT)
+			If Mouse.ButtonDown(MouseButton.Left)
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,gridwidth,gridheight)
+				map[x,y] = paletteselected
+			End If
+			End if
+			' Mouse down (MIDDLE)
+			If Mouse.ButtonDown(MouseButton.Middle)
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,gridwidth,gridheight)
+				paletteselected = map[x,y]
+			End If
+			End if
+
+		Next
+		Next
+	
+	End Method
+	
 	Method spritegrid(canvas:Canvas)
 		
 		canvas.Color = Color.Grey
@@ -97,6 +131,7 @@ Class spriteeditor
 		'canvas.Color = c64color[2]
 	End Method
 	Method draw(canvas:Canvas)
+		spriteview(canvas)
 		spritegrid(canvas)
 		paletteview(canvas)
 	End Method
