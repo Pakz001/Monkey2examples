@@ -7,12 +7,20 @@ Using mojo..
 Global instance:AppInstance
 
 Class spriteeditor
+	
+	'preview
+	Field previewim:Image
+	Field previewcan:Canvas
+	Field previewx:Int,previewy:Int
+	Field previewwidth:Int,previewheight:Int
+	Field previewcellwidth:Int,previewcellheight:Int
+	
 	'sprite view
 	Field map:Int[,]
-	Field canvasx:Int,canvasy:Int
-	Field canvaswidth:Float,canvasheight:Float
-	Field gridwidth:Float,gridheight:Float	
-	Field spritewidth:Int,spriteheight:Int
+	Field canvasx:Int,canvasy:Int 'canvas x and y position on the scrern
+	Field canvaswidth:Float,canvasheight:Float 'width and height of our canvas
+	Field gridwidth:Float,gridheight:Float	 ' grids width and height
+	Field spritewidth:Int,spriteheight:Int ' our main sprite width and height
 	
 	' palette
 	
@@ -25,7 +33,7 @@ Class spriteeditor
 	Method New()
 		'palette setup
 		inic64colors()
-		palettex = 320
+		palettex = 640-100
 		palettey = 0
 		palettewidth = 100
 		paletteheight = 100
@@ -39,12 +47,24 @@ Class spriteeditor
 		spritewidth = 8
 		spriteheight = 8
 		map = New Int[spritewidth,spriteheight]		
-		canvaswidth=320
-		canvasheight=240
+		canvaswidth=640-100
+		canvasheight=320
 		gridwidth = canvaswidth/spritewidth		
 		gridheight = canvasheight/spriteheight
 		
+		' previewview setup
+		previewx = 640-100
+		previewy = 200
+		previewcellwidth = 5
+		previewcellheight = 5
+		previewwidth = spritewidth*previewcellwidth
+		previewheight = spriteheight*previewcellheight
+		previewim = New Image(previewwidth,previewheight)
+		previewcan = New Canvas(previewim)
+		updatepreview()
+		
 	End Method
+
 	Method spriteview(canvas:Canvas)
 		
 		canvas.Color = Color.Grey
@@ -54,28 +74,31 @@ Class spriteeditor
 			Local pointx:Int=(x*gridwidth)+canvasx
 			Local pointy:Int=(y*gridheight)+canvasy
 			'canvas.DrawRect()
-			canvas.Color = c64color[map[x,y]]
+			canvas.Color = c64color[map[x,y]]			
 			canvas.DrawRect(pointx,pointy,gridwidth,gridheight)
 			
 			'
 			' Mouse down (LEFT)
 			If Mouse.ButtonDown(MouseButton.Left)
-			If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,gridwidth,gridheight)
-				map[x,y] = paletteselected
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,gridwidth,gridheight)=True								
+					map[x,y] = paletteselected
+				End If					
 			End If
-			End if
+			
 			' Mouse down (MIDDLE)
 			If Mouse.ButtonDown(MouseButton.Middle)
-			If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,gridwidth,gridheight)
-				paletteselected = map[x,y]
-			End If
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,gridwidth,gridheight)
+					paletteselected = map[x,y]
+				End If
 			End if
 			' Copy to clipboard
-			copytoclipboard()
+			If Keyboard.KeyReleased(Key.C)
+				copytoclipboard()
+			End if
 
 		Next
 		Next
-	
+		updatepreview()
 	End Method
 	
 	Method spritegrid(canvas:Canvas)
@@ -92,11 +115,11 @@ Class spriteeditor
 		Next
 	End Method
 	Method paletteview(canvas:Canvas)
-		canvas.Color = Color.Black
+		canvas.Color = Color.Grey
 		canvas.DrawRect(palettex,palettey,palettewidth,paletteheight)
 		Local cc:Int=0
-		For Local y:Int=0 Until paletteheight Step palettecellheight
-		For Local x:Int=0 Until palettewidth Step palettecellwidth
+		For Local y:Int=0 Until paletteheight-palettecellheight Step palettecellheight
+		For Local x:Int=0 Until palettewidth-palettecellwidth Step palettecellwidth
 			If cc>=numpalette Then Exit			
 			Local pointx:Float=x+palettex
 			Local pointy:Float=y+palettey
@@ -107,25 +130,22 @@ Class spriteeditor
 			'
 			' Draw a white bar around the currently selected color
 			If paletteselected = cc
-			canvas.OutlineMode = OutlineMode.Solid
-			canvas.OutlineWidth = 3
-			canvas.OutlineColor = Color.Black
-			canvas.DrawRect(pointx+2,pointy+2,palettecellwidth-4,palettecellheight-4)
-			canvas.OutlineMode = OutlineMode.Solid
-			canvas.OutlineWidth = 1
-			canvas.OutlineColor = Color.Yellow
-			canvas.DrawRect(pointx+2,pointy+2,palettecellwidth-4,palettecellheight-4)
-
-			canvas.OutlineMode = OutlineMode.None
+				canvas.OutlineMode = OutlineMode.Solid
+				canvas.OutlineWidth = 3
+				canvas.OutlineColor = Color.Black
+				canvas.DrawRect(pointx+2,pointy+2,palettecellwidth-4,palettecellheight-4)
+				canvas.OutlineMode = OutlineMode.Solid
+				canvas.OutlineWidth = 1
+				canvas.OutlineColor = Color.Yellow
+				canvas.DrawRect(pointx+2,pointy+2,palettecellwidth-4,palettecellheight-4)	
+				canvas.OutlineMode = OutlineMode.None
 			End If
 			'
 			' Select our color
-			If Mouse.ButtonDown(MouseButton.Left)
-			
-			If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,palettecellwidth,palettecellheight) = true
-				Print Microsecs()
-				paletteselected = cc
-			End If
+			If Mouse.ButtonDown(MouseButton.Left)				
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,palettecellwidth,palettecellheight) = True
+					paletteselected = cc
+				End If
 			End if
 			'
 			cc+=1			
@@ -133,10 +153,30 @@ Class spriteeditor
 		Next
 		'canvas.Color = c64color[2]
 	End Method
+	
+	Method updatepreview()			
+		previewcan.Clear(Color.Black)	
+		For Local y:Int=0 Until map.GetSize(1)
+		For Local x:Int=0 Until map.GetSize(0)
+			Local pointx:Int=x*previewcellwidth
+			Local pointy:Int=y*previewcellheight
+			previewcan.Color = c64color[map[x,y]]
+			previewcan.DrawRect(pointx,pointy,previewcellwidth,previewcellheight)
+		Next
+		Next
+		previewcan.Flush()
+	End Method
+	Method previewview(canvas:Canvas)		
+		canvas.Color = Color.White
+		canvas.DrawRect(previewx,previewy,previewwidth,previewheight)
+		canvas.DrawImage(previewim,previewx+1,previewy+1,0,.95,.95)		
+	End Method
+	
 	Method draw(canvas:Canvas)
 		spriteview(canvas)
 		spritegrid(canvas)
 		paletteview(canvas)
+		previewview(canvas)
 	End Method
 	Method inic64colors()
 		c64color = New Color[16]
@@ -210,7 +250,7 @@ Function Main()
 	App.Run()
 End Function
 
-Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)   	
     If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
     If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
     Return True
