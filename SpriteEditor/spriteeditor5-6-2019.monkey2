@@ -8,6 +8,17 @@ Global instance:AppInstance
 
 Class spriteeditor
 
+	'tool view
+	Field toolx:Int,tooly:Int
+	Field toolwidth:Int,toolheight:Int
+	Field toolim:Image[]
+	Field toolcan:Canvas[]
+	Field toolpencilid:Int=0
+	Field tooleraserid:Int=1
+	Field toolfillid:Int=2
+	Field numtools:Int
+	
+
 	' sprite library
 	Field spritelibx:Int,spriteliby:Int
 	Field spritelibwidth:Int,spritelibheight:Int
@@ -46,13 +57,13 @@ Class spriteeditor
 		
 		'palette setup
 		inic64colors()
-		palettex = 640-100
+		palettex = 640-150
 		palettey = 0
-		palettewidth = 100
-		paletteheight = 100
+		palettewidth = 150
+		paletteheight = 150
 		numpalette = 16
-		palettecellwidth = 16
-		palettecellheight = 16		
+		palettecellwidth = 32
+		palettecellheight = 32		
 
 		'sprite canvas setup
 		canvasx = 0
@@ -65,6 +76,23 @@ Class spriteeditor
 		gridwidth = canvaswidth/spritewidth		
 		gridheight = canvasheight/spriteheight
 
+		' tool view
+		toolx = 340
+		tooly = 200
+		toolwidth = 100
+		toolheight = 100
+		numtools = 8
+		toolim = New Image[numtools]
+		toolcan = New Canvas[numtools]
+		For Local i:Int=0 Until numtools
+			toolim[i] = New Image(32,32)
+			toolcan[i] = New Canvas(toolim[i])
+			toolcan[i].Clear(Color.Black)
+			toolcan[i].Flush()
+		Next
+
+		setuptoolview()
+			
 		'spritelib setup
 		spritelibx = 0
 		spriteliby = canvasheight
@@ -95,8 +123,80 @@ Class spriteeditor
 		
 	End Method
 
+	Method toolview(canvas:Canvas)
+		canvas.Color=Color.Black
+		canvas.DrawRect(toolx,tooly,toolwidth,toolheight)
+		canvas.Color=Color.White
+		'Print toolx+","+tooly
+		Local num:Int=0
+		For Local x:Int=toolx Until toolx+toolwidth Step 32
+			Local pointx:Int=x
+			canvas.Scissor = New Recti(pointx+1,tooly+1,pointx+30,tooly+30)
+			canvas.DrawImage(toolim[num],pointx,tooly)
+			canvas.Scissor = New Recti(0,0,640,480)
+			num+=1
+			If num>=numtools Then Exit
+		Next
+		
+	End Method
+
+	Method setuptoolview()
+		'read icons
+		Local pencil := New Int[][] (
+		New Int[](12,12,12,12,12,12,12,12),
+		New Int[](12,1,1,1,1,12,12,12),
+		New Int[](12,1,1,1,12,1,12,12),
+		New Int[](12,1,1,12,1,1,1,12),
+		New Int[](12,1,12,1,1,1,1,1),
+		New Int[](12,12,1,1,1,1,1,1),
+		New Int[](12,12,12,1,1,1,1,1),
+		New Int[](12,12,12,12,1,1,1,1))		
+		For Local y:Int=0 Until 8
+		For Local x:Int=0 Until 8
+			toolcan[toolpencilid].Color = c64color[pencil[y][x]]
+			toolcan[toolpencilid].DrawRect(x*4,y*4,4,4)
+		Next
+		Next
+		toolcan[toolpencilid].Flush()
+		
+		Local eraser := New Int[][] (
+		New Int[](12,12,12,12,12,12,12,12),
+		New Int[](12,12,12,1,12,12,12,12),
+		New Int[](12,12,1,1,1,12,12,12),
+		New Int[](12,1,1,12,1,1,12,12),
+		New Int[](12,12,1,1,12,1,1,12),
+		New Int[](12,12,12,1,1,1,12,12),
+		New Int[](12,12,12,12,1,12,12,12),
+		New Int[](12,12,12,12,12,12,12,12))
+		For Local y:Int=0 Until 8
+		For Local x:Int=0 Until 8
+			toolcan[tooleraserid].Color = c64color[eraser[y][x]]
+			toolcan[tooleraserid].DrawRect(x*4,y*4,4,4)
+		Next
+		Next
+		toolcan[tooleraserid].Flush()
+
+		Local fill := New Int[][] (
+		New Int[](12,12,12,1,12,12,12,12),
+		New Int[](12,12,1,1,1,12,12,12),
+		New Int[](12,1,1,1,1,1,12,12),
+		New Int[](1,1,1,1,1,1,1,12),
+		New Int[](12,1,1,1,1,1,1,1),
+		New Int[](1,12,1,1,1,1,1,12),
+		New Int[](12,12,12,1,1,1,12,12),
+		New Int[](1,12,12,12,1,12,12,12))
+		For Local y:Int=0 Until 8
+		For Local x:Int=0 Until 8
+			toolcan[toolfillid].Color = c64color[fill[y][x]]
+			toolcan[toolfillid].DrawRect(x*4,y*4,4,4)
+		Next
+		Next
+		toolcan[toolfillid].Flush()
+		
+	End Method
+
 	Method spritelibview(canvas:Canvas)
-		canvas.Color = Color.Yellow
+		canvas.Color = Color.Black
 		canvas.DrawRect(spritelibx,spriteliby,spritelibwidth,spritelibheight)
 		canvas.Color = Color.White
 		Local num:Int=0
@@ -272,6 +372,7 @@ Class spriteeditor
 		paletteview(canvas)
 		previewview(canvas)
 		spritelibview(canvas)
+		toolview(canvas)
 	End Method
 	Method inic64colors()
 		c64color = New Color[16]
@@ -292,6 +393,8 @@ Class spriteeditor
 		c64color[14] = New Color(intof(0)  ,intof(136),intof(255))'Light blue
 		c64color[15] = New Color(intof(187),intof(187),intof(187))'Light grey / grey 3
 	End Method
+	
+	
 	
 	Function intof:Float(a:Int)
 		Return 1.0/255.0*a
