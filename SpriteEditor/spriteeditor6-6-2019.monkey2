@@ -39,6 +39,7 @@ Class spriteeditor
 	Field toolcutid:Int=7
 	Field toolflipverticalid:Int=8
 	Field toolfliphorizontalid:Int=9
+	Field toolcolorpickerid:Int=10
 	Field numtools:Int
 	Field delay:Int
 	Field delaydefault:Int=20
@@ -165,7 +166,7 @@ Class spriteeditor
 		tooly = 200
 		toolwidth = 32*4
 		toolheight = 32*3
-		numtools = 10
+		numtools = 11
 		toolim = New Image[numtools]
 		toolcan = New Canvas[numtools]
 		For Local i:Int=0 Until numtools
@@ -530,6 +531,23 @@ Class spriteeditor
 		Next
 		Next
 		toolcan[toolfliphorizontalid].Flush()
+
+		Local colorpicker := New Int[][] (
+		New Int[](12,1,1,12,12,12,12,12),
+		New Int[](1,1,12,12,1,12,12,12),
+		New Int[](1,12,12,1,12,12,12,12),
+		New Int[](12,12,1,12,1,12,12,12),
+		New Int[](12,1,12,1,12,1,12,12),
+		New Int[](12,12,12,12,1,12,1,12),
+		New Int[](12,12,12,12,12,1,1,12),
+		New Int[](12,12,12,12,12,12,12,1))
+		For Local y:Int=0 Until 8
+		For Local x:Int=0 Until 8
+			toolcan[toolcolorpickerid].Color = c64color[colorpicker[y][x]]
+			toolcan[toolcolorpickerid].DrawRect(x*4,y*4,4,4)
+		Next
+		Next
+		toolcan[toolcolorpickerid].Flush()
 		
 	End Method
 
@@ -689,12 +707,20 @@ Class spriteeditor
 			End If
 					
 			
-			' Mouse down (MIDDLE)
+			' Mouse down (MIDDLE) Color Picker
 			If Mouse.ButtonDown(MouseButton.Middle)
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,gridwidth,gridheight)
 					paletteselected = map[x,y]
 				End If
 			End if
+			If Mouse.ButtonDown(MouseButton.Left)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,gridwidth,gridheight)
+					If toolselected = toolcolorpickerid
+						paletteselected = map[x,y]
+					End If
+				End If
+			End if
+			
 			' Copy to clipboard
 			If Keyboard.KeyReleased(Key.C)
 				copytoclipboard()
