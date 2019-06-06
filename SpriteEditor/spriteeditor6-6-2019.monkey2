@@ -117,8 +117,8 @@ Class spriteeditor
 		paletteeraser = 0
 		palettex = 640-150
 		palettey = 32
-		palettewidth = 150
-		paletteheight = 150
+		palettewidth = 32*4
+		paletteheight = 32*4
 		numpalette = 16
 		palettecellwidth = 32
 		palettecellheight = 32		
@@ -829,11 +829,13 @@ Class spriteeditor
 		Next
 	End Method
 	Method paletteview(canvas:Canvas)
-		canvas.Color = Color.Grey
+		canvas.Color = Color.Black
 		canvas.DrawRect(palettex,palettey,palettewidth,paletteheight)
+		canvas.Scissor = New Recti(palettex+2,palettey+2,palettex+2+palettewidth-4,palettey+2+paletteheight-4)
+		canvas.Color = Color.White
 		Local cc:Int=0
-		For Local y:Int=0 Until paletteheight-palettecellheight Step palettecellheight
-		For Local x:Int=0 Until palettewidth-palettecellwidth Step palettecellwidth
+		For Local y:Int=0 Until paletteheight Step palettecellheight
+		For Local x:Int=0 Until palettewidth Step palettecellwidth
 			If cc>=numpalette Then Exit			
 			Local pointx:Float=x+palettex
 			Local pointy:Float=y+palettey
@@ -865,6 +867,7 @@ Class spriteeditor
 			cc+=1			
 		Next
 		Next
+		canvas.Scissor = New Recti(0,0,640,480)
 		'canvas.Color = c64color[2]
 	End Method
 	
