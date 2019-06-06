@@ -237,45 +237,53 @@ Class spriteeditor
 
 
 					' Pastethe selected area
-					If toolselected = toolpasteid						
-						For Local y1:Int=selectionbufferstarty To selectionbufferendy
-						For Local x1:Int=selectionbufferstartx To selectionbufferendx
-							Local destx:Int=selectionstartx+x1-selectionbufferstartx
-							Local desty:Int=selectionstarty+y1-selectionbufferstarty
-							If x1<0 Or y1<0 Or x1>=map.GetSize(0) Or y1>=map.GetSize(1) Then Continue
-							If destx<0 Or desty<0 Or destx>=map.GetSize(0) Or desty>=map.GetSize(1) Then Continue
-							If destx>selectionendx Or desty>selectionendy Then Continue
-							map[destx,desty] = selectionbuffer[x1,y1]
-						Next
-						Next
-						toolselected = toolpencilid
-						
+					If toolselected = toolpasteid
+						If selectionstartx = selectionendx And selectionstarty = selectionendy Then 
+						Else
+							For Local y1:Int=selectionbufferstarty To selectionbufferendy
+							For Local x1:Int=selectionbufferstartx To selectionbufferendx
+								Local destx:Int=selectionstartx+x1-selectionbufferstartx
+								Local desty:Int=selectionstarty+y1-selectionbufferstarty
+								If x1<0 Or y1<0 Or x1>=map.GetSize(0) Or y1>=map.GetSize(1) Then Continue
+								If destx<0 Or desty<0 Or destx>=map.GetSize(0) Or desty>=map.GetSize(1) Then Continue
+								If destx>selectionendx Or desty>selectionendy Then Continue
+								map[destx,desty] = selectionbuffer[x1,y1]
+							Next
+							Next
+							toolselected = toolpencilid
+						End If						
 					End If
 				
 					
 					' Copy the selected area
 					If toolselected = toolcopyid
-						selectionbufferstartx = selectionstartx
-						selectionbufferstarty = selectionstarty
-						selectionbufferendx = selectionendx
-						selectionbufferendy = selectionendy
-						For Local y1:Int=selectionstarty To selectionendy
-						For Local x1:Int=selectionstartx To selectionendx
-							selectionbuffer[x1,y1] = map[x1,y1]
-						Next
-						Next
-						toolselected = toolpencilid
-						
+						If selectionstartx = selectionendx And selectionstarty = selectionendy Then 
+							
+						Else
+							selectionbufferstartx = selectionstartx
+							selectionbufferstarty = selectionstarty
+							selectionbufferendx = selectionendx
+							selectionbufferendy = selectionendy
+							For Local y1:Int=selectionstarty To selectionendy
+							For Local x1:Int=selectionstartx To selectionendx
+								selectionbuffer[x1,y1] = map[x1,y1]
+							Next
+							Next
+							toolselected = toolpencilid
+						End If						
 					End If
 					' Cut the selected area		
 					If toolselected = toolcutid
+						If selectionstartx = selectionendx And selectionstarty = selectionendy Then 
 						
-						For Local y1:Int=selectionstarty To selectionendy
-						For Local x1:Int=selectionstartx To selectionendx
-							map[x1,y1] = paletteeraser
-						Next
-						Next
+						Else
+							For Local y1:Int=selectionstarty To selectionendy
+							For Local x1:Int=selectionstartx To selectionendx
+								map[x1,y1] = paletteeraser
+							Next
+							Next
 						toolselected = toolpencilid
+						End If
 					End If
 					
 					' Mirror vertically
@@ -733,7 +741,7 @@ Class spriteeditor
 	End Method
 	
 	Method previewselection(canvas:Canvas,drawit:Bool=False)
-		
+		If selectionstartx = selectionendx And selectionstarty = selectionendy Then Return
 		Local x1:Int=canvasx+(selectionstartx*gridwidth)
 		Local y1:Int=canvasy+(selectionstarty*gridheight)
 		Local x2:Int=canvasx+((selectionendx+1)*gridwidth)
