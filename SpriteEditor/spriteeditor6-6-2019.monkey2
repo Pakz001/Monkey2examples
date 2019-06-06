@@ -3,6 +3,16 @@
 ' clipboard buffer.
 '
 
+' grid toggle icon.
+' map view. (XXX....)
+' hand icon for moving (map)
+' grid icon for toggling grid
+' box tool (icons)(filled/outline)
+' circle tool (icons)(filled/outline)
+' 16x16 and 32x32 sprite sizes (setup screen on startup)
+' triangle tool (filled/outline)
+' poly tool (filled/outlines)
+' mirror/flip tool check if selection is active and flip/mirror in that
 
 #Import "<std>"
 #Import "<mojo>"
@@ -62,7 +72,14 @@ Class spriteeditor
 	Field previewx:Int,previewy:Int
 	Field previewwidth:Int,previewheight:Int
 	Field previewcellwidth:Int,previewcellheight:Int
-	
+
+	' tile map view
+	Field tilemapx:Int,tilemapy:Int
+	Field tilemapwidth:Int,tilemapheight:Int
+	Field tilemaptileshorizontal:Int,tilemaptilesvertical:Int
+	Field tilemaptilesscreenhorizontal:Int
+	Field tilemaptilesscreenvertical:Int
+	Field tilemap:Int[,]
 	'
 	'sprite view
 	Field map:Int[,]
@@ -161,23 +178,8 @@ Class spriteeditor
 		gridwidth = canvaswidth/spritewidth		
 		gridheight = canvasheight/spriteheight
 
-		' tool view
-		toolx = 340
-		tooly = 200
-		toolwidth = 32*4
-		toolheight = 32*3
-		numtools = 11
-		toolim = New Image[numtools]
-		toolcan = New Canvas[numtools]
-		For Local i:Int=0 Until numtools
-			toolim[i] = New Image(32,32)
-			toolcan[i] = New Canvas(toolim[i])
-			toolcan[i].Clear(Color.Black)
-			toolcan[i].Flush()
-		Next
 
-		setuptoolview()
-			
+		'	
 		'spritelib setup
 		spritelibx = 0
 		spriteliby = canvasheight+32+32
@@ -195,6 +197,38 @@ Class spriteeditor
 			spritelibcan[i].Flush()
 		Next	
 		spritelibmap = New Int[numspritelib,spritewidth,spriteheight]	
+
+		'
+		'tilemap setup
+		tilemapx = 0
+		tilemapy = 32
+		tilemaptileshorizontal = 100
+		tilemaptilesvertical = 100
+		tilemapwidth = 640
+		tilemapheight= 256
+		tilemaptilesscreenhorizontal = tilemapwidth/(spritewidth*spritelibscale)
+		tilemaptilesscreenvertical = tilemapheight/(spriteheight*spritelibscale)+1
+		tilemap = New Int[tilemaptileshorizontal,tilemaptilesvertical]
+
+		' tool view
+		toolx = 340
+		tooly = 200
+		toolwidth = 32*4
+		toolheight = 32*3
+		numtools = 11
+		toolim = New Image[numtools]
+		toolcan = New Canvas[numtools]
+		For Local i:Int=0 Until numtools
+			toolim[i] = New Image(32,32)
+			toolcan[i] = New Canvas(toolim[i])
+			toolcan[i].Clear(Color.Black)
+			toolcan[i].Flush()
+		Next
+
+		setuptoolview()
+		
+
+		'
 		' previewview setup
 		previewx = 640-100
 		previewy = 200
@@ -961,17 +995,48 @@ Class spriteeditor
 		canvas.DrawRect(bottombarx,bottombary+bottombarheight/2,bottombarwidth,bottombarheight/2)
 	End Method
 	
+	Method tilemapview(canvas:Canvas)		
+		canvas.Color = Color.Black
+		canvas.DrawRect(tilemapx,tilemapy,tilemapwidth,tilemapheight)
+		canvas.Color = Color.White
+		For Local y:Int=0 Until tilemaptilesscreenvertical
+		For Local x:Int=0 Until tilemaptilesscreenhorizontal
+			Local pointx:Int=(x*spritewidth*spritelibscale)+tilemapx
+			Local pointy:Int=(y*spriteheight*spritelibscale)+tilemapy
+			canvas.DrawImage(spritelibim[tilemap[x,y]],pointx,pointy)			
+			
+		Next
+		Next
+		If Mouse.ButtonDown(MouseButton.Left)
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,tilemapx,tilemapy,tilemapwidth,tilemapheight)
+				Local x:Int=(Mouse.X-tilemapx) / (spritewidth*spritelibscale)
+				Local y:Int=(Mouse.Y-tilemapy) / (spriteheight*spritelibscale)
+				If x<0 Or y<0 Or x>=tilemaptileshorizontal Or y>=tilemaptilesvertical Then 
+				Else
+				tilemap[x,y] = spritelibselected
+				End If
+			End If
+		End If
+	End Method
+	
 	Method draw(canvas:Canvas)
-		bottombarview(canvas)
-		topbarview(canvas)
-		spriteview(canvas)
-		previewline(canvas)
-		spritegrid(canvas)
-		previewselection(canvas)		
-		paletteview(canvas)
-		previewview(canvas)
-		spritelibview(canvas)
-		toolview(canvas)
+		If topbarcurrentid = topbarspriteeditid
+			bottombarview(canvas)
+			topbarview(canvas)
+			spriteview(canvas)
+			previewline(canvas)
+			spritegrid(canvas)
+			previewselection(canvas)		
+			paletteview(canvas)
+			previewview(canvas)
+			spritelibview(canvas)
+			toolview(canvas)
+		Elseif topbarcurrentid = topbarmapeditid
+			bottombarview(canvas)
+			topbarview(canvas)
+			tilemapview(canvas)
+			spritelibview(canvas)
+		End If
 	End Method
 	Method inic64colors()
 		c64color = New Color[16]
