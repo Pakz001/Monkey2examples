@@ -445,13 +445,13 @@ Class spriteeditor
 
 		Local fill := New Int[][] (
 		New Int[](12,12,12,1,12,12,12,12),
-		New Int[](12,12,1,1,1,12,12,12),
-		New Int[](12,1,1,1,1,1,12,12),
+		New Int[](12,12,12,12,1,12,12,12),
+		New Int[](12,12,12,12,12,1,12,12),
 		New Int[](1,1,1,1,1,1,1,12),
 		New Int[](12,1,1,1,1,1,1,1),
 		New Int[](1,12,1,1,1,1,1,12),
 		New Int[](12,12,12,1,1,1,12,12),
-		New Int[](1,12,12,12,1,12,12,12))
+		New Int[](1,12,12,12,1,12,12,12))		
 		For Local y:Int=0 Until 8
 		For Local x:Int=0 Until 8
 			toolcan[toolfillid].Color = c64color[fill[y][x]]
