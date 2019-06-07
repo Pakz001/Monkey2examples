@@ -3,7 +3,6 @@
 ' clipboard buffer.
 '
 
-' grid toggle icon.
 ' map view. (XXX....)
 ' hand icon for moving (map)
 ' grid icon for toggling grid
@@ -38,6 +37,7 @@ Class spriteeditor
 	Field toolwidth:Int,toolheight:Int
 	Field toolim:Image[]
 	Field toolcan:Canvas[]
+	Field toolgridtoggle:Bool=True
 	Field toolselected:Int=0
 	Field toolpencilid:Int=0
 	Field tooleraserid:Int=1
@@ -50,6 +50,7 @@ Class spriteeditor
 	Field toolflipverticalid:Int=8
 	Field toolfliphorizontalid:Int=9
 	Field toolcolorpickerid:Int=10
+	Field toolgridid:Int=11
 	Field numtools:Int
 	Field delay:Int
 	Field delaydefault:Int=20
@@ -215,7 +216,7 @@ Class spriteeditor
 		tooly = 200
 		toolwidth = 32*4
 		toolheight = 32*3
-		numtools = 11
+		numtools = 12
 		toolim = New Image[numtools]
 		toolcan = New Canvas[numtools]
 		For Local i:Int=0 Until numtools
@@ -352,7 +353,12 @@ Class spriteeditor
 						delay = delaydefault
 						toolselected = toolpencilid
 					End If
-					
+					' Grid toggle
+					If toolselected = toolgridid And delay <= 0
+						If toolgridtoggle = True Then toolgridtoggle = False Else toolgridtoggle = True
+						delay = delaydefault
+						toolselected = toolpencilid
+					End If
 				End If								
 			End If				
 			num+=1
@@ -590,6 +596,23 @@ Class spriteeditor
 		Next
 		Next
 		toolcan[toolcolorpickerid].Flush()
+
+		Local grid := New Int[][] (
+		New Int[](12,12,12,12,12,12,12,12),
+		New Int[](12,12,1,12,12,1,12,12),
+		New Int[](12,1,1,1,1,1,1,12),
+		New Int[](12,12,1,12,12,1,12,12),
+		New Int[](12,12,1,12,12,1,12,12),
+		New Int[](12,1,1,1,1,1,1,12),
+		New Int[](12,12,1,12,12,1,12,12),
+		New Int[](12,12,12,12,12,12,12,12))		
+		For Local y:Int=0 Until 8
+		For Local x:Int=0 Until 8
+			toolcan[toolgridid].Color = c64color[grid[y][x]]
+			toolcan[toolgridid].DrawRect(x*4,y*4,4,4)
+		Next
+		Next
+		toolcan[toolgridid].Flush()
 		
 	End Method
 
@@ -884,7 +907,10 @@ Class spriteeditor
 	End Method
 	
 	Method spritegrid(canvas:Canvas)
+		' If grid noview then exit this method		
+		If toolgridtoggle = False Then Return
 		
+		' draw our grid	
 		canvas.Color = Color.Grey
 		
 		For Local y:Int=0 Until spriteheight
