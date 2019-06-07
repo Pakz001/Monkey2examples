@@ -208,7 +208,7 @@ Class spriteeditor
 		tilemapwidth = 640
 		tilemapheight= 256
 		tilemaptilesscreenhorizontal = tilemapwidth/(spritewidth*spritelibscale)
-		tilemaptilesscreenvertical = tilemapheight/(spriteheight*spritelibscale)+1
+		tilemaptilesscreenvertical = tilemapheight/(spriteheight*spritelibscale)
 		tilemap = New Int[tilemaptileshorizontal,tilemaptilesvertical]
 
 		' tool view
