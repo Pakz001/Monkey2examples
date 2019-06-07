@@ -186,9 +186,9 @@ Class spriteeditor
 		spriteliby = canvasheight+32+32
 		spritelibwidth = 640
 		spritelibheight = 128
-		numspritelib = 48
+		numspritelib = 80
 		spritelibselected = 0
-		spritelibscale = 5
+		spritelibscale = 4
 		spritelibim = New Image[numspritelib]
 		spritelibcan = New Canvas[numspritelib]		
 		For Local i:Int=0 Until numspritelib
@@ -621,7 +621,7 @@ Class spriteeditor
 		canvas.DrawRect(spritelibx,spriteliby,spritelibwidth,spritelibheight)
 		canvas.Color = Color.White
 		Local num:Int=0
-		For Local y:Int=spriteliby Until spriteliby+spritelibheight-spriteheight*spritelibscale Step spriteheight*spritelibscale
+		For Local y:Int=spriteliby Until spriteliby+spritelibheight Step spriteheight*spritelibscale
 		For Local x:Int=spritelibx Until spritelibx+spritelibwidth Step spritewidth*spritelibscale
 			Local pointx:Int=x
 			Local pointy:Int=y
@@ -656,7 +656,9 @@ Class spriteeditor
 		Next
 			If num>=numspritelib Then Exit
 		Next
+	
 	End Method
+	
 
 	Method updatespritelib()
 		For Local y:Int=0 Until spriteheight
