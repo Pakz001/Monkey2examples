@@ -184,7 +184,7 @@ Class spriteeditor
 		middlebary = canvasheight+32
 		middlebarwidth = 640
 		middlebarheight = 32
-		middlebarcolor = Color.Puce
+		middlebarcolor = Color.LightGrey
 		nummiddlebaricons = 4
 		middlebarim = New Image[nummiddlebaricons]
 		middlebarcan = New Canvas[nummiddlebaricons]
@@ -216,7 +216,7 @@ Class spriteeditor
 		spriteliby = canvasheight+32+32
 		spritelibwidth = 640
 		spritelibheight = 128
-		numspritelib = 80
+		numspritelib = 80*4
 		spritelibselected = 0
 		spritelibscale = 4
 		spritelibim = New Image[numspritelib]
@@ -767,13 +767,14 @@ Class spriteeditor
 		canvas.Color = Color.Black
 		canvas.DrawRect(spritelibx,spriteliby,spritelibwidth,spritelibheight)
 		canvas.Color = Color.White
-		Local num:Int=0
+		Local num:Int=(middlebarcurrentid*80)
 		For Local y:Int=spriteliby Until spriteliby+spritelibheight Step spriteheight*spritelibscale
 		For Local x:Int=spritelibx Until spritelibx+spritelibwidth Step spritewidth*spritelibscale
 			Local pointx:Int=x
 			Local pointy:Int=y
 
 			If num = spritelibselected
+				
 				canvas.Color = Color.White
 				canvas.DrawRect(pointx,pointy,spritewidth*spritelibscale,spriteheight*spritelibscale)
 				canvas.Scissor = New Recti(pointx+2,pointy+2,pointx+spritewidth*spritelibscale-3,pointy+spriteheight*spritelibscale-3)
@@ -1239,6 +1240,7 @@ Class spriteeditor
 			toolview(canvas)
 		Elseif topbarcurrentid = topbarmapeditid
 			bottombarview(canvas)
+			middlebarview(canvas)
 			topbarview(canvas)
 			tilemapview(canvas)
 			spritelibview(canvas)
