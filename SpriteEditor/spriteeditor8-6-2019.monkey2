@@ -134,7 +134,7 @@ Class spriteeditor
 	Field middlebar1id:Int=1
 	Field middlebar2id:Int=2
 	Field middlebar3id:Int=3
-	Field middlebarnumicons:Int=4
+	Field nummiddlebaricons:Int=4
 	Field middlebarcurrentid:Int=0
 	'
 	' Bottom Bar
@@ -185,10 +185,10 @@ Class spriteeditor
 		middlebarwidth = 640
 		middlebarheight = 32
 		middlebarcolor = Color.Puce
-		middlebarnumicons = 4
-		middlebarim = New Image[middlebarnumicons]
-		middlebarcan = New Canvas[middlebarnumicons]
-		For Local i:Int=0 Until middlebarnumicons
+		nummiddlebaricons = 4
+		middlebarim = New Image[nummiddlebaricons]
+		middlebarcan = New Canvas[nummiddlebaricons]
+		For Local i:Int=0 Until nummiddlebaricons
 			middlebarim[i] = New Image(32,32)
 			middlebarcan[i] = New Canvas(middlebarim[i])
 		Next
@@ -1137,6 +1137,28 @@ Class spriteeditor
 		canvas.DrawRect(middlebarx,middlebary,middlebarwidth,middlebarheight)
 		canvas.Color = middlebarcolor/2
 		canvas.DrawRect(middlebarx,middlebary+middlebarheight/2,middlebarwidth,middlebarheight/2)
+		' Draw the icons ..
+		Local num:Int=0
+		For Local x:Int=640-128 Until 640 Step 32
+			If num>=nummiddlebaricons Then Continue
+			Local pointx:Int=x+middlebarx
+			Local pointy:Int=middlebary
+			If middlebarcurrentid = num Then
+				canvas.Color=Color.White								
+				Else
+				canvas.Color=Color.DarkGrey						
+			End If
+			canvas.DrawImage(middlebarim[num],pointx,pointy)
+			'
+			' Selection of the sprite editor or the map editor
+			If Mouse.ButtonDown(MouseButton.Left)
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,32,32)
+				middlebarcurrentid = num
+			End If
+			End if			
+			
+			num+=1
+		Next
 		
 	End Method
 
