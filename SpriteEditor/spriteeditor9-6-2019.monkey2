@@ -5,9 +5,7 @@
 
 ' map view. (XXX....)
 ' hand icon for moving (map)
-' grid icon for toggling grid
-' box tool (icons)(filled/outline)
-' circle tool (icons)(filled/outline)
+' circle tool (icons)(filled/outline) <<<<<<<<<<< Update circle needs outline
 ' 16x16 and 32x32 sprite sizes (setup screen on startup)
 ' triangle tool (filled/outline)
 ' poly tool (filled/outlines)
@@ -784,7 +782,6 @@ Class spriteeditor
 		For Local y:Int=0 Until 8
 		For Local x:Int=0 Until 8			
 			Local p:Int=filledcircle[y][x]
-			If p=12 Then p=15
 			toolcan[toolfilledcircleid].Color = c64color[p]
 			toolcan[toolfilledcircleid].DrawRect(x*4,y*4,4,4)
 		Next
@@ -802,8 +799,7 @@ Class spriteeditor
 		New Int[](12,12,12,1,1,12,12,12))
 		For Local y:Int=0 Until 8
 		For Local x:Int=0 Until 8
-			Local p:Int=filledcircle[y][x]
-			If p=12 Then p=15
+			Local p:Int=outlinecircle[y][x]
 			toolcan[tooloutlinecircleid].Color = c64color[p]
 			toolcan[tooloutlinecircleid].DrawRect(x*4,y*4,4,4)
 		Next
@@ -1088,6 +1084,23 @@ End Method
 						Next
 					Elseif toolselected = toolfilledcircleid Or toolselected = tooloutlinecircleid
 						' add circle code here	
+						
+						Local w:Int=Abs(bcselectionstartx-bcselectionendx)+1
+						Local h:Int=Abs(bcselectionstarty-bcselectionendy)+1
+						
+						Local ti:Image = New Image(spritewidth,spriteheight)
+						Local tc:Canvas = New Canvas(ti)
+						tc.Clear(Color.Black)
+						tc.Color = Color.White
+						tc.DrawOval(bcselectionstartx-1,bcselectionstarty-1,w+1,h+1)
+						tc.Flush()
+						For Local y:Int=0 Until spriteheight
+						For Local x:Int=0 Until spritewidth
+							If ti.GetPixel(x,y) <> Color.Black
+								map[x,y] = paletteselected
+							End If
+						Next
+						Next
 					End If
 					'
 					bcselectionendy=0
