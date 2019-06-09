@@ -105,6 +105,8 @@ Class spriteeditor
 	Field selectionbuffer:Int[,] 'our copy paste buffer
 	Field selectionbufferstartx:Int,selectionbufferstarty:Int
 	Field selectionbufferendx:Int,selectionbufferendy:Int
+	Field selectionnegativeswitchx:Bool=False ' switch if negative selection
+	Field selectionnegativeswitchy:Bool=False
 	'
 	' palette	
 	Field c64color:Color[] ' our colors
@@ -926,11 +928,28 @@ End Method
 							selectionactive = True
 							selectionpressed = True
 							selectionstartx = x
-							selectionstarty = y														
+							selectionstarty = y
+							selectionnegativeswitchx = True
+							selectionnegativeswitchy = True
 						End If
 						If selectionactive = True
 							selectionendx = x
-							selectionendy = y							
+							selectionendy = y
+							If selectionendx < selectionstartx Then 
+								selectionendx-=1
+								If selectionnegativeswitchx Then 
+									selectionnegativeswitchx = False
+									selectionstartx+=1
+								End If
+							End If
+							If selectionendy < selectionstarty Then 
+								selectionendy-=1
+								If selectionnegativeswitchy Then 
+									selectionnegativeswitchy = False
+									selectionstarty+=1
+								End If
+							End If
+							
 						End If						
 					End If
 				End If
@@ -940,7 +959,23 @@ End Method
 					If selectionactive = True						
 						'previewselection(canvas,True)
 						selectionactive = False
-						selectionpressed = False						
+						selectionpressed = False	
+
+						' if the end is smaller then then start then switch them
+						If selectionendx<selectionstartx Then 
+							Local a:Int=selectionstartx
+							Local b:Int=selectionendx
+							selectionstartx = b+1 
+							selectionendx = a -1
+						End If
+						If selectionendy<selectionstarty Then
+							Local a:Int=selectionstarty
+							Local b:Int=selectionendy
+							selectionstarty = b +1
+							selectionendy = a -1 
+						End If
+
+						'
 					End If
 				End If
 			End if
