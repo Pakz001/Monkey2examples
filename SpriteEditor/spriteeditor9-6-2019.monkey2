@@ -1087,20 +1087,41 @@ End Method
 						
 						Local w:Int=Abs(bcselectionstartx-bcselectionendx)+1
 						Local h:Int=Abs(bcselectionstarty-bcselectionendy)+1
-						
-						Local ti:Image = New Image(spritewidth,spriteheight)
-						Local tc:Canvas = New Canvas(ti)
-						tc.Clear(Color.Black)
-						tc.Color = Color.White
-						tc.DrawOval(bcselectionstartx-1,bcselectionstarty-1,w+1,h+1)
-						tc.Flush()
-						For Local y:Int=0 Until spriteheight
-						For Local x:Int=0 Until spritewidth
-							If ti.GetPixel(x,y) <> Color.Black
-								map[x,y] = paletteselected
-							End If
-						Next
-						Next
+
+						If toolselected = tooloutlinecircleid						
+							Local ti:Image = New Image(spritewidth,spriteheight)
+							Local tc:Canvas = New Canvas(ti)
+							tc.Clear(Color.Black)
+							tc.Color = Color.White
+							tc.OutlineMode=OutlineMode.Smooth
+							tc.OutlineColor = Color.Green
+							tc.OutlineWidth = 0
+							tc.DrawOval(bcselectionstartx,bcselectionstarty,w-1,h-1)
+							tc.Flush()
+							For Local y:Int=0 Until spriteheight
+							For Local x:Int=0 Until spritewidth
+								If ti.GetPixel(x,y) = Color.Green
+									map[x,y] = paletteselected
+								End If
+							Next
+							Next
+						Else
+							Local ti:Image = New Image(spritewidth,spriteheight)
+							Local tc:Canvas = New Canvas(ti)
+							tc.Clear(Color.Black)
+							tc.Color = Color.White
+							tc.DrawOval(bcselectionstartx-1,bcselectionstarty-1,w+1,h+1)
+							tc.Flush()
+							For Local y:Int=0 Until spriteheight
+							For Local x:Int=0 Until spritewidth
+								If ti.GetPixel(x,y) <> Color.Black
+									map[x,y] = paletteselected
+								End If
+							Next
+							Next
+
+						End If
+					
 					End If
 					'
 					bcselectionendy=0
