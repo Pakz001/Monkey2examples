@@ -107,6 +107,17 @@ Class spriteeditor
 	Field selectionbufferendx:Int,selectionbufferendy:Int
 	Field selectionnegativeswitchx:Bool=False ' switch if negative selection
 	Field selectionnegativeswitchy:Bool=False
+	' filled/outlined rectsangles and circles fields
+	Field bcselectionpressed:Bool=False 
+	Field bcselectionactive:Bool=False
+	Field bcselectionstartx:Int,bcselectionstarty:Int
+	Field bcselectionendx:Int,bcselectionendy:Int
+	Field bcselectionbuffer:Int[,] 'our copy paste buffer
+	Field bcselectionbufferstartx:Int,bcselectionbufferstarty:Int
+	Field bcselectionbufferendx:Int,bcselectionbufferendy:Int
+	Field bcselectionnegativeswitchx:Bool=False ' switch if negative selection
+	Field bcselectionnegativeswitchy:Bool=False
+	
 	'
 	' palette	
 	Field c64color:Color[] ' our colors
@@ -771,8 +782,10 @@ Class spriteeditor
 		New Int[](12,12,1,1,1,1,12,12),
 		New Int[](12,12,12,1,1,12,12,12))
 		For Local y:Int=0 Until 8
-		For Local x:Int=0 Until 8
-			toolcan[toolfilledcircleid].Color = c64color[filledcircle[y][x]]
+		For Local x:Int=0 Until 8			
+			Local p:Int=filledcircle[y][x]
+			If p=12 Then p=15
+			toolcan[toolfilledcircleid].Color = c64color[p]
 			toolcan[toolfilledcircleid].DrawRect(x*4,y*4,4,4)
 		Next
 		Next
@@ -789,7 +802,9 @@ Class spriteeditor
 		New Int[](12,12,12,1,1,12,12,12))
 		For Local y:Int=0 Until 8
 		For Local x:Int=0 Until 8
-			toolcan[tooloutlinecircleid].Color = c64color[outlinecircle[y][x]]
+			Local p:Int=filledcircle[y][x]
+			If p=12 Then p=15
+			toolcan[tooloutlinecircleid].Color = c64color[p]
 			toolcan[tooloutlinecircleid].DrawRect(x*4,y*4,4,4)
 		Next
 		Next
@@ -988,7 +1003,7 @@ End Method
 				selectionendy=0
 			End If
 					
-			
+			'		
 			' Mouse down (MIDDLE) Color Picker
 			If Mouse.ButtonDown(MouseButton.Middle)
 				If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,gridwidth,gridheight)
@@ -1002,6 +1017,87 @@ End Method
 					End If
 				End If
 			End if
+
+		'
+		' Mouse Down(LEFT) Filled rect / outlined rect / filled circle / outlined circle
+		If Mouse.ButtonDown(MouseButton.Left)
+			If rectsoverlap(Mouse.X,Mouse.Y,1,1,pointx,pointy,gridwidth,gridheight)
+				If toolselected = toolfilledrectid Or toolselected = tooloutlinerectid Or toolselected = toolfilledcircleid Or toolselected = tooloutlinecircleid
+					If bcselectionpressed = False And bcselectionactive = False
+						bcselectionactive = True
+						bcselectionpressed = True
+						bcselectionstartx = x
+						bcselectionstarty = y
+						bcselectionnegativeswitchx = True
+						bcselectionnegativeswitchy = True
+					End If
+					If bcselectionactive = True
+						bcselectionendx = x
+						bcselectionendy = y
+						If bcselectionendx < bcselectionstartx Then 
+							bcselectionendx-=1
+							If bcselectionnegativeswitchx Then 
+								bcselectionnegativeswitchx = False
+								bcselectionstartx+=1
+							End If
+						End If
+						If bcselectionendy < bcselectionstarty Then 
+							bcselectionendy-=1
+							If bcselectionnegativeswitchy Then 
+								bcselectionnegativeswitchy = False
+								bcselectionstarty+=1
+							End If
+						End If
+						
+					End If						
+				End If
+			End If
+		End If
+		If Mouse.ButtonDown(MouseButton.Left) = False
+			If toolselected = toolfilledrectid Or toolselected = tooloutlinerectid Or toolselected = toolfilledcircleid Or toolselected = tooloutlinecircleid
+				If bcselectionactive = True						
+					'previewselection(canvas,True)
+					bcselectionactive = False
+					bcselectionpressed = False	
+
+					' if the end is smaller then then start then switch them
+					If bcselectionendx<bcselectionstartx Then 
+						Local a:Int=bcselectionstartx
+						Local b:Int=bcselectionendx
+						bcselectionstartx = b+1 
+						bcselectionendx = a -1
+					End If
+					If bcselectionendy<bcselectionstarty Then
+						Local a:Int=bcselectionstarty
+						Local b:Int=bcselectionendy
+						bcselectionstarty = b +1
+						bcselectionendy = a -1 
+					End If
+					'
+					' Do the filling
+					If toolselected = toolfilledrectid Or toolselected = tooloutlinerectid
+						For Local y:Int=bcselectionstarty To bcselectionendy
+						For Local x:Int=bcselectionstartx To bcselectionendx
+							If toolselected = toolfilledrectid Then map[x,y] = paletteselected
+							If toolselected = tooloutlinerectid
+								If x = bcselectionstartx Or x = bcselectionendx Or y = bcselectionendy Or y=bcselectionstarty
+									map[x,y] = paletteselected
+								End If
+							End If
+						Next
+						Next
+					Elseif toolselected = toolfilledcircleid Or toolselected = tooloutlinecircleid
+						' add circle code here	
+					End If
+					'
+					bcselectionendy=0
+					bcselectionendx=0
+					bcselectionstarty=0
+					bcselectionstartx=0
+				End If
+			End If
+		End if
+			
 			
 			' Copy to clipboard
 			If Keyboard.KeyReleased(Key.C)
@@ -1014,30 +1110,60 @@ End Method
 		updatespritelib()
 	End Method
 	
+	' Selection for the selection tool or the filled outlined tools
+	'
 	Method previewselection(canvas:Canvas,drawit:Bool=False)
-		If selectionstartx = selectionendx And selectionstarty = selectionendy Then Return
-		Local x1:Int=canvasx+(selectionstartx*gridwidth)
-		Local y1:Int=canvasy+(selectionstarty*gridheight)
-		Local x2:Int=canvasx+((selectionendx+1)*gridwidth)
-		Local y2:Int=canvasy+((selectionendy+1)*gridheight)		
-		
-		canvas.Color = Color.White
-		canvas.DrawLine(x1,y1,x2,y1)
-		canvas.DrawLine(x1,y1,x1,y2)
-		canvas.DrawLine(x1,y2,x2,y2)
-		canvas.DrawLine(x2,y1,x2,y2)
-		canvas.Color = Color.Black
-		x1+=1;y1+=1;x2-=1;y2-=1
-		canvas.DrawLine(x1,y1,x2,y1)
-		canvas.DrawLine(x1,y1,x1,y2)
-		canvas.DrawLine(x1,y2,x2,y2)
-		canvas.DrawLine(x2,y1,x2,y2)
-		x1+=2;y1+=2;x2-=2;y2-=2
-		canvas.DrawLine(x1,y1,x2,y1)
-		canvas.DrawLine(x1,y1,x1,y2)
-		canvas.DrawLine(x1,y2,x2,y2)
-		canvas.DrawLine(x2,y1,x2,y2)
-		
+		' the selection rectangle
+		If selectionstartx = selectionendx And selectionstarty = selectionendy Then
+		Else
+			Local x1:Int=canvasx+(selectionstartx*gridwidth)
+			Local y1:Int=canvasy+(selectionstarty*gridheight)
+			Local x2:Int=canvasx+((selectionendx+1)*gridwidth)
+			Local y2:Int=canvasy+((selectionendy+1)*gridheight)		
+					
+			
+			canvas.Color = Color.White
+			canvas.DrawLine(x1,y1,x2,y1)
+			canvas.DrawLine(x1,y1,x1,y2)
+			canvas.DrawLine(x1,y2,x2,y2)
+			canvas.DrawLine(x2,y1,x2,y2)
+			canvas.Color = Color.Black
+			x1+=1;y1+=1;x2-=1;y2-=1
+			canvas.DrawLine(x1,y1,x2,y1)
+			canvas.DrawLine(x1,y1,x1,y2)
+			canvas.DrawLine(x1,y2,x2,y2)
+			canvas.DrawLine(x2,y1,x2,y2)
+			x1+=2;y1+=2;x2-=2;y2-=2
+			canvas.DrawLine(x1,y1,x2,y1)
+			canvas.DrawLine(x1,y1,x1,y2)
+			canvas.DrawLine(x1,y2,x2,y2)
+			canvas.DrawLine(x2,y1,x2,y2)
+		End If
+		' the filled outlined tool
+		If bcselectionstartx = bcselectionendx And bcselectionstarty = bcselectionendy Then 
+		Else
+			Local x1:Int=canvasx+(bcselectionstartx*gridwidth)
+			Local y1:Int=canvasy+(bcselectionstarty*gridheight)
+			Local x2:Int=canvasx+((bcselectionendx+1)*gridwidth)
+			Local y2:Int=canvasy+((bcselectionendy+1)*gridheight)		
+			
+			canvas.Color = Color.White
+			canvas.DrawLine(x1,y1,x2,y1)
+			canvas.DrawLine(x1,y1,x1,y2)
+			canvas.DrawLine(x1,y2,x2,y2)
+			canvas.DrawLine(x2,y1,x2,y2)
+			canvas.Color = Color.Black
+			x1+=1;y1+=1;x2-=1;y2-=1
+			canvas.DrawLine(x1,y1,x2,y1)
+			canvas.DrawLine(x1,y1,x1,y2)
+			canvas.DrawLine(x1,y2,x2,y2)
+			canvas.DrawLine(x2,y1,x2,y2)
+			x1+=2;y1+=2;x2-=2;y2-=2
+			canvas.DrawLine(x1,y1,x2,y1)
+			canvas.DrawLine(x1,y1,x1,y2)
+			canvas.DrawLine(x1,y2,x2,y2)
+			canvas.DrawLine(x2,y1,x2,y2)
+		End If
 	End Method
 	
 	Method previewline(canvas:Canvas,drawit:Bool=False)
@@ -1392,3 +1518,12 @@ Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:In
     If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
     Return True
 End
+Function circlerectcollide:Bool(cx:Int,cy:Int,cr:Int, rx:Int,ry:Int,rw:Int,rh:Int)
+    Local closestx:Float = Clamp(cx, rx, rx+rw)
+    Local closesty:Float = Clamp(cy, ry, ry+rh)
+    Local distancex :Float = cx - closestx
+    Local distancey:Float = cy - closesty
+    Local distancesquared:Float = (distancex * distancex) + (distancey * distancey)
+    Return distancesquared < (cr * cr)
+End Function
+
