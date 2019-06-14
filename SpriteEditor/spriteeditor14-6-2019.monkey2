@@ -4,9 +4,8 @@
 '
 
 ' map view. (XXX....)
-' hand icon for moving (map)
-' circle tool (icons)(filled/outline) <<<<<<<<<<< Update circle needs outline
-' 16x16 and 32x32 sprite sizes (setup screen on startup)
+' zoom in/out
+' hand icon for moving (map/sprite)
 ' triangle tool (filled/outline)
 ' poly tool (filled/outlines)
 ' mirror/flip tool check if selection is active and flip/mirror in that
