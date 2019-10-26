@@ -31,12 +31,38 @@ Global missilecan:Canvas
 Class missiles
 	Field x:Float,y:Float,angle:Float,incx:Float,incy:Float	
 	Field deleteme:Bool=False
+	Field home:Bool
+	'Field currentangle:float
 	Method New(x:Int,y:Int,angle:Float)
 		Self.x = x
 		Self.y = y
 		Self.angle = angle		
 	End Method
 	Method update()
+		
+		If edistance(x,y,320,240)<200
+			home=True
+		End If
+		If edistance(x,y,320,240)<32
+			home=False
+			deleteme = True
+		End If
+		If home=False Then Return
+		'Home the missile
+        Local targetx:Double = 320 - x
+        Local targety:Double = 240 - y
+        angle = ATan2(targety, targetx) * 180 / Pi
+        '2 here below is the movement speed
+        Local vx:Double = 2 * (90 - Abs(angle)) / 90
+	    local vy:Double
+	    if (angle < 0)
+	        vy = -2 + Abs(vx)
+	    Else
+	        vy = 2 - Abs(vx)
+		End if		     
+	    x += vx
+	    y += vy		
+	    angle = -getangle(320,240,x,y)+Pi
 	End Method
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.White
