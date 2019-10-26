@@ -24,6 +24,70 @@ Global rockbackcan:Canvas
 Global rockore1im:Image
 Global rockore1can:Canvas
 
+
+Class laser
+	Field x:Float,y:Float,s:Float=3
+	Field incx:Float,incy:Float
+	Field time:Int,timeout:Int=320
+	Field deleteme:Bool=False
+	Method New(x:Float,y:Float,incx:Float,incy:Float)
+		Self.x = x
+		Self.y = y
+		Self.incx = incx
+		Self.incy = incy
+	End Method
+	Method update()
+		' increase life
+		time+=1
+		' if to old then mark for delete
+		If time>timeout Then deleteme=True
+		x += incx
+		y += incy
+		'
+		' get map position
+		Local rx:Int=x+myship.x
+		Local ry:Int=y+myship.y
+		Local tx:Int=rx/myship.tilew
+		Local ty:Int=ry/myship.tileh
+		For Local y2:Int=-1 To 1
+		For Local x2:Int=-1 To 1
+			Local ax:Int=tx+x2*myship.tilew
+			Local ay:Int=ty+y2*myship.tileh
+			
+		If myship.map[ax,ay] = 7 Or myship.map[ax,ay] = 1
+			If rectsoverlap(ax*myship.tilew,ay*myship.tileh,myship.tilew,myship.tileh,rx,ry,3,3)
+				myship.map[ax,ay] = 6
+				deleteme = True
+				' remove any edges
+				For Local bx:Int=-1 To 1
+				For Local by:Int=-1 To 1
+					If myship.map[ax+bx,ay+by] >1 And myship.map[ax+bx,ay+by]<6 Then myship.map[ax+bx,ay+by] = 6
+				Next
+				Next
+				'recreate any edges
+				For Local by:Int=ay-2 Until ay+2
+				For Local bx:Int=ax-2 Until ax+2
+					If myship.map[bx,by] = 1 And myship.map[bx-1,by+1] = 1 And myship.map[bx-1,by]=6 Then myship.map[bx-1,by] = 2 'left top rock
+					If myship.map[bx,by] = 1 And myship.map[bx+1,by+1] = 1 And myship.map[bx+1,by]=6 Then myship.map[bx+1,by] = 3 'right top rock
+					If myship.map[bx,by] = 1 And myship.map[bx-1,by-1] = 1 And myship.map[bx-1,by]=6 Then myship.map[bx-1,by] = 4 'left bottom rock
+					If myship.map[bx,by] = 1 And myship.map[bx+1,by-1] = 1 And myship.map[bx+1,by]=6 Then myship.map[bx+1,by] = 5 'right bottom rock
+				Next
+				Next
+
+
+				Exit
+			End If
+		End If
+		Next
+		Next
+		'
+	End Method
+	Method draw(canvas:Canvas)
+		canvas.Color = Color.Red
+		canvas.DrawCircle(x,y,s)
+	End Method
+End Class
+
 Class ship
 	' tilemap
 	Field map:Int[,]
@@ -49,6 +113,11 @@ Class ship
 
 	End Method
 	Method controls()
+		'mine
+		If Keyboard.KeyReleased(Key.Space) Then
+			mylaser.Add(New laser(320+24-16,200+24+16,Cos(angle)*4,-Sin(angle)*4))
+		End If
+
 		' turn
 		If Keyboard.KeyDown(Key.Right) Then angle-=.1
 		If Keyboard.KeyDown(Key.Left) Then angle+=.1
@@ -199,11 +268,13 @@ Class ship
 	End Method
 End Class
 
+Global mylaser:List<laser> = New List<laser>
+	' Our classes
+Global myship:ship
+
 Class MyWindow Extends Window
 	' The c64 palette (16 colors)
 	Field c64color:Color[]
-	' Our classes
-	Field myship:ship
 	Method New()
 		'Setup our images so they can be drawn
 		setupim()
@@ -215,10 +286,28 @@ Class MyWindow Extends Window
 		'
 		myship.update()
 		myship.controls()
+		' update the lasers
+		For Local i:=Eachin mylaser
+			i.update()
+		Next
+		' remove any dead ones
+		For Local i:=Eachin mylaser
+			If i.deleteme Then mylaser.Remove(i)
+		Next
+		
+		
 		'
 		myship.drawmap(canvas)
 		canvas.Color = Color.White
 		canvas.DrawImage(shipim,320,240,myship.angle)
+
+		' draw the lasers
+		For Local i:=Eachin mylaser
+			i.draw(canvas)
+		Next
+
+
+
 		canvas.DrawText("angle : "+myship.angle,0,0)
 		canvas.DrawText("thrust : "+myship.thrust,0,15)
 		canvas.DrawText("incx and incy : "+myship.incx+","+myship.incy,0,25)
@@ -498,3 +587,8 @@ End Function
 Function edistance:Float(x1:Float,y1:Float,x2:Float,y2:Float) 
 	Return Sqrt( (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2) )
 End Function
+Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:Int, h2:Int)
+    If x1 >= (x2 + w2) Or (x1 + w1) <= x2 Then Return False
+    If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
+    Return True
+End
