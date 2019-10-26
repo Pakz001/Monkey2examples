@@ -25,6 +25,25 @@ Global rockore1im:Image
 Global rockore1can:Canvas
 
 
+Class pickups
+	Field deleteme:Bool=False
+	Field x:Float,y:Float
+	Field angle:Float,incx:Float,incy:Float
+	Field s:Int=8
+	Method New(x:Int,y:Int)
+		Self.x = x
+		Self.y = y
+	End Method
+	Method draw(canvas:Canvas)
+		canvas.Color = Color.Yellow
+		canvas.DrawCircle(x,y,s)
+		canvas.Color = Color.Black
+		canvas.DrawText("O",x,y)
+		canvas.Color = Color.White
+		canvas.DrawText("O",x-1,y-1)		
+	End Method
+End Class
+
 Class laser
 	Field x:Float,y:Float,s:Float=3
 	Field incx:Float,incy:Float
@@ -59,6 +78,11 @@ Class laser
 				deleteme = True
 				myship.mapdamage[ax,ay]+=1
 				If myship.mapdamage[ax,ay] < 4 Then Exit
+			
+				If myship.map[ax,ay] = 7 Then 'drop pickup
+					mypickups.Add(New pickups(x,y))
+				End if
+			
 				myship.map[ax,ay] = 6
 				
 				
@@ -151,6 +175,10 @@ Class ship
 		End If
         x+=incx
         y-=incy
+        For Local i:=Eachin mypickups
+	        i.x -=incx
+	        i.y +=incy
+	    Next
 	End Method
 	Method generatemap()	
 		' center of map set to 256,256
@@ -275,6 +303,8 @@ End Class
 Global mylaser:List<laser> = New List<laser>
 	' Our classes
 Global myship:ship
+Global mypickups:List<pickups> = New List<pickups>
+
 
 Class MyWindow Extends Window
 	' The c64 palette (16 colors)
@@ -307,6 +337,10 @@ Class MyWindow Extends Window
 
 		' draw the lasers
 		For Local i:=Eachin mylaser
+			i.draw(canvas)
+		Next
+		' draw the pickups
+		For Local i:=Eachin mypickups
 			i.draw(canvas)
 		Next
 
