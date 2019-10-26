@@ -6,11 +6,17 @@ Using std..
 Using mojo..
 
 
+' Our gfx
+Global shipim:Image
+Global shipcan:Canvas
+Global rockim:Image
+Global rockcan:Canvas
+
 Class ship
 	' tilemap
 	Field map:Int[,]
-	Field tilew:Int=16
-	Field tileh:Int=16
+	Field tilew:Int=48
+	Field tileh:Int=48
 	'ship
     Field x:Float,y:Float
 	Field incx:Float,incy:Float
@@ -59,23 +65,62 @@ Class ship
         x+=incx
         y-=incy
 	End Method
-	Method generatemap()
-		For Local i:Int=0 Until 500
-			Local nx:Int=Rnd(-100,100)
-			Local ny:Int=Rnd(-100,100)
-			map[256+nx,256+ny] = 1
+	Method generatemap()	
+		' center of map set to 256,256
+		
+		'create asteroid by growing pixels
+		map[256,256] = 1
+		For Local i:Int=0 Until 1000*1000
+			Local x:Int=256+Rnd(-100,100)
+			Local y:Int=256+Rnd(-100,100)
+			If map[x,y] = 1 Then 
+				For Local y2:Int=-1 To 1
+				For Local x2:Int=-1 To 1
+					map[x+x2,y+y2] = 1
+				Next
+				Next
+			End If
 		Next
+		
+		Local point:Stack<Vec2i> = New Stack<Vec2i>
+		Local numpoints:Int=32
+		For Local i:Int=0 Until numpoints
+			point.Push(New Vec2i(256-Rnd(-100,100),256+Rnd(-100,100)))
+		Next
+		For Local i:Int=1 Until point.Length
+			'carve
+			Local x1:Int=point.Get(i-1).x
+			Local y1:Int=point.Get(i-1).y
+			Local x2:Int=point.Get(i).x
+			Local y2:Int=point.Get(i).y
+			While x1<>x2 And y1<>y2
+				If x1<x2 Then x1+=1
+				If x1>x2 Then x1-=1
+				If y1<y2 Then y1+=1
+				If y1>y2 Then y1-=1
+				Local s:Int=1
+				If Rnd()<.1 Then s=Rnd(2,3)
+				For Local y:Int=-s To s
+				For Local x:Int=-s To s
+				map[x1+x,y1+y] = 0
+				Next
+				Next
+			Wend
+			
+		Next
+		
 	End Method
 	Method drawmap(canvas:Canvas)
 		Local offx:Int=x/tilew
 		Local offy:Int=y/tileh
 		Local poffx:Int = (offx*tilew)-x
 		Local poffy:Int = (offy*tileh)-y
-		For Local my:Int=0 Until 32
-		For Local mx:Int=0 Until 48
+		For Local my:Int=0 Until 16
+		For Local mx:Int=0 Until 24
 			If map[offx+mx,offy+my] = 1
-				canvas.Color=Color.Blue
-				canvas.DrawRect(0+mx*tilew+poffx,0+my*tileh+poffy,tilew,tileh)
+				canvas.Color=Color.White
+				'canvas.DrawRect(0+mx*tilew+poffx,0+my*tileh+poffy,tilew,tileh)
+				canvas.DrawImage(rockim,0+mx*tilew+poffx,0+my*tileh+poffy)
 			End If
 		Next
 		Next
@@ -83,9 +128,6 @@ Class ship
 End Class
 
 Class MyWindow Extends Window
-	' Our gfx
-	Field shipim:Image
-	Field shipcan:Canvas
 	' The c64 palette (16 colors)
 	Field c64color:Color[]
 	' Our classes
@@ -93,7 +135,7 @@ Class MyWindow Extends Window
 	Method New()
 		'Setup our images so they can be drawn
 		setupim()
-		myship = New ship(256*16,256*16,0)
+		myship = New ship(256*48,256*48,0)
 	End method
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -121,6 +163,9 @@ Class MyWindow Extends Window
 		shipim = New Image(32,32)
 		shipcan = New Canvas(shipim)
 		shipim.Handle = New Vec2f(0.5,0.5)
+		rockim = New Image(48,48)
+		rockcan = New Canvas(rockim)
+
 Local map := New Int[][] (
 New Int[](1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
 New Int[](0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0),
@@ -145,7 +190,33 @@ New Int[](1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0))
 		Next
 		Next
 		shipcan.Flush()
-	End Method
+
+map = New Int[][] (
+New Int[](12,11,12,12,15,15,15,15,15,15,15,15,15,15,15,15),
+New Int[](15,15,15,15,15,15,15,15,15,15,15,15,15,1,12,15),
+New Int[](15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15),
+New Int[](15,15,15,15,15,15,15,15,15,15,15,12,12,15,15,15),
+New Int[](15,15,15,12,1,15,15,15,15,1,12,11,15,15,15,15),
+New Int[](15,15,15,15,12,1,15,15,15,15,12,15,15,15,15,15),
+New Int[](15,15,15,15,15,12,15,15,15,15,15,15,15,15,15,15),
+New Int[](15,15,15,15,15,11,12,15,15,15,15,15,15,15,15,12),
+New Int[](12,15,15,15,15,15,15,12,15,15,15,15,15,12,15,15),
+New Int[](15,15,15,15,15,15,15,11,12,15,15,15,15,15,15,15),
+New Int[](15,15,15,15,15,1,15,15,15,15,15,15,15,1,15,15),
+New Int[](15,15,15,11,12,12,15,15,15,15,15,15,12,12,1,15),
+New Int[](15,15,15,12,15,15,15,15,15,15,15,15,15,12,12,15),
+New Int[](15,15,11,12,1,15,15,15,15,15,15,15,12,11,12,15),
+New Int[](12,11,15,15,1,15,15,15,15,15,15,15,12,11,12,15),
+New Int[](12,15,15,12,15,15,15,15,15,15,15,15,15,15,12,12))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			rockcan.Color = c64color[map[y][x]]
+			rockcan.DrawRect(x*3,y*3,3,3)
+		Next
+		Next
+		rockcan.Flush()
+
+End Method
 	'
 	' This is the palette used for the graphics... 
 	Method inic64colors()
