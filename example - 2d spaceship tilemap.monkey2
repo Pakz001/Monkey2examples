@@ -11,6 +11,16 @@ Global shipim:Image
 Global shipcan:Canvas
 Global rockim:Image
 Global rockcan:Canvas
+Global rockltim:Image
+Global rockltcan:Canvas
+Global rockrtim:Image
+Global rockrtcan:Canvas
+Global rocklbim:Image
+Global rocklbcan:Canvas
+Global rockrbim:Image
+Global rockrbcan:Canvas
+Global rockbackim:Image
+Global rockbackcan:Canvas
 
 Class ship
 	' tilemap
@@ -102,11 +112,21 @@ Class ship
 				If Rnd()<.1 Then s=Rnd(2,3)
 				For Local y:Int=-s To s
 				For Local x:Int=-s To s
-				map[x1+x,y1+y] = 0
+				map[x1+x,y1+y] = 6
 				Next
 				Next
 			Wend
 			
+		Next
+
+		'find edges and create those tile values
+		For Local y:Int=1 Until 511
+		For Local x:Int=1 Until 511
+			If map[x,y] = 1 And map[x-1,y+1] = 1 And map[x-1,y]=6 Then map[x-1,y] = 2 'left top rock
+			If map[x,y] = 1 And map[x+1,y+1] = 1 And map[x+1,y]=6 Then map[x+1,y] = 3 'right top rock
+			If map[x,y] = 1 And map[x-1,y-1] = 1 And map[x-1,y]=6 Then map[x-1,y] = 4 'left bottom rock
+			If map[x,y] = 1 And map[x+1,y-1] = 1 And map[x+1,y]=6 Then map[x+1,y] = 5 'right bottom rock
+		Next
 		Next
 		
 	End Method
@@ -122,6 +142,27 @@ Class ship
 				'canvas.DrawRect(0+mx*tilew+poffx,0+my*tileh+poffy,tilew,tileh)
 				canvas.DrawImage(rockim,0+mx*tilew+poffx,0+my*tileh+poffy)
 			End If
+			If map[offx+mx,offy+my] = 2 'left top rock
+				canvas.Color=Color.White
+				canvas.DrawImage(rockltim,0+mx*tilew+poffx,0+my*tileh+poffy)
+			End if
+			If map[offx+mx,offy+my] = 3 'right top rock
+				canvas.Color=Color.White
+				canvas.DrawImage(rockrtim,0+mx*tilew+poffx,0+my*tileh+poffy)
+			End if
+			If map[offx+mx,offy+my] = 4 'left bottom rock
+				canvas.Color=Color.White
+				canvas.DrawImage(rocklbim,0+mx*tilew+poffx,0+my*tileh+poffy)
+			End if
+			If map[offx+mx,offy+my] = 5 'right bottom rock
+				canvas.Color=Color.White
+				canvas.DrawImage(rockrbim,0+mx*tilew+poffx,0+my*tileh+poffy)
+			End if
+			If map[offx+mx,offy+my] = 6 'background rock
+				canvas.Color=Color.White '.Blend(Color.Black,.8)
+				canvas.DrawImage(rockbackim,0+mx*tilew+poffx,0+my*tileh+poffy)
+			End if
+
 		Next
 		Next
 	End Method
@@ -165,6 +206,16 @@ Class MyWindow Extends Window
 		shipim.Handle = New Vec2f(0.5,0.5)
 		rockim = New Image(48,48)
 		rockcan = New Canvas(rockim)
+		rockltim = New Image(48,48)
+		rockltcan = New Canvas(rockltim)
+		rockrtim = New Image(48,48)
+		rockrtcan = New Canvas(rockrtim)
+		rocklbim = New Image(48,48)
+		rocklbcan = New Canvas(rocklbim)
+		rockrbim = New Image(48,48)
+		rockrbcan = New Canvas(rockrbim)
+		rockbackim = New Image(48,48)
+		rockbackcan = New Canvas(rockbackim)
 
 Local map := New Int[][] (
 New Int[](1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
@@ -215,6 +266,140 @@ New Int[](12,15,15,12,15,15,15,15,15,15,15,15,15,15,12,12))
 		Next
 		Next
 		rockcan.Flush()
+
+'lefttop rock
+map = New Int[][] (
+New Int[](11,12,15,0,0,0,0,0,0,0,0,0,11,11,0,15),
+New Int[](0,11,15,0,0,11,11,0,11,0,0,0,0,0,11,15),
+New Int[](11,0,0,0,11,0,0,0,0,11,0,11,0,15,11,15),
+New Int[](0,0,0,0,11,12,15,12,11,0,11,0,15,15,15,15),
+New Int[](0,11,11,0,11,11,11,0,0,0,0,11,15,15,15,15),
+New Int[](0,11,12,11,0,11,0,0,0,11,11,11,15,11,12,15),
+New Int[](11,0,12,0,0,11,0,11,0,15,11,11,15,11,12,15),
+New Int[](0,12,15,11,0,0,11,0,0,15,15,15,15,12,1,15),
+New Int[](11,11,11,0,0,11,11,15,15,1,15,15,15,12,12,1),
+New Int[](11,0,0,11,0,11,15,15,15,15,12,12,15,15,15,15),
+New Int[](11,0,11,0,0,15,15,15,15,15,12,15,15,15,15,15),
+New Int[](12,15,0,0,15,11,15,15,15,15,15,15,15,15,15,15),
+New Int[](11,0,11,0,0,0,15,15,15,15,15,15,15,15,15,15),
+New Int[](0,11,15,11,15,15,15,12,11,15,15,15,15,15,15,15),
+New Int[](11,15,1,15,15,15,12,1,15,15,15,15,1,15,15,15),
+New Int[](15,15,12,15,15,11,15,15,15,15,15,15,12,12,11,15))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			rockltcan.Color = c64color[map[y][x]]
+			rockltcan.DrawRect(x*3,y*3,3,3)
+		Next
+		Next
+		rockltcan.Flush()
+
+'right top rock
+map = New Int[][] (
+New Int[](15,11,0,11,0,0,0,12,11,0,0,0,11,0,0,0),
+New Int[](15,15,11,0,0,11,15,11,11,11,0,0,11,0,0,11),
+New Int[](15,15,11,11,11,0,0,11,0,0,0,0,11,0,0,12),
+New Int[](11,15,11,15,0,0,0,11,0,0,0,11,0,11,15,12),
+New Int[](15,15,11,15,15,11,0,0,0,0,0,0,11,11,12,11),
+New Int[](15,15,15,15,15,15,11,11,0,11,11,11,0,11,0,11),
+New Int[](15,15,1,12,12,15,15,11,11,11,12,11,0,0,11,0),
+New Int[](15,15,15,12,11,15,0,11,0,12,12,15,11,0,0,0),
+New Int[](15,15,12,15,15,15,0,0,11,11,11,15,11,0,11,0),
+New Int[](15,15,15,15,15,15,15,15,15,15,11,0,0,0,0,12),
+New Int[](15,15,15,15,15,15,15,12,12,15,15,11,0,11,15,12),
+New Int[](15,15,15,15,15,15,1,1,11,15,15,15,0,0,0,11),
+New Int[](15,15,15,15,15,12,12,12,15,11,15,15,15,11,0,0),
+New Int[](15,12,1,15,15,12,15,15,15,15,15,11,11,0,11,0),
+New Int[](15,11,12,12,15,15,15,15,12,12,1,15,11,11,15,11),
+New Int[](15,15,15,15,15,15,15,15,11,12,15,15,15,15,15,15))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			rockrtcan.Color = c64color[map[y][x]]
+			rockrtcan.DrawRect(x*3,y*3,3,3)
+		Next
+		Next
+		rockrtcan.Flush()
+
+
+'left bottom rock
+map = New Int[][] (
+New Int[](15,15,15,15,15,15,1,15,12,11,15,15,15,15,15,15),
+New Int[](11,15,15,12,12,12,12,15,15,15,15,15,15,15,15,15),
+New Int[](11,11,15,15,15,15,12,11,15,15,15,15,12,1,12,15),
+New Int[](0,0,11,15,11,11,15,15,15,15,15,15,15,15,11,15),
+New Int[](11,0,11,0,0,11,15,15,15,15,15,15,15,15,15,15),
+New Int[](12,12,0,11,0,11,15,15,15,12,1,15,15,12,15,15),
+New Int[](11,0,15,11,0,0,15,15,11,12,12,15,15,15,15,15),
+New Int[](0,11,11,0,11,0,0,15,15,11,12,15,15,15,15,15),
+New Int[](0,0,0,11,0,12,0,0,15,12,15,15,15,12,1,15),
+New Int[](0,0,0,0,15,12,11,11,11,15,15,15,15,12,12,15),
+New Int[](0,0,0,0,11,11,0,0,11,11,11,11,15,15,12,15),
+New Int[](11,11,11,0,0,11,11,0,0,0,11,0,11,15,12,11),
+New Int[](15,12,11,0,11,0,11,0,0,0,0,11,15,15,15,11),
+New Int[](11,0,0,0,0,11,0,0,11,11,0,11,0,11,15,15),
+New Int[](0,0,0,0,0,0,0,15,12,11,0,0,11,0,15,15),
+New Int[](11,0,0,11,11,0,0,11,12,0,0,0,0,11,11,15))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			rocklbcan.Color = c64color[map[y][x]]
+			rocklbcan.DrawRect(x*3,y*3,3,3)
+		Next
+		Next
+		rocklbcan.Flush()
+
+
+'right bottom rock
+map = New Int[][] (
+New Int[](1,12,12,15,15,15,15,12,1,11,12,15,15,15,15,15),
+New Int[](15,12,11,15,15,15,15,15,1,15,15,15,15,11,15,11),
+New Int[](15,12,15,15,15,15,15,15,12,15,15,11,0,15,11,11),
+New Int[](15,15,15,15,15,15,1,12,11,15,15,15,0,11,0,0),
+New Int[](15,15,15,15,12,12,12,11,15,15,15,0,11,11,0,11),
+New Int[](15,15,15,15,15,15,15,15,15,15,15,0,0,11,15,0),
+New Int[](15,15,15,15,15,1,12,15,11,15,11,11,11,12,12,0),
+New Int[](15,15,15,15,15,12,15,15,11,11,0,0,11,11,0,11),
+New Int[](15,15,15,15,12,15,15,15,11,0,0,11,0,0,11,0),
+New Int[](15,1,15,15,15,11,15,0,11,11,12,11,0,0,0,0),
+New Int[](15,1,12,15,11,15,11,11,0,11,11,11,0,0,0,11),
+New Int[](15,12,11,11,11,11,11,0,0,11,0,0,0,0,0,0),
+New Int[](15,15,15,15,11,11,0,11,11,0,0,0,0,0,0,0),
+New Int[](15,15,15,12,12,15,11,0,0,0,0,0,0,11,0,0),
+New Int[](15,15,11,0,11,12,12,12,11,0,11,15,12,11,0,11),
+New Int[](15,11,0,11,0,0,0,0,11,0,0,11,12,11,0,11))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			rockrbcan.Color = c64color[map[y][x]]
+			rockrbcan.DrawRect(x*3,y*3,3,3)
+		Next
+		Next
+		rockrbcan.Flush()
+
+' background dark
+map = New Int[][] (
+
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,11,0,0,0),
+New Int[](0,0,11,0,0,0,0,0,0,0,12,15,0,0,0,0),
+New Int[](11,11,0,0,0,0,0,0,0,11,0,11,0,0,0,0),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,0,0,0,0,0,0,0,0,11,0,0,0,0,0),
+New Int[](0,0,0,0,0,0,0,0,11,12,0,0,0,0,0,0),
+New Int[](0,0,0,0,0,0,0,0,0,11,0,0,0,0,0,0),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](15,12,0,0,0,0,0,0,0,0,0,11,0,0,0,0),
+New Int[](11,0,0,0,0,0,0,0,0,0,11,0,0,0,0,0))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			rockbackcan.Color = c64color[map[y][x]]
+			rockbackcan.DrawRect(x*3,y*3,3,3)
+		Next
+		Next
+		rockbackcan.Flush()
+
 
 End Method
 	'
