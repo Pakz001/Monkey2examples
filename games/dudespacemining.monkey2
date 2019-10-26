@@ -25,6 +25,24 @@ Global rockore1im:Image
 Global rockore1can:Canvas
 Global iconore1im:Image
 Global iconore1can:Canvas
+Global missileim:Image
+Global missilecan:Canvas
+
+Class missiles
+	Field x:Float,y:Float,angle:Float,incx:Float,incy:Float	
+	Field deleteme:Bool=False
+	Method New(x:Int,y:Int,angle:Float)
+		Self.x = x
+		Self.y = y
+		Self.angle = angle		
+	End Method
+	Method update()
+	End Method
+	Method draw(canvas:Canvas)
+		canvas.Color = Color.White
+		canvas.DrawImage(missileim,x,y,angle)
+	End Method
+End Class
 
 Class pickups
 	Field deleteme:Bool=False
@@ -123,7 +141,15 @@ Class laser
 					If myship.map[bx,by] = 1 And myship.map[bx+1,by-1] = 1 And myship.map[bx+1,by]=6 Then myship.map[bx+1,by] = 5 ;myship.mapdamage[bx+1,by]=0'right bottom rock
 				Next
 				Next
-
+				'remove any missiles on the rocks
+				For Local i:=Eachin mymissiles
+					'Print ax*myship.tilew+ ","+ay*myship.tileh
+					'Exit
+					If edistance(ax*myship.tilew-myship.x,ay*myship.tileh-myship.y,i.x,i.y)<76 Then 
+						Print Microsecs()	
+						i.deleteme = True
+					End If
+				Next
 
 				Exit
 			End If
@@ -156,6 +182,10 @@ Class ship
 	   	generatemap()
 		Self.x = x
 		Self.y = y
+		For Local i:=Eachin mymissiles
+			i.x-=x
+			i.y-=y
+		Next
 		Self.angle = angle
 	End Method
 	
@@ -201,6 +231,11 @@ Class ship
 	        i.x -=incx
 	        i.y +=incy
 	    Next
+        For Local i:=Eachin mymissiles
+	        i.x -=incx
+	        i.y +=incy
+	    Next
+
 	End Method
 	Method generatemap()	
 		' center of map set to 256,256
@@ -281,6 +316,19 @@ Class ship
 			End If
 		Next
 		
+		' add some missiles
+		For Local i:Int=0 Until 50000
+			Local nx:Int=Rnd(100,400)
+			Local ny:Int=Rnd(100,400)
+			If map[nx,ny] = 1 And map[nx+1,ny] = 6
+				'Print nx+"."+ny
+				mymissiles.Add(New missiles(((nx+1)*tilew)+32/2,ny*tileh+tileh/2,0))
+			End If
+			If map[nx,ny] = 1 And map[nx-1,ny] = 6
+				'Print nx+"."+ny
+				mymissiles.Add(New missiles(((nx)*tilew)-32/2,ny*tileh+tileh/2,Pi))
+			End If
+		Next
 	End Method
 	Method drawmap(canvas:Canvas)
 		Local offx:Int=x/tilew
@@ -326,7 +374,7 @@ Global mylaser:List<laser> = New List<laser>
 	' Our classes
 Global myship:ship
 Global mypickups:List<pickups> = New List<pickups>
-
+Global mymissiles:List<missiles> = New List<missiles>
 
 Class MyWindow Extends Window
 	' The c64 palette (16 colors)
@@ -358,6 +406,14 @@ Class MyWindow Extends Window
 		For Local i:=Eachin mypickups
 			If i.deleteme Then mypickups.Remove(i)
 		Next
+		' update the missiles		
+		For Local i:=Eachin mymissiles
+			i.update()
+		Next
+		' remove any dead missiles
+		For Local i:=Eachin mymissiles
+			If i.deleteme Then mymissiles.Remove(i)
+		Next
 		
 		
 		'
@@ -371,6 +427,10 @@ Class MyWindow Extends Window
 		Next
 		' draw the pickups
 		For Local i:=Eachin mypickups
+			i.draw(canvas)
+		Next
+		' draw the missiles
+		For Local i:=Eachin mymissiles
 			i.draw(canvas)
 		Next
 
@@ -392,6 +452,9 @@ Class MyWindow Extends Window
 		shipim = New Image(32,32)
 		shipcan = New Canvas(shipim)
 		shipim.Handle = New Vec2f(0.5,0.5)
+		missileim = New Image(32,32)
+		missilecan = New Canvas(missileim)
+		missileim.Handle = New Vec2f(0.5,0.5)		
 		rockim = New Image(48,48)
 		rockcan = New Canvas(rockim)
 		rockltim = New Image(48,48)
@@ -661,6 +724,33 @@ New Int[](15,15,0,0,0,0,0,0,15,0,0,0,15,15,15,15))
 		Next
 		Next
 		iconore1can.Flush()
+
+'missile
+map = New Int[][] (
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](0,4,4,4,4,4,4,4,4,4,0,4,4,4,4,4),
+New Int[](0,0,0,4,4,4,4,4,4,4,0,0,4,4,4,4),
+New Int[](0,11,11,0,0,0,0,0,0,0,0,0,11,11,11,11),
+New Int[](0,12,12,15,15,15,15,15,10,10,15,15,1,1,1,0),
+New Int[](0,0,0,12,12,12,12,12,2,2,12,12,15,7,7,0),
+New Int[](0,11,11,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,0,4,4,4,4,4,4,4,0,0,4,4,4,4),
+New Int[](0,4,4,4,4,4,4,4,4,4,0,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			missilecan.Color = c64color[map[y][x]].Blend(Color.Red,.2)
+			If map[y][x] = 4 Then missilecan.Alpha = 0 Else missilecan.Alpha=1
+			missilecan.DrawRect(x*2,y*2,2,2)
+		Next
+		Next
+		missilecan.Flush()
 
 End Method
 	'
