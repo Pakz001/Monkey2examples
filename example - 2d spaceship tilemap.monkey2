@@ -21,6 +21,8 @@ Global rockrbim:Image
 Global rockrbcan:Canvas
 Global rockbackim:Image
 Global rockbackcan:Canvas
+Global rockore1im:Image
+Global rockore1can:Canvas
 
 Class ship
 	' tilemap
@@ -129,6 +131,31 @@ Class ship
 		Next
 		Next
 		
+		'add ore 1
+		For Local i:Int=0 Until 900
+			Local x:Int=256+Rnd(-100,100)
+			Local y:Int=256+Rnd(-100,100)
+			If map[x,y] = 1 Then map[x,y] = 7
+			'grow
+			If Rnd()<.8
+				Local s:Int=Rnd(2,80)
+				For Local i2:Int=0 Until s
+					Local x2:Int=x+Rnd(-25,25)
+					Local y2:Int=y+Rnd(-25,25)
+					If map[x2,y2] = 7 Then
+						
+						For Local x3:Int=-1 To 1
+						For Local y3:Int=-1 To 1
+							If map[x2+x3,y2+y3] = 1 And Rnd()<.3
+								map[x2+x3,y2+y3] = 7
+							End If 
+						Next
+						Next
+					End if
+				Next
+			End If
+		Next
+		
 	End Method
 	Method drawmap(canvas:Canvas)
 		Local offx:Int=x/tilew
@@ -161,6 +188,10 @@ Class ship
 			If map[offx+mx,offy+my] = 6 'background rock
 				canvas.Color=Color.White '.Blend(Color.Black,.8)
 				canvas.DrawImage(rockbackim,0+mx*tilew+poffx,0+my*tileh+poffy)
+			End if
+			If map[offx+mx,offy+my] = 7 'background rock
+				canvas.Color=Color.White '.Blend(Color.Black,.8)
+				canvas.DrawImage(rockore1im,0+mx*tilew+poffx,0+my*tileh+poffy)
 			End if
 
 		Next
@@ -216,7 +247,8 @@ Class MyWindow Extends Window
 		rockrbcan = New Canvas(rockrbim)
 		rockbackim = New Image(48,48)
 		rockbackcan = New Canvas(rockbackim)
-
+		rockore1im = New Image(48,48)
+		rockore1can = New Canvas(rockore1im)
 Local map := New Int[][] (
 New Int[](1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
 New Int[](0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0),
@@ -399,6 +431,32 @@ New Int[](11,0,0,0,0,0,0,0,0,0,11,0,0,0,0,0))
 		Next
 		Next
 		rockbackcan.Flush()
+
+map = New Int[][] (
+
+New Int[](12,15,12,11,12,15,12,12,15,15,15,15,12,15,15,12),
+New Int[](15,15,15,1,15,15,11,12,11,15,15,15,15,15,15,15),
+New Int[](15,15,15,15,15,12,12,1,14,14,11,15,15,15,15,15),
+New Int[](15,15,15,15,15,11,3,14,6,0,11,15,12,12,15,15),
+New Int[](15,11,15,15,12,11,3,14,0,11,15,15,15,15,15,15),
+New Int[](15,12,1,15,15,15,14,6,11,11,15,15,15,15,15,15),
+New Int[](15,12,15,11,12,12,15,0,15,12,12,15,15,15,15,15),
+New Int[](15,15,12,12,1,3,14,11,15,15,12,15,12,15,15,15),
+New Int[](15,15,12,11,3,14,14,6,11,12,11,11,14,0,15,15),
+New Int[](15,15,15,15,14,14,6,0,12,1,3,14,14,11,15,15),
+New Int[](15,15,15,15,0,0,0,12,11,14,6,14,6,0,15,15),
+New Int[](15,15,15,15,15,11,12,15,11,14,15,0,0,11,15,15),
+New Int[](15,15,15,15,15,15,1,12,15,0,11,11,15,15,15,15),
+New Int[](15,1,15,15,15,15,15,15,15,15,15,15,15,15,15,15),
+New Int[](12,12,15,15,15,15,15,15,15,15,15,15,12,1,15,15),
+New Int[](11,12,15,15,15,15,15,15,15,15,15,15,11,12,12,15))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			rockore1can.Color = c64color[map[y][x]]
+			rockore1can.DrawRect(x*3,y*3,3,3)
+		Next
+		Next
+		rockore1can.Flush()
 
 
 End Method
