@@ -23,36 +23,46 @@ Global rockbackim:Image
 Global rockbackcan:Canvas
 Global rockore1im:Image
 Global rockore1can:Canvas
-
+Global iconore1im:Image
+Global iconore1can:Canvas
 
 Class pickups
 	Field deleteme:Bool=False
 	Field x:Float,y:Float
 	Field angle:Float,incx:Float,incy:Float
 	Field s:Int=8
+	Field rotation:Float=0
 	Method New(x:Int,y:Int)
 		Self.x = x
 		Self.y = y
 	End Method
 	Method update()
+		rotation += .05
+		If rotation>TwoPi Then rotation-=TwoPi
 		x+=incx
 		y+=incy
+		' check distance to ship 
+		' and if close move it quickly to ship position
 		If edistance(x,y,320,240)<50
 			Local a:Float = getangle(x,y,320,240)
 			incx = Cos(a)*10
 			incy = Sin(a)*10			
 		End If
+		' if closer to ship remove (add to inventory!)
 		If edistance(x,y,320,240)<10
 			deleteme = True
 		End If
 	End Method
 	Method draw(canvas:Canvas)
-		canvas.Color = Color.Yellow
-		canvas.DrawCircle(x,y,s)
-		canvas.Color = Color.Black
-		canvas.DrawText("O",x,y)
+'		canvas.Color = Color.Yellow
+'		canvas.DrawCircle(x,y,s)
+'		canvas.Color = Color.Black
+'		canvas.DrawText("O",x,y)
+'		canvas.Color = Color.White
+'		canvas.DrawText("O",x-1,y-1)		
 		canvas.Color = Color.White
-		canvas.DrawText("O",x-1,y-1)		
+		canvas.DrawImage(iconore1im,x,y,rotation)
+
 	End Method
 End Class
 
@@ -92,7 +102,7 @@ Class laser
 				If myship.mapdamage[ax,ay] < 4 Then Exit
 			
 				If myship.map[ax,ay] = 7 Then 'drop pickup
-					mypickups.Add(New pickups(x,y))
+					mypickups.Add(New pickups(ax*myship.tilew-myship.x+myship.tilew/2,ay*myship.tileh-myship.y+myship.tileh/2))
 				End if
 			
 				myship.map[ax,ay] = 6
@@ -396,6 +406,9 @@ Class MyWindow Extends Window
 		rockbackcan = New Canvas(rockbackim)
 		rockore1im = New Image(48,48)
 		rockore1can = New Canvas(rockore1im)
+		iconore1im = New Image(32,32)
+		iconore1can = New Canvas(iconore1im)
+		iconore1im.Handle = New Vec2f(0.5,0.5)
 Local map := New Int[][] (
 New Int[](1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
 New Int[](0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0),
@@ -599,12 +612,37 @@ New Int[](12,12,15,15,15,15,15,15,15,15,15,15,12,1,15,15),
 New Int[](11,12,15,15,15,15,15,15,15,15,15,15,11,12,12,15))
 		For Local y:Int=0 Until 16
 		For Local x:Int=0 Until 16
-			rockore1can.Color = c64color[map[y][x]]
+			rockore1can.Color = c64color[map[y][x]]			
 			rockore1can.DrawRect(x*3,y*3,3,3)
 		Next
 		Next
 		rockore1can.Flush()
 
+map = New Int[][] (
+New Int[](15,15,15,15,0,0,0,0,0,15,15,15,15,15,15,15),
+New Int[](15,15,15,0,14,14,14,14,6,0,15,15,15,15,15,15),
+New Int[](15,15,0,14,3,3,14,6,6,0,0,0,0,15,15,15),
+New Int[](15,15,0,14,1,3,14,6,6,6,6,6,6,0,15,15),
+New Int[](15,15,0,14,1,14,6,6,14,3,3,14,6,6,0,15),
+New Int[](15,15,0,14,1,14,14,6,14,1,14,14,6,0,15,15),
+New Int[](15,15,0,14,3,14,6,6,14,3,14,14,6,0,15,15),
+New Int[](15,15,0,14,3,14,6,6,6,6,14,14,6,0,15,15),
+New Int[](15,15,0,14,3,14,6,6,6,14,14,6,6,0,15,15),
+New Int[](15,0,14,3,14,3,14,6,6,3,14,6,6,0,15,15),
+New Int[](15,0,14,1,14,3,14,6,14,3,14,6,6,0,15,15),
+New Int[](15,0,14,3,14,14,6,6,14,3,14,14,6,0,15,15),
+New Int[](15,0,14,3,14,6,6,6,14,3,14,6,6,0,15,15),
+New Int[](15,0,14,3,6,14,14,6,6,3,6,6,6,0,15,15),
+New Int[](15,0,14,6,6,6,6,6,0,6,6,6,0,15,15,15),
+New Int[](15,15,0,0,0,0,0,0,15,0,0,0,15,15,15,15))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			iconore1can.Color = c64color[map[y][x]]
+			If map[y][x] = 15 Then iconore1can.Alpha = 0 Else iconore1can.Alpha=1
+			iconore1can.DrawRect(x*2,y*2,2,2)
+		Next
+		Next
+		iconore1can.Flush()
 
 End Method
 	'
