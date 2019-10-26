@@ -5,6 +5,7 @@
 Using std..
 Using mojo..
 
+
 Class ship
     Field x:Float,y:Float
 	Field incx:Float,incy:Float
@@ -19,8 +20,7 @@ Class ship
 	Method update()		
 		
 		If thrust>0 Then thrust-=.01
-		'If incx>0 Then incx-=.03
-		'If incy>0 Then incy-=.03
+
 	End Method
 	Method controls()
 		' turn
@@ -30,15 +30,23 @@ Class ship
 		If angle>TwoPi Then angle-=TwoPi
 		' thrust (inc)
 		If Keyboard.KeyDown(Key.Up) Then 
-			thrust+=.03			
+			thrust+=.015
 			If thrust>thrustmax Then thrust=thrustmax
-			For Local i:Float=0 Until thrust Step .1
-			incx += Cos(angle)*.1
-			incy += Sin(angle)*.1
-			If incx<-maxspeed Or incx>maxspeed Then Exit
-			If incy<-maxspeed Or incy>maxspeed Then Exit
-			Next
-			
+			Local nvx:Float = incx+Cos(angle)*thrust
+			Local nvy:Float = incy+Sin(angle)*thrust
+			'get the angle of the new nvx and nvy
+			Local nangle:Float = ATan2(nvy,nvx) 'get the angle from the movement variables
+			'get the distance traveled from location of ship and the location with the movement added
+			Local dist:Float = edistance(x,y,x+nvx,y+nvy)
+			' If the movement is larger than max then limit
+			If Abs(dist) > maxspeed	Then
+				incx = Cos(nangle)*maxspeed
+				incy = Sin(nangle)*maxspeed
+				Else
+				'if the movement is within bounds then update the inc variables
+				incx = nvx
+				incy = nvy
+			End If			
 		End If
         x+=incx
         y-=incy
@@ -66,8 +74,9 @@ Class MyWindow Extends Window
 		myship.controls()
 		'
 		canvas.DrawImage(shipim,myship.x,myship.y,myship.angle)
-		canvas.DrawText(myship.angle,0,0)
-		canvas.DrawText(myship.thrust,0,15)
+		canvas.DrawText("angle : "+myship.angle,0,0)
+		canvas.DrawText("thrust : "+myship.thrust,0,15)
+		canvas.DrawText("incx and incy : "+myship.incx+","+myship.incy,0,25)
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
@@ -140,20 +149,7 @@ Function Main()
 	App.Run()
 End Function
 
-' Thanks to Blitzcoder for the functions
-';= Get horizontal size of vector using distance and angle
-Function vectorx:Float(distance:Float,angle:Float)
-    Return Sin(angle)*distance
-End Function
-';= Get vertical size of vector using distance and angle
-Function vectory:Float(distance:Float,angle:Float)
-    Return Sin(angle-(90/180*Pi))*distance
-End Function
-';= Get True length of a vector
-Function vectordistance:Float(x:Float,y:Float)
-    Return Sqrt(x*x+y*y)
-End Function
-';= Get True angle of a vector
-Function vectorangle:Float(x:Float,y:Float)
-    Return -ATan2(x,y)+(180*(180/Pi))
+
+Function edistance:Float(x1:Float,y1:Float,x2:Float,y2:Float) 
+	Return Sqrt( (x1-x2)*(x1-x2)+(y1-y2)*(y1-y2) )
 End Function
