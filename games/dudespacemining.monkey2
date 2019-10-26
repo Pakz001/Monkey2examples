@@ -34,6 +34,18 @@ Class pickups
 		Self.x = x
 		Self.y = y
 	End Method
+	Method update()
+		x+=incx
+		y+=incy
+		If edistance(x,y,320,240)<50
+			Local a:Float = getangle(x,y,320,240)
+			incx = Cos(a)*10
+			incy = Sin(a)*10			
+		End If
+		If edistance(x,y,320,240)<10
+			deleteme = True
+		End If
+	End Method
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.Yellow
 		canvas.DrawCircle(x,y,s)
@@ -327,6 +339,14 @@ Class MyWindow Extends Window
 		' remove any dead ones
 		For Local i:=Eachin mylaser
 			If i.deleteme Then mylaser.Remove(i)
+		Next
+		' update the pickups
+		For Local i:=Eachin mypickups
+			i.update()
+		Next
+		' remove any dead pickups
+		For Local i:=Eachin mypickups
+			If i.deleteme Then mypickups.Remove(i)
 		Next
 		
 		
@@ -630,3 +650,9 @@ Function rectsoverlap:Bool(x1:Int, y1:Int, w1:Int, h1:Int, x2:Int, y2:Int, w2:In
     If y1 >= (y2 + h2) Or (y1 + h1) <= y2 Then Return False
     Return True
 End
+
+'
+' Return the angle from - to in float
+Function getangle:Float(x1:Int,y1:Int,x2:Int,y2:Int)
+	Return ATan2(y2-y1, x2-x1)
+End Function
