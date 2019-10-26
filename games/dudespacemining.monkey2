@@ -56,8 +56,12 @@ Class laser
 			
 		If myship.map[ax,ay] = 7 Or myship.map[ax,ay] = 1
 			If rectsoverlap(ax*myship.tilew,ay*myship.tileh,myship.tilew,myship.tileh,rx,ry,3,3)
-				myship.map[ax,ay] = 6
 				deleteme = True
+				myship.mapdamage[ax,ay]+=1
+				If myship.mapdamage[ax,ay] < 4 Then Exit
+				myship.map[ax,ay] = 6
+				
+				
 				' remove any edges
 				For Local bx:Int=-1 To 1
 				For Local by:Int=-1 To 1
@@ -67,10 +71,10 @@ Class laser
 				'recreate any edges
 				For Local by:Int=ay-2 Until ay+2
 				For Local bx:Int=ax-2 Until ax+2
-					If myship.map[bx,by] = 1 And myship.map[bx-1,by+1] = 1 And myship.map[bx-1,by]=6 Then myship.map[bx-1,by] = 2 'left top rock
-					If myship.map[bx,by] = 1 And myship.map[bx+1,by+1] = 1 And myship.map[bx+1,by]=6 Then myship.map[bx+1,by] = 3 'right top rock
-					If myship.map[bx,by] = 1 And myship.map[bx-1,by-1] = 1 And myship.map[bx-1,by]=6 Then myship.map[bx-1,by] = 4 'left bottom rock
-					If myship.map[bx,by] = 1 And myship.map[bx+1,by-1] = 1 And myship.map[bx+1,by]=6 Then myship.map[bx+1,by] = 5 'right bottom rock
+					If myship.map[bx,by] = 1 And myship.map[bx-1,by+1] = 1 And myship.map[bx-1,by]=6 Then myship.map[bx-1,by] = 2 ;myship.mapdamage[bx-1,by]=0'left top rock
+					If myship.map[bx,by] = 1 And myship.map[bx+1,by+1] = 1 And myship.map[bx+1,by]=6 Then myship.map[bx+1,by] = 3 ;myship.mapdamage[bx+1,by]=0'right top rock
+					If myship.map[bx,by] = 1 And myship.map[bx-1,by-1] = 1 And myship.map[bx-1,by]=6 Then myship.map[bx-1,by] = 4 ;myship.mapdamage[bx-1,by]=0'left bottom rock
+					If myship.map[bx,by] = 1 And myship.map[bx+1,by-1] = 1 And myship.map[bx+1,by]=6 Then myship.map[bx+1,by] = 5 ;myship.mapdamage[bx+1,by]=0'right bottom rock
 				Next
 				Next
 
@@ -91,6 +95,7 @@ End Class
 Class ship
 	' tilemap
 	Field map:Int[,]
+	Field mapdamage:Int[,]
 	Field tilew:Int=48
 	Field tileh:Int=48
 	'ship
@@ -101,6 +106,7 @@ Class ship
 	Field maxspeed:Float=2
    	Method New(x:Float,y:Float,angle:Float)
 	   	map = New Int[512,512]
+	   	mapdamage = New Int[512,512]
 	   	generatemap()
 		Self.x = x
 		Self.y = y
@@ -233,33 +239,31 @@ Class ship
 		Local poffy:Int = (offy*tileh)-y
 		For Local my:Int=0 Until 16
 		For Local mx:Int=0 Until 24
+			canvas.Color = Color.White
+			Local damage:Float=mapdamage[offx+mx,offy+my]
+			If damage > 0 Then 
+				canvas.Color = Color.White.Blend(Color.Black,1.0/10*damage)
+			End If
 			If map[offx+mx,offy+my] = 1
-				canvas.Color=Color.White
 				'canvas.DrawRect(0+mx*tilew+poffx,0+my*tileh+poffy,tilew,tileh)
 				canvas.DrawImage(rockim,0+mx*tilew+poffx,0+my*tileh+poffy)
 			End If
 			If map[offx+mx,offy+my] = 2 'left top rock
-				canvas.Color=Color.White
 				canvas.DrawImage(rockltim,0+mx*tilew+poffx,0+my*tileh+poffy)
 			End if
 			If map[offx+mx,offy+my] = 3 'right top rock
-				canvas.Color=Color.White
 				canvas.DrawImage(rockrtim,0+mx*tilew+poffx,0+my*tileh+poffy)
 			End if
 			If map[offx+mx,offy+my] = 4 'left bottom rock
-				canvas.Color=Color.White
 				canvas.DrawImage(rocklbim,0+mx*tilew+poffx,0+my*tileh+poffy)
 			End if
 			If map[offx+mx,offy+my] = 5 'right bottom rock
-				canvas.Color=Color.White
 				canvas.DrawImage(rockrbim,0+mx*tilew+poffx,0+my*tileh+poffy)
 			End if
-			If map[offx+mx,offy+my] = 6 'background rock
-				canvas.Color=Color.White '.Blend(Color.Black,.8)
+			If map[offx+mx,offy+my] = 6 'background rock				
 				canvas.DrawImage(rockbackim,0+mx*tilew+poffx,0+my*tileh+poffy)
 			End if
-			If map[offx+mx,offy+my] = 7 'background rock
-				canvas.Color=Color.White '.Blend(Color.Black,.8)
+			If map[offx+mx,offy+my] = 7 'background rock				
 				canvas.DrawImage(rockore1im,0+mx*tilew+poffx,0+my*tileh+poffy)
 			End if
 
