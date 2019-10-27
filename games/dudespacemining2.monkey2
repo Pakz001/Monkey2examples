@@ -30,6 +30,8 @@ Global iconore1im:Image
 Global iconore1can:Canvas
 Global iconore2im:Image
 Global iconore2can:Canvas
+Global iconore3im:Image
+Global iconore3can:Canvas
 
 Global missileim:Image
 Global missilecan:Canvas
@@ -132,10 +134,13 @@ Class pickups
 '		canvas.Color = Color.White
 '		canvas.DrawText("O",x-1,y-1)		
 		canvas.Color = Color.White
-		If tp = 7
+		If tp = 1 'rock
+		canvas.DrawImage(iconore3im,x,y,rotation)
+		Endif
+		If tp = 7 'crystal blue
 		canvas.DrawImage(iconore1im,x,y,rotation)
 		End If
-		If tp = 8
+		If tp = 8 'metal
 		canvas.DrawImage(iconore2im,x,y,rotation)
 		Endif
 
@@ -182,6 +187,9 @@ Class laser
 				End if
 				If myship.map[ax,ay] = 8 Then 'drop pickup (metal)
 					mypickups.Add(New pickups(ax*myship.tilew-myship.x+myship.tilew/2,ay*myship.tileh-myship.y+myship.tileh/2,8))
+				End if
+				If myship.map[ax,ay] = 1 Then 'drop pickup (rock)
+					mypickups.Add(New pickups(ax*myship.tilew-myship.x+myship.tilew/2,ay*myship.tileh-myship.y+myship.tileh/2,1))
 				End if
 			
 				myship.map[ax,ay] = 6
@@ -570,6 +578,9 @@ Class MyWindow Extends Window
 		iconore2im = New Image(32,32)
 		iconore2can = New Canvas(iconore2im)
 		iconore2im.Handle = New Vec2f(0.5,0.5)
+		iconore3im = New Image(32,32)
+		iconore3can = New Canvas(iconore3im)
+		iconore3im.Handle = New Vec2f(0.5,0.5)
 
 'ship
 Local map := New Int[][] (
@@ -897,6 +908,51 @@ New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4))
 		Next
 		Next
 		iconore2can.Flush()
+
+' icon ore 3 (rock)
+map = New Int[][] (
+
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,12,12,11,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,12,1,11,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,12,4,11,15,15,0,4,4,4),
+New Int[](4,4,4,4,4,4,12,15,4,4,11,11,0,4,4,4),
+New Int[](4,4,4,4,4,4,4,0,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,12,4,4,4,4,4,12,4,4,4,4,4),
+New Int[](4,4,4,12,15,0,4,4,4,12,15,11,11,4,4,4),
+New Int[](4,4,4,4,0,0,4,4,4,12,1,15,11,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,0,15,15,0,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,0,0,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4))
+'New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+'New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+'New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+'New Int[](4,4,4,4,4,4,4,15,12,12,4,4,4,4,4,4),
+'New Int[](4,4,4,4,4,4,15,1,15,15,11,4,4,4,4,4),
+'New Int[](4,4,4,4,4,15,1,15,15,15,15,11,4,4,4,4),
+'New Int[](4,4,4,4,4,12,15,15,1,12,15,0,4,4,4,4),
+'New Int[](4,4,4,4,4,12,15,12,15,15,11,0,4,4,4,4),
+'New Int[](4,4,4,4,15,11,15,15,15,11,0,4,4,4,4,4),
+'New Int[](4,4,4,12,1,15,0,11,0,11,0,4,4,4,4,4),
+'New Int[](4,4,4,11,15,15,0,15,1,15,15,11,0,4,4,4),
+'New Int[](4,4,4,0,15,11,0,1,15,15,15,11,0,4,4,4),
+'New Int[](4,4,4,4,0,0,0,0,15,11,0,0,4,4,4,4),
+'New Int[](4,4,4,4,4,4,4,4,0,0,4,4,4,4,4,4),
+'New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+'New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			iconore3can.Color = c64color[map[y][x]]
+			If map[y][x] = 4 Then iconore3can.Alpha = 0 Else iconore3can.Alpha=1
+			iconore3can.DrawRect(x*2,y*2,2,2)
+		Next
+		Next
+		iconore3can.Flush()
+
 
 'missile
 map = New Int[][] (
