@@ -28,6 +28,9 @@ Global rockore2can:Canvas
 
 Global iconore1im:Image
 Global iconore1can:Canvas
+Global iconore2im:Image
+Global iconore2can:Canvas
+
 Global missileim:Image
 Global missilecan:Canvas
 
@@ -98,9 +101,11 @@ Class pickups
 	Field angle:Float,incx:Float,incy:Float
 	Field s:Int=8
 	Field rotation:Float=0
-	Method New(x:Int,y:Int)
+	Field tp:Int 'type of icon (uses tile numbering)
+	Method New(x:Int,y:Int,tp:Int)
 		Self.x = x
 		Self.y = y
+		Self.tp = tp
 	End Method
 	Method update()
 		rotation += .05
@@ -127,7 +132,12 @@ Class pickups
 '		canvas.Color = Color.White
 '		canvas.DrawText("O",x-1,y-1)		
 		canvas.Color = Color.White
+		If tp = 7
 		canvas.DrawImage(iconore1im,x,y,rotation)
+		End If
+		If tp = 8
+		canvas.DrawImage(iconore2im,x,y,rotation)
+		Endif
 
 	End Method
 End Class
@@ -161,14 +171,17 @@ Class laser
 			Local ax:Int=tx+x2*myship.tilew
 			Local ay:Int=ty+y2*myship.tileh
 			
-		If myship.map[ax,ay] = 7 Or myship.map[ax,ay] = 1
+		If isore(myship.map[ax,ay]) Or myship.map[ax,ay] = 1
 			If rectsoverlap(ax*myship.tilew,ay*myship.tileh,myship.tilew,myship.tileh,rx,ry,3,3)
 				deleteme = True
 				myship.mapdamage[ax,ay]+=1
 				If myship.mapdamage[ax,ay] < 4 Then Exit
 			
-				If myship.map[ax,ay] = 7 Then 'drop pickup
-					mypickups.Add(New pickups(ax*myship.tilew-myship.x+myship.tilew/2,ay*myship.tileh-myship.y+myship.tileh/2))
+				If myship.map[ax,ay] = 7 Then 'drop pickup (crystal)
+					mypickups.Add(New pickups(ax*myship.tilew-myship.x+myship.tilew/2,ay*myship.tileh-myship.y+myship.tileh/2,7))
+				End if
+				If myship.map[ax,ay] = 8 Then 'drop pickup (metal)
+					mypickups.Add(New pickups(ax*myship.tilew-myship.x+myship.tilew/2,ay*myship.tileh-myship.y+myship.tileh/2,8))
 				End if
 			
 				myship.map[ax,ay] = 6
@@ -205,6 +218,11 @@ Class laser
 		Next
 		Next
 		'
+	End Method
+	Method isore:Bool(val:Int)
+		If val = 7 Then Return True
+		If val = 8 Then Return True
+		Return False
 	End Method
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.Red
@@ -549,6 +567,9 @@ Class MyWindow Extends Window
 		iconore1im = New Image(32,32)
 		iconore1can = New Canvas(iconore1im)
 		iconore1im.Handle = New Vec2f(0.5,0.5)
+		iconore2im = New Image(32,32)
+		iconore2can = New Canvas(iconore2im)
+		iconore2im.Handle = New Vec2f(0.5,0.5)
 
 'ship
 Local map := New Int[][] (
@@ -849,6 +870,33 @@ New Int[](15,15,15,15,15,15,15,15,12,15,15,15,12,15,15,15))
 		Next
 		Next
 		rockore2can.Flush()
+
+' metal icon
+map = New Int[][] (
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,15,12,12,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,15,15,1,15,15,12,4,4,4,4,4),
+New Int[](4,4,4,4,15,1,1,15,0,15,12,11,4,4,4,4),
+New Int[](4,4,4,12,15,15,15,12,11,12,12,12,0,4,4,4),
+New Int[](4,4,4,12,15,15,11,15,0,12,11,0,4,4,4,4),
+New Int[](4,4,4,12,15,12,11,0,11,11,11,4,4,4,4,4),
+New Int[](4,4,4,11,15,12,12,11,0,1,15,0,4,4,4,4),
+New Int[](4,4,4,4,12,11,11,0,1,15,11,0,4,4,4,4),
+New Int[](4,4,4,4,4,0,11,15,15,12,11,0,4,4,4,4),
+New Int[](4,4,4,4,4,4,0,12,0,11,0,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,0,4,0,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			iconore2can.Color = c64color[map[y][x]]
+			If map[y][x] = 4 Then iconore2can.Alpha = 0 Else iconore2can.Alpha=1
+			iconore2can.DrawRect(x*2,y*2,2,2)
+		Next
+		Next
+		iconore2can.Flush()
 
 'missile
 map = New Int[][] (
