@@ -23,6 +23,9 @@ Global rockbackim:Image
 Global rockbackcan:Canvas
 Global rockore1im:Image
 Global rockore1can:Canvas
+Global rockore2im:Image
+Global rockore2can:Canvas
+
 Global iconore1im:Image
 Global iconore1can:Canvas
 Global missileim:Image
@@ -360,6 +363,30 @@ Class ship
 				Next
 			End If
 		Next
+		'add ore 2
+		For Local i:Int=0 Until 900
+			Local x:Int=256+Rnd(-100,100)
+			Local y:Int=256+Rnd(-100,100)
+			If map[x,y] = 1 Then map[x,y] = 8
+			'grow
+			If Rnd()<.8
+				Local s:Int=Rnd(2,180)
+				For Local i2:Int=0 Until s
+					Local x2:Int=x+Rnd(-25,25)
+					Local y2:Int=y+Rnd(-25,25)
+					If map[x2,y2] = 8 Then
+						
+						For Local x3:Int=-1 To 1
+						For Local y3:Int=-1 To 1
+							If map[x2+x3,y2+y3] = 1 And Rnd()<.3
+								map[x2+x3,y2+y3] = 8
+							End If 
+						Next
+						Next
+					End if
+				Next
+			End If
+		Next
 		
 		' add some missiles
 		For Local i:Int=0 Until 50000
@@ -406,8 +433,11 @@ Class ship
 			If map[offx+mx,offy+my] = 6 'background rock				
 				canvas.DrawImage(rockbackim,0+mx*tilew+poffx,0+my*tileh+poffy)
 			End if
-			If map[offx+mx,offy+my] = 7 'background rock				
+			If map[offx+mx,offy+my] = 7 'rock ore 1 (blue crystal)
 				canvas.DrawImage(rockore1im,0+mx*tilew+poffx,0+my*tileh+poffy)
+			End if
+			If map[offx+mx,offy+my] = 8 'rock ore 2 (metal)
+				canvas.DrawImage(rockore2im,0+mx*tilew+poffx,0+my*tileh+poffy)
 			End if
 
 		Next
@@ -514,6 +544,8 @@ Class MyWindow Extends Window
 		rockbackcan = New Canvas(rockbackim)
 		rockore1im = New Image(48,48)
 		rockore1can = New Canvas(rockore1im)
+		rockore2im = New Image(48,48)
+		rockore2can = New Canvas(rockore2im)
 		iconore1im = New Image(32,32)
 		iconore1can = New Canvas(iconore1im)
 		iconore1im.Handle = New Vec2f(0.5,0.5)
@@ -765,6 +797,7 @@ New Int[](11,12,15,15,15,15,15,15,15,15,15,15,11,12,12,15))
 		Next
 		rockore1can.Flush()
 
+'rock icon
 map = New Int[][] (
 New Int[](15,15,15,15,0,0,0,0,0,15,15,15,15,15,15,15),
 New Int[](15,15,15,0,14,14,14,14,6,0,15,15,15,15,15,15),
@@ -790,6 +823,32 @@ New Int[](15,15,0,0,0,0,0,0,15,0,0,0,15,15,15,15))
 		Next
 		Next
 		iconore1can.Flush()
+
+'ore 2 (metal)
+map = New Int[][] (
+New Int[](15,15,15,15,15,15,15,15,15,12,12,15,15,15,15,15),
+New Int[](15,15,15,15,12,15,15,15,15,15,15,15,15,15,15,15),
+New Int[](15,15,15,11,11,15,15,15,15,15,15,15,15,15,15,15),
+New Int[](15,15,15,12,15,12,12,11,0,15,15,15,15,1,15,15),
+New Int[](15,15,15,15,15,12,1,1,15,0,11,15,12,12,15,15),
+New Int[](15,15,15,15,15,11,15,15,11,0,0,12,11,15,15,15),
+New Int[](15,15,12,15,0,15,11,12,11,11,15,0,11,15,15,15),
+New Int[](15,12,11,15,0,11,12,1,0,1,15,11,0,15,15,15),
+New Int[](1,12,15,15,15,0,1,15,11,0,11,11,0,15,15,15),
+New Int[](15,15,15,15,0,15,15,15,11,0,0,0,11,15,15,15),
+New Int[](15,15,15,15,0,11,15,11,0,11,15,15,15,1,15,15),
+New Int[](15,15,11,15,15,0,0,0,11,15,15,15,12,11,15,15),
+New Int[](15,15,12,11,15,11,11,11,15,15,15,15,15,12,15,15),
+New Int[](15,15,15,11,12,15,15,15,15,15,11,11,15,15,15,15),
+New Int[](15,15,15,15,15,15,15,15,15,15,15,12,11,15,15,15),
+New Int[](15,15,15,15,15,15,15,15,12,15,15,15,12,15,15,15))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			rockore2can.Color = c64color[map[y][x]]			
+			rockore2can.DrawRect(x*3,y*3,3,3)
+		Next
+		Next
+		rockore2can.Flush()
 
 'missile
 map = New Int[][] (
