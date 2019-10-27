@@ -33,11 +33,13 @@ Class missiles
 	Field deleteme:Bool=False
 	Field home:Bool
 	Field launchtime:Int=60
+	Field launchangle:Float
 	'Field currentangle:float
 	Method New(x:Int,y:Int,angle:Float)
 		Self.x = x
 		Self.y = y
-		Self.angle = angle		
+		Self.angle = angle
+		Self.launchangle=angle		
 	End Method
 	Method update()
 		
@@ -52,21 +54,17 @@ Class missiles
 		launchtime-=1
 		If launchtime>0 Then 
 			Local vx:Float,vy:Float
-			vx = Cos(angle)*Float(100-launchtime)/100.0
-			vy = Sin(angle)*Float(100-launchtime)/100.0
+			vx = Cos(launchangle)*Float(100-launchtime)/70.0
+			vy = Sin(launchangle)*Float(100-launchtime)/70.0
 			x+=vx
 			y+=vy
-			Local tan:Float= getangle(x,y,320,240)'-ATan2(vy,vx)+TwoPi
-    		Local difference:Float = tan - angle
-        	While (difference < -Pi) 
-	        	difference += TwoPi
-	        Wend
-        	While (difference > Pi) 
-	        	difference -= TwoPi
-	        Wend
-	        Print difference
-        	If difference<0 Then angle+=.02 Else angle-=.02
-
+			'Local tan:Float=-ATan2(vy,vx)+TwoPi
+			Local tan:Float=-getangle(x,y,320,240)
+    		Local difference:Float = angledifference(tan,angle)
+			'Print "x:"+x+" y:+"+y+" dif:"+difference+"---"+angle+" tan:"+getangle(x,y,320,240)
+        	'angle=-tan
+        	If difference<0 Then angle-=.15 Else angle+=.15
+			'Print getangle(x,y,320,240)+" tan:"+angle+ "diff:"+difference
 			Return
 		End if
 		'Home the missile
@@ -869,4 +867,20 @@ End
 ' Return the angle from - to in float
 Function getangle:Float(x1:Int,y1:Int,x2:Int,y2:Int)
 	Return ATan2(y2-y1, x2-x1)
+End Function
+
+' Return a float value which is negative if the distance between the angle
+' and target angle is shorter. Positive value if the right turn is shorter.
+' Uses for homing missiles and turrets etc.
+' returns - distance float
+Function angledifference:Float(target:Float,angle:Float)
+	' Our difference (Negative if left target angle is shorter or positive if right turn is closer)
+	Local difference:Float = target - angle
+	While (difference < -Pi) 
+		difference += TwoPi
+	Wend
+	While (difference > Pi) 
+		difference -= TwoPi
+	Wend	
+	Return difference
 End Function
