@@ -56,15 +56,17 @@ Class missiles
 			vy = Sin(angle)*Float(100-launchtime)/100.0
 			x+=vx
 			y+=vy
-			Local tan:Float=-ATan2(vy,vx)+TwoPi
-			Local l:Float,r:Float
-			For l=tan To -TwoPi Step -.01				
-				If edistance(l,l,angle,angle)<.04 Then Exit				
-			Next
-			For r=tan To TwoPi Step .01
-				If edistance(r,r,angle,angle)<.04 Then Exit
-			Next
-			If l>r Then angle-=.02 Else angle+=.02
+			Local tan:Float= getangle(x,y,320,240)'-ATan2(vy,vx)+TwoPi
+    		Local difference:Float = tan - angle
+        	While (difference < -Pi) 
+	        	difference += TwoPi
+	        Wend
+        	While (difference > Pi) 
+	        	difference -= TwoPi
+	        Wend
+	        Print difference
+        	If difference<0 Then angle+=.02 Else angle-=.02
+
 			Return
 		End if
 		'Home the missile
@@ -517,6 +519,8 @@ Class MyWindow Extends Window
 		iconore1im = New Image(32,32)
 		iconore1can = New Canvas(iconore1im)
 		iconore1im.Handle = New Vec2f(0.5,0.5)
+
+'ship
 Local map := New Int[][] (
 
 'New Int[](1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
@@ -560,6 +564,7 @@ New Int[](0,0,0,0,0,0,0,0,4,4,4,4,4,4,4,4))
 		Next
 		shipcan.Flush()
 
+'rock
 map = New Int[][] (
 New Int[](12,11,12,12,15,15,15,15,15,15,15,15,15,15,15,15),
 New Int[](15,15,15,15,15,15,15,15,15,15,15,15,15,1,12,15),
@@ -694,22 +699,40 @@ New Int[](15,11,0,11,0,0,0,0,11,0,0,11,12,11,0,11))
 ' background dark
 map = New Int[][] (
 
+
 New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,0,0,0,0,0,0,11,0,0,0,0,0,0,0),
 New Int[](0,0,0,0,0,0,0,0,0,0,0,0,11,0,0,0),
-New Int[](0,0,11,0,0,0,0,0,0,0,12,15,0,0,0,0),
-New Int[](11,11,0,0,0,0,0,0,0,11,0,11,0,0,0,0),
-New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
-New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
-New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
-New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
-New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
 New Int[](0,0,0,0,0,0,0,0,0,0,11,0,0,0,0,0),
-New Int[](0,0,0,0,0,0,0,0,11,12,0,0,0,0,0,0),
-New Int[](0,0,0,0,0,0,0,0,0,11,0,0,0,0,0,0),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,11,0,11,0),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,11,0,0,0,0),
 New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
-New Int[](11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
-New Int[](15,12,0,0,0,0,0,0,0,0,0,11,0,0,0,0),
-New Int[](11,0,0,0,0,0,0,0,0,0,11,0,0,0,0,0))
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,0,0,11,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,11,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,0,11,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,11,0,11,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,0,0,0,0,11,0,0,0,0,0,0,0,0,0),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0))
+
+'New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+'New Int[](0,0,0,0,0,0,0,0,0,0,0,0,11,0,0,0),
+'New Int[](0,0,11,0,0,0,0,0,0,0,12,15,0,0,0,0),
+'New Int[](11,11,0,0,0,0,0,0,0,11,0,11,0,0,0,0),
+'New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+'New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+'New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+'New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+'New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+'New Int[](0,0,0,0,0,0,0,0,0,0,11,0,0,0,0,0),
+'New Int[](0,0,0,0,0,0,0,0,11,12,0,0,0,0,0,0),
+'New Int[](0,0,0,0,0,0,0,0,0,11,0,0,0,0,0,0),
+'New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+'New Int[](11,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+'New Int[](15,12,0,0,0,0,0,0,0,0,0,11,0,0,0,0),
+'New Int[](11,0,0,0,0,0,0,0,0,0,11,0,0,0,0,0))
 		For Local y:Int=0 Until 16
 		For Local x:Int=0 Until 16
 			rockbackcan.Color = c64color[map[y][x]]
