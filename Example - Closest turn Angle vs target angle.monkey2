@@ -9,18 +9,11 @@ Class MyWindow Extends Window
 
 	Method New()
 		'Our target angle
-		Local tan:Float=Pi+0.5
+		Local target:Float=Pi+0.5
 		'Our angle
 		Local angle:Float=TwoPi-0.2
-		' Our difference (Negative if left target angle is shorter or positive if right turn is closer)
-    	Local difference:Float = tan - angle
-        While (difference < -Pi) 
-        	difference += TwoPi
-        Wend
-        While (difference > Pi) 
-        	difference -= TwoPi
-        Wend
-        Print difference
+
+        Print angledifference(target,angle)
 		
 	End method
 	
@@ -31,6 +24,22 @@ Class MyWindow Extends Window
 	End Method	
 	
 End	Class
+
+' Return a float value which is negative if the distance between the angle
+' and target angle is shorter. Positive value if the right turn is shorter.
+' Uses for homing missiles and turrets etc.
+' returns - distance float
+Function angledifference:Float(target:Float,angle:Float)
+	' Our difference (Negative if left target angle is shorter or positive if right turn is closer)
+	Local difference:Float = target - angle
+	While (difference < -Pi) 
+		difference += TwoPi
+	Wend
+	While (difference > Pi) 
+		difference -= TwoPi
+	Wend	
+	Return difference
+End Function
 
 Function Main()
 	New AppInstance		
