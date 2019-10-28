@@ -6,6 +6,7 @@ Using std..
 Using mojo..
 
 ' global game variables
+Global startx:Int,starty:Int
 Global gamestate:String="world" 'world/shipinventory
 	' The c64 palette (16 colors)
 Global c64color:Color[]
@@ -442,6 +443,9 @@ Class laser
 End Class
 
 Class ship
+	'
+	Field respawn:Bool
+	Field respawntime:Int=0
 	' tilemap
 	Field map:Int[,]
 	Field mapdamage:Int[,]
@@ -467,7 +471,28 @@ Class ship
 	End Method
 	
 	Method update()		
-		
+		If respawn = True Then 
+			incx = 0
+			incy = 0
+			respawntime+=1			
+			If respawntime>100 Then
+				respawntime = 0
+				' realign anything on the map
+				For Local i:=Eachin mymissiles
+					i.x += x-startx
+					i.y += y-starty
+				Next
+				' set to original position
+				x = startx
+				y = starty
+				incx = 0
+				incy = 0
+				angle = 0
+
+				respawn = False
+			End if
+			Return
+		End if
 		If thrust>0 Then thrust-=.01
 
 
@@ -489,7 +514,8 @@ Class ship
 			'rect
 			If circlerectcollide(rx,ry,16,ax,ay,tilew,tileh)=True				
 				incx=-incx
-				incy=-incy						
+				incy=-incy
+				dienow()
 				Return
 			End If
 		End If
@@ -507,6 +533,7 @@ Class ship
 			If pointintriangle2d(rx+x4,ry+y4,x1,y1,x2,y2,x3,y3)
 				incx=-incx
 				incy=-incy
+				dienow()
 				Return
 			End If
 			Next		
@@ -524,6 +551,7 @@ Class ship
 			If pointintriangle2d(rx+x4,ry+y4,x1,y1,x2,y2,x3,y3)
 				incx=-incx
 				incy=-incy
+				dienow()
 				Return
 			End If
 			Next
@@ -543,6 +571,7 @@ Class ship
 			If pointintriangle2d(rx+x4,ry+y4,x1,y1,x2,y2,x3,y3)
 				incx=-incx
 				incy=-incy
+				dienow()
 				Return
 			End If
 			Next		
@@ -561,6 +590,7 @@ Class ship
 			If pointintriangle2d(rx+x4,ry+y4,x1,y1,x2,y2,x3,y3)
 				incx=-incx
 				incy=-incy
+				dienow()
 				Return
 			End If
 			Next		
@@ -570,6 +600,7 @@ Class ship
 		Next
 	End Method
 	Method controls()
+		If respawn Then Return
 		'mine
 		If Keyboard.KeyReleased(Key.Space) Then
 			mylaser.Add(New laser(320+24-16,200+24+16,Cos(angle)*4,-Sin(angle)*4))
@@ -774,6 +805,14 @@ Class ship
 		Next
 		Next
 	End Method
+	Method dienow()
+		If Sqrt(incx*incx+incy*incy) > 1 Then 
+			For Local i:Int=0 Until 10
+				myexplosions.Add(New explosion(320+Rnd(-32,32),240+Rnd(-32,32),1,Rnd(30)))
+			Next						
+			respawn = True
+		End if		
+	End Method	
 End Class
 
 Global mylaser:List<laser> = New List<laser>
@@ -790,6 +829,8 @@ Class MyWindow Extends Window
 		'Setup our images so they can be drawn
 		setupim()
 		myship = New ship(256*48,256*48+20,0)
+		startx = 256*48
+		starty = 256*48+20
 		myshipinventory = New shipinventory
 	End method
 	
