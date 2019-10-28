@@ -36,6 +36,11 @@ Global iconore2im:Image
 Global iconore2can:Canvas
 Global iconore3im:Image
 Global iconore3can:Canvas
+Global iconscrapim:Image
+Global iconscrapcan:Canvas
+Global iconelecim:Image
+Global iconeleccan:Canvas
+
 
 Global missileim:Image
 Global missilecan:Canvas
@@ -49,8 +54,10 @@ Class shipinventory
 		invnum = New Int[23]
 		For Local i:Int=0 Until 23
 			Local num:Int=8
-			If Rnd()<.3 Then num=1
-			If Rnd()<.3 Then num=7			 
+			If Rnd()<.2 Then num=1
+			If Rnd()<.2 Then num=7			 
+			If Rnd()<.2 Then num=9
+			If Rnd()<.2 Then num=10
 			inv[i] = num
 			invnum[i] = Rnd(1,99)
 			If Rnd()<.3 Then invnum[i] = 99
@@ -136,6 +143,11 @@ Class shipinventory
 			canvas.DrawImage(iconore1im,_x+24,_y+24,0)
 			Case 8 'metal
 			canvas.DrawImage(iconore2im,_x+24,_y+24,0)
+			Case 9 'scrap
+			canvas.DrawImage(iconscrapim,_x+24,_y+24,0)
+			Case 10 'electronics
+			canvas.DrawImage(iconelecim,_x+24,_y+24,0)
+
 		End Select
 	End Method
 End Class
@@ -161,6 +173,8 @@ Class missiles
 		If edistance(x,y,320,240)<32
 			home=False
 			deleteme = True
+			mypickups.Add(New pickups(x*myship.tilew-myship.x+myship.tilew/2,y*myship.tileh-myship.y+myship.tileh/2,9))
+			mypickups.Add(New pickups(x*myship.tilew-myship.x+myship.tilew/2,y*myship.tileh-myship.y+myship.tileh/2,10))
 		End If
 		If home=False Then Return
 		launchtime-=1
@@ -247,6 +261,12 @@ Class pickups
 		If tp = 8 'metal
 		canvas.DrawImage(iconore2im,x,y,rotation)
 		Endif
+		If tp = 9 'scrap
+		canvas.DrawImage(iconscrapim,x,y,rotation)
+		End if
+		If tp = 10'elec
+		canvas.DrawImage(iconelecim,x,y,rotation)
+		End If
 
 	End Method
 End Class
@@ -319,8 +339,10 @@ Class laser
 					'Print ax*myship.tilew+ ","+ay*myship.tileh
 					'Exit
 					If edistance(ax*myship.tilew-myship.x,ay*myship.tileh-myship.y,i.x,i.y)<76 Then 
-						Print Microsecs()	
 						i.deleteme = True
+						If Rnd()<.8 Then mypickups.Add(New pickups(i.x+Rnd(-8,8),i.y+Rnd(-8,8),9))
+						If Rnd()<.8 Then mypickups.Add(New pickups(i.x+Rnd(-8,8),i.y+Rnd(-8,8),10))
+						
 					End If
 				Next
 
@@ -693,6 +715,12 @@ Class MyWindow Extends Window
 		iconore3im = New Image(32,32)
 		iconore3can = New Canvas(iconore3im)
 		iconore3im.Handle = New Vec2f(0.5,0.5)
+		iconscrapim = New Image(32,32)
+		iconscrapcan = New Canvas(iconscrapim)
+		iconscrapim.Handle = New Vec2f(0.5,0.5)
+		iconelecim = New Image(32,32)
+		iconeleccan = New Canvas(iconelecim)
+		iconelecim.Handle = New Vec2f(0.5,0.5)
 
 'ship
 Local map := New Int[][] (
@@ -1092,6 +1120,62 @@ New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4))
 		Next
 		Next
 		missilecan.Flush()
+
+'electronic icon
+map = New Int[][] (
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,5,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,5,5,5,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,5,5,5,1,5,4,4,4,4,4,4,4,4),
+New Int[](4,4,5,5,5,5,5,5,5,4,4,4,4,4,4,4),
+New Int[](4,4,4,5,1,5,5,5,11,12,4,4,4,4,4,4),
+New Int[](4,4,4,4,5,5,11,5,12,15,5,4,4,4,4,4),
+New Int[](4,4,4,4,7,11,0,5,5,5,5,0,4,4,4,4),
+New Int[](4,4,4,4,4,7,5,5,5,5,5,5,5,4,1,4),
+New Int[](4,4,4,4,4,4,7,5,11,0,5,5,5,1,4,4),
+New Int[](4,4,4,4,4,4,4,4,0,0,5,5,11,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,5,5,11,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,1,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,1,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			iconscrapcan.Color = c64color[map[y][x]]
+			If map[y][x] = 4 Then iconscrapcan.Alpha = 0 Else iconscrapcan.Alpha=1
+			iconscrapcan.DrawRect(x*2,y*2,2,2)
+		Next
+		Next
+		iconscrapcan.Flush()
+
+
+'scrap icon
+map = New Int[][] (
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,1,1,1,1,15,15,11,4,4,4,4),
+New Int[](4,4,4,4,4,1,1,12,12,12,15,11,4,4,4,4),
+New Int[](4,4,4,4,4,1,12,12,12,15,12,4,4,4,4,4),
+New Int[](4,4,4,4,4,1,12,12,15,12,11,4,4,4,4,4),
+New Int[](4,4,4,4,4,1,12,15,15,12,11,4,4,15,4,4),
+New Int[](4,4,4,4,4,1,15,15,12,11,4,4,12,4,4,4),
+New Int[](4,4,4,4,4,15,15,12,12,11,4,11,4,4,4,4),
+New Int[](4,4,4,4,4,15,12,12,12,0,11,4,4,4,4,4),
+New Int[](4,4,4,4,4,15,12,12,0,11,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,15,12,15,0,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,12,11,11,0,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,11,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,12,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			iconeleccan.Color = c64color[map[y][x]]
+			If map[y][x] = 4 Then iconeleccan.Alpha = 0 Else iconeleccan.Alpha=1
+			iconeleccan.DrawRect(x*2,y*2,2,2)
+		Next
+		Next
+		iconeleccan.Flush()
+
 
 End Method
 	'
