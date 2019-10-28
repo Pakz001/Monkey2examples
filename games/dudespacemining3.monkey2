@@ -413,6 +413,16 @@ Class laser
 		Next
 		Next
 		'
+		' collision with missiles
+		' 
+		For Local i:=Eachin mymissiles
+			If rectsoverlap(i.x,i.y,6,6,x,y,4,4)
+				i.deleteme = True
+					For Local i:Int=0 Until 10
+						myexplosions.Add(New explosion(x+Rnd(-32,32),y+Rnd(-32,32),1,Rnd(30)))
+					Next	
+			End If
+		Next
 	End Method
 	Method isore:Bool(val:Int)
 		If val = 7 Then Return True
