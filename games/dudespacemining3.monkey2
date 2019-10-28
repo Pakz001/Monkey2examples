@@ -6,7 +6,7 @@ Using std..
 Using mojo..
 
 ' global game variables
-Global gamestate:String="shipinventory" 'world/shipinventory
+Global gamestate:String="world" 'world/shipinventory
 	' The c64 palette (16 colors)
 Global c64color:Color[]
 
@@ -41,9 +41,65 @@ Global iconscrapcan:Canvas
 Global iconelecim:Image
 Global iconeleccan:Canvas
 
+Global explosionframe1im:Image
+Global explosionframe1can:Canvas
+Global explosionframe2im:Image
+Global explosionframe2can:Canvas
+Global explosionframe3im:Image
+Global explosionframe3can:Canvas
 
 Global missileim:Image
 Global missilecan:Canvas
+
+Class explosion
+	Field x:Int,y:Int
+	Field tp:Int,delay:Int,delaymax:Int=Rnd(1,6)
+	Field startcount:Int,startdelay:Int
+	Field anim:Int[],animpointer:Int=0
+	Field deleteme:Bool	
+	Method New(x:Int,y:Int,tp:Int,startdelay:Int)
+		Self.x = x
+		Self.y = y
+		Self.tp = tp
+		Self.startdelay = startdelay
+		Select tp
+			Case 1
+			anim = New Int[5]
+			anim[0] = 0
+			anim[1] = 1
+			anim[2] = 2
+			anim[3] = 1
+			anim[4] = 0
+		End Select
+	End Method
+	Method update()		
+		delay += 1
+		startcount+=1
+		If startcount<startdelay Then Return
+		If delay > delaymax
+			delay = 0
+			animpointer+=1
+			Select tp
+				Case 1
+				If animpointer >4 Then deleteme = True ; Return
+			End Select			
+		End If
+	End Method
+	Method draw(canvas:Canvas)
+		canvas.Color = Color.White
+		Select tp
+			Case 1
+				Select anim[animpointer]
+					Case 0
+					canvas.DrawImage(explosionframe1im,x,y)
+					Case 1
+					canvas.DrawImage(explosionframe2im,x,y)
+					Case 2
+					canvas.DrawImage(explosionframe3im,x,y)
+				End Select
+		End Select
+	End Method
+End Class
 
 Class shipinventory
 	Field x:Int=96,y:Int=96,w:Int=640-96*2,h:Int=480-96*2
@@ -175,6 +231,9 @@ Class missiles
 			deleteme = True
 			mypickups.Add(New pickups(x*myship.tilew-myship.x+myship.tilew/2,y*myship.tileh-myship.y+myship.tileh/2,9))
 			mypickups.Add(New pickups(x*myship.tilew-myship.x+myship.tilew/2,y*myship.tileh-myship.y+myship.tileh/2,10))
+			For Local i:Int=0 Until 10
+				myexplosions.Add(New explosion(x+Rnd(-32,32),y+Rnd(-32,32),1,Rnd(30)))
+			Next
 		End If
 		If home=False Then Return
 		launchtime-=1
@@ -338,11 +397,13 @@ Class laser
 				For Local i:=Eachin mymissiles
 					'Print ax*myship.tilew+ ","+ay*myship.tileh
 					'Exit
-					If edistance(ax*myship.tilew-myship.x,ay*myship.tileh-myship.y,i.x,i.y)<76 Then 
+					If edistance(ax*myship.tilew-myship.x,ay*myship.tileh-myship.y,i.x,i.y)<64 Then 
 						i.deleteme = True
 						If Rnd()<.8 Then mypickups.Add(New pickups(i.x+Rnd(-8,8),i.y+Rnd(-8,8),9))
 						If Rnd()<.8 Then mypickups.Add(New pickups(i.x+Rnd(-8,8),i.y+Rnd(-8,8),10))
-						
+						For Local i2:Int=0 Until 10
+							myexplosions.Add(New explosion(i.x+Rnd(-32,32),i.y+Rnd(-32,32),1,Rnd(30)))
+						Next					
 					End If
 				Next
 
@@ -432,6 +493,10 @@ Class ship
 	        i.y +=incy
 	    Next
         For Local i:=Eachin mymissiles
+	        i.x -=incx
+	        i.y +=incy
+	    Next
+        For Local i:=Eachin myexplosions
 	        i.x -=incx
 	        i.y +=incy
 	    Next
@@ -603,7 +668,7 @@ Global myship:ship
 Global mypickups:List<pickups> = New List<pickups>
 Global mymissiles:List<missiles> = New List<missiles>
 Global myshipinventory:shipinventory
-
+Global myexplosions:List<explosion> = New List<explosion>
 
 Class MyWindow Extends Window
 	
@@ -648,6 +713,14 @@ Class MyWindow Extends Window
 			For Local i:=Eachin mymissiles
 				If i.deleteme Then mymissiles.Remove(i)
 			Next
+			' explosions
+			For Local i:=Eachin myexplosions
+				i.update()
+			Next
+			' remove any dead explosions
+			For Local i:=Eachin myexplosions
+				If i.deleteme Then myexplosions.Remove(i)
+			Next
 			
 			
 			'
@@ -667,7 +740,11 @@ Class MyWindow Extends Window
 			For Local i:=Eachin mymissiles
 				i.draw(canvas)
 			Next
-	
+			' draw the explosions
+			For Local i:=Eachin myexplosions
+				i.draw(canvas)
+			Next
+		
 	
 	
 			canvas.DrawText("angle : "+myship.angle,0,0)
@@ -721,6 +798,16 @@ Class MyWindow Extends Window
 		iconelecim = New Image(32,32)
 		iconeleccan = New Canvas(iconelecim)
 		iconelecim.Handle = New Vec2f(0.5,0.5)
+
+		explosionframe1im = New Image(32,32)
+		explosionframe1can = New Canvas(explosionframe1im)
+		explosionframe1im.Handle = New Vec2f(0.5,0.5)
+		explosionframe2im = New Image(32,32)
+		explosionframe2can = New Canvas(explosionframe2im)
+		explosionframe2im.Handle = New Vec2f(0.5,0.5)
+		explosionframe3im = New Image(32,32)
+		explosionframe3can = New Canvas(explosionframe3im)
+		explosionframe3im.Handle = New Vec2f(0.5,0.5)
 
 'ship
 Local map := New Int[][] (
@@ -1176,6 +1263,87 @@ New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4))
 		Next
 		iconeleccan.Flush()
 
+'explosion frame 1 (4)
+map = New Int[][] (
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,2,4,4,4,4,2,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,2,4,4,2,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,7,7,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,7,7,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,2,4,4,2,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,2,4,4,4,4,2,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			explosionframe1can.Color = c64color[map[y][x]]
+			If map[y][x] = 4 Then explosionframe1can.Alpha = 0 Else explosionframe1can.Alpha=1
+			explosionframe1can.DrawRect(x*2,y*2,2,2)
+		Next
+		Next
+		explosionframe1can.Flush()
+
+
+'explosion frame 2 (4)
+map = New Int[][] (
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,2,4,4,4,4,4,4,4,4,4,4,2,4,4),
+New Int[](4,4,4,2,4,4,4,4,4,4,4,4,2,4,4,4),
+New Int[](4,4,4,4,7,4,4,2,2,4,4,7,4,4,4,4),
+New Int[](4,4,4,4,4,7,4,7,7,4,7,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,7,1,1,7,4,4,4,4,4,4),
+New Int[](4,4,4,2,2,7,1,1,1,1,7,2,2,4,4,4),
+New Int[](4,4,4,2,2,7,1,1,1,1,7,2,2,4,4,4),
+New Int[](4,4,4,4,4,4,7,1,1,7,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,7,4,7,7,4,7,4,4,4,4,4),
+New Int[](4,4,4,4,7,4,4,2,2,4,4,7,4,4,4,4),
+New Int[](4,4,4,2,4,4,4,4,4,4,4,4,2,4,4,4),
+New Int[](4,4,2,4,4,4,4,4,4,4,4,4,4,2,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			explosionframe2can.Color = c64color[map[y][x]]
+			If map[y][x] = 4 Then explosionframe2can.Alpha = 0 Else explosionframe2can.Alpha=1
+			explosionframe2can.DrawRect(x*2,y*2,2,2)
+		Next
+		Next
+		explosionframe2can.Flush()
+
+'explosion frame 3 (4)
+map = New Int[][] (
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](4,7,4,4,4,4,2,2,2,2,4,4,4,4,7,4),
+New Int[](4,4,7,7,4,2,2,2,2,2,2,4,7,7,4,4),
+New Int[](4,4,7,7,7,2,2,7,7,2,2,7,7,7,4,4),
+New Int[](4,4,4,7,7,7,7,7,7,7,7,7,7,4,4,4),
+New Int[](4,4,2,2,7,7,7,1,1,7,7,7,2,2,4,4),
+New Int[](4,2,2,2,7,7,1,1,1,1,7,7,2,2,2,4),
+New Int[](4,2,2,7,7,1,1,1,1,1,1,7,7,2,2,4),
+New Int[](4,2,2,7,7,1,1,1,1,1,1,7,7,2,2,4),
+New Int[](4,2,2,2,7,7,1,1,1,1,7,7,2,2,2,4),
+New Int[](4,4,2,2,7,7,7,1,1,7,7,7,2,2,4,4),
+New Int[](4,4,4,7,7,7,7,7,7,7,7,7,7,4,4,4),
+New Int[](4,4,7,7,7,2,2,7,7,2,2,7,7,7,4,4),
+New Int[](4,4,7,7,4,2,2,2,2,2,2,4,7,7,4,4),
+New Int[](4,7,4,4,4,4,2,2,2,2,4,4,4,4,7,4),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			explosionframe3can.Color = c64color[map[y][x]]
+			If map[y][x] = 4 Then explosionframe3can.Alpha = 0 Else explosionframe3can.Alpha=1
+			explosionframe3can.DrawRect(x*2,y*2,2,2)
+		Next
+		Next
+		explosionframe3can.Flush()
 
 End Method
 	'
