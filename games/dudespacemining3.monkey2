@@ -482,6 +482,7 @@ Class ship
 				For Local i:=Eachin mymissiles
 					i.x += x-startx
 					i.y += y-starty
+					If i.home Then i.deleteme=True
 				Next
 				For Local i:=Eachin mypickups
 					i.x += x-startx
