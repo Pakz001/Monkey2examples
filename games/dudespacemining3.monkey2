@@ -10,6 +10,10 @@ Global gamestate:String="world" 'world/shipinventory
 	' The c64 palette (16 colors)
 Global c64color:Color[]
 
+Global debugx1:Int,debugy1:Int,debugx2:Int,debugy2:Int
+Global debugr1:Int
+Global debugw1:Int,debugh1:Int
+
 ' Our gfx
 Global shipim:Image
 Global shipcan:Canvas
@@ -430,11 +434,7 @@ Class laser
 			End If
 		Next
 	End Method
-	Method isore:Bool(val:Int)
-		If val = 7 Then Return True
-		If val = 8 Then Return True
-		Return False
-	End Method
+
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.Red
 		canvas.DrawCircle(x,y,s)
@@ -470,6 +470,104 @@ Class ship
 		
 		If thrust>0 Then thrust-=.01
 
+
+		' collision with tiles
+		' get map position
+		
+		Local rx:Int=320+x
+		Local ry:Int=240+y
+		Local tx:Int=rx/tilew
+		Local ty:Int=ry/tileh
+		For Local y2:Int=-1 To 1
+		For Local x2:Int=-1 To 1
+			Local ax:Int=(tx+x2)*tilew
+			Local ay:Int=(ty+y2)*tileh
+
+			
+			
+		If map[tx+x2,ty+y2] = 1 Or isore(map[tx+x2,ty+y2])			
+			'rect
+			If circlerectcollide(rx,ry,16,ax,ay,tilew,tileh)=True				
+				incx=-incx
+				incy=-incy						
+				Return
+			End If
+		End If
+		If map[tx+x2,ty+y2] = 2 'left top
+		
+			Local x1:Float=ax
+			Local y1:Float=ay+tileh
+			Local x2:Float=ax+tilew
+			Local y2:Float=ay+tileh
+			Local x3:Float=ax+tilew
+			Local y3:Float=ay
+			For Local an:Float=0 To TwoPi Step .5
+			Local x4:Float=Cos(an)*16
+			Local y4:Float=Sin(an)*16
+			If pointintriangle2d(rx+x4,ry+y4,x1,y1,x2,y2,x3,y3)
+				incx=-incx
+				incy=-incy
+				Return
+			End If
+			Next		
+		End if
+		If map[tx+x2,ty+y2] = 3 'right top
+			Local x1:Float=ax
+			Local y1:Float=ay
+			Local x2:Float=ax+tilew
+			Local y2:Float=ay+tileh
+			Local x3:Float=ax
+			Local y3:Float=ay+tileh
+			For Local an:Float=0 To TwoPi Step .5
+			Local x4:Float=Cos(an)*16
+			Local y4:Float=Sin(an)*16
+			If pointintriangle2d(rx+x4,ry+y4,x1,y1,x2,y2,x3,y3)
+				incx=-incx
+				incy=-incy
+				Return
+			End If
+			Next
+		End If			
+		If map[tx+x2,ty+y2] = 4 'left bottom
+		
+			Local x1:Float=ax
+			Local y1:Float=ay
+			Local x2:Float=ax+tilew
+			Local y2:Float=ay+tileh
+			Local x3:Float=ax+tilew
+			Local y3:Float=ay
+'
+			For Local an:Float=0 To TwoPi Step .5
+			Local x4:Float=Cos(an)*16
+			Local y4:Float=Sin(an)*16
+			If pointintriangle2d(rx+x4,ry+y4,x1,y1,x2,y2,x3,y3)
+				incx=-incx
+				incy=-incy
+				Return
+			End If
+			Next		
+		End if
+		If map[tx+x2,ty+y2] = 5 'right bottom
+		
+			Local x1:Float=ax
+			Local y1:Float=ay
+			Local x2:Float=ax
+			Local y2:Float=ay+tileh
+			Local x3:Float=ax+tilew
+			Local y3:Float=ay+tileh
+			For Local an:Float=0 To TwoPi Step .5
+			Local x4:Float=Cos(an)*16
+			Local y4:Float=Sin(an)*16
+			If pointintriangle2d(rx+x4,ry+y4,x1,y1,x2,y2,x3,y3)
+				incx=-incx
+				incy=-incy
+				Return
+			End If
+			Next		
+		End if
+
+		Next
+		Next
 	End Method
 	Method controls()
 		'mine
@@ -647,7 +745,7 @@ Class ship
 			If damage > 0 Then 
 				canvas.Color = Color.White.Blend(Color.Black,1.0/10*damage)
 			End If
-			If map[offx+mx,offy+my] = 1
+			If map[offx+mx,offy+my] = 1 'rock
 				'canvas.DrawRect(0+mx*tilew+poffx,0+my*tileh+poffy,tilew,tileh)
 				canvas.DrawImage(rockim,0+mx*tilew+poffx,0+my*tileh+poffy)
 			End If
@@ -691,7 +789,7 @@ Class MyWindow Extends Window
 	Method New()
 		'Setup our images so they can be drawn
 		setupim()
-		myship = New ship(256*48,256*48,0)
+		myship = New ship(256*48,256*48+20,0)
 		myshipinventory = New shipinventory
 	End method
 	
@@ -767,6 +865,53 @@ Class MyWindow Extends Window
 			canvas.DrawText("thrust : "+myship.thrust,0,15)
 			canvas.DrawText("incx and incy : "+myship.incx+","+myship.incy,0,25)
 		End if
+		
+'
+'
+'		Local rx:Int=Mouse.X+myship.x
+'		Local ry:Int=Mouse.Y+myship.y
+'		Local tx:Int=rx/myship.tilew
+'		Local ty:Int=ry/myship.tileh
+'		For Local y2:Int=-1 To 1
+'		For Local x2:Int=-1 To 1
+'			Local ax:Int=(tx+x2)*myship.tilew
+'			Local ay:Int=(ty+y2)*myship.tileh
+'		If myship.map[tx+x2,ty+y2] = 1 'Or isore(myship.map[tx+x2,ty+y2])			
+'			
+'		'rect
+'		debugx1 = rx-myship.x ; debugy1 = ry-myship.y
+'		debugr1 = 32
+'		debugx2 = ax-myship.x
+'		debugy2 = ay-myship.y
+'		debugw1 = myship.tilew
+'		debugh1 = myship.tileh
+'		canvas.Alpha = 0.5
+'		canvas.Color=Color.White
+'		canvas.DrawCircle(debugx1,debugy1,debugr1)
+'		canvas.Color=Color.Yellow
+'		canvas.DrawRect(debugx2,debugy2,debugw1,debugh1)
+'		canvas.Alpha = 1
+'
+'		If circlerectcollide(rx,ry,32,ax,ay,myship.tilew,myship.tileh)=True				
+'			'Return
+'			Print Microsecs()
+'		End If
+'		End If
+'
+'		Next
+'		Next
+'
+'		canvas.Alpha = 0.5
+'		canvas.Color=Color.White
+'		canvas.DrawCircle(debugx1,debugy1,debugr1)
+'		canvas.Color=Color.Yellow
+'		canvas.DrawRect(debugx2,debugy2,debugw1,debugh1)
+'		canvas.Alpha = 1
+''		canvas.DrawRect(250,250,50,50)
+'		canvas.DrawCircle(Mouse.X,Mouse.Y,50)
+'		If circlerectcollide(Mouse.X,Mouse.Y,50,250,250,50,50) Then Print Microsecs()
+
+
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
@@ -1426,4 +1571,38 @@ Function angledifference:Float(target:Float,angle:Float)
 		difference -= TwoPi
 	Wend	
 	Return difference
+End Function
+
+' Here is the circle vs rectangle collide function
+' input :
+' circlex,circley,circleradius
+' rectx,recty,rectwidth,rectheight
+' Returns : True or False
+Function circlerectcollide:Bool(cx:Float,cy:Float,cr:Float, rx:Float,ry:Float,rw:Float,rh:Float)	
+    Local closestx:Float = Clamp(cx, rx, rx+rw)
+    Local closesty:Float = Clamp(cy, ry, ry+rh)
+    Local distancex :Float = cx - closestx
+    Local distancey:Float = cy - closesty
+    Local distancesquared:Float = (distancex * distancex) + (distancey * distancey)
+    Return distancesquared < (cr * cr)
+End Function
+
+Function isore:Bool(val:Int)
+	If val = 7 Then Return True
+	If val = 8 Then Return True
+	Return False
+End Function
+
+' by RaGR (Ralph G. Roeske). from blitzbasic.com
+Function pointintriangle2d:Bool(px:Float,pz:Float, x1:Float,y1:Float,x2:Float,y2:Float,x3:Float,y3:Float) 
+	Local bc:Float,ca:Float,ab:Float,ap:Float,bp:Float,cp:Float,abc:Float
+	bc = x2*y3 - y2*x3 
+	ca = x3*y1 - y3*x1 
+	ab = x1*y2 - y1*x2
+	ap = x1*pz - y1*px
+	bp = x2*pz - y2*px
+	cp = x3*pz - y3*px
+	abc = Sgn(bc + ca + ab)
+	If (abc*(bc-bp+cp)>=0) And (abc*(ca-cp+ap)>=0) And (abc*(ab-ap+bp)>=0) Return True
+	Return False
 End Function
