@@ -276,6 +276,137 @@ Class missiles
 	    x += vx
 	    y += vy		
 	    angle = -ATan2(vy,vx)+TwoPi'-getangle(320,240,x,y)+Pi
+	
+	
+		'collision with walls
+		' get map position
+		Local rx:Int=x+myship.x
+		Local ry:Int=y+myship.y
+		Local tx:Int=rx/myship.tilew
+		Local ty:Int=ry/myship.tileh
+		For Local y2:Int=-1 To 1
+		For Local x2:Int=-1 To 1
+			Local ax:Int=(tx+x2)*myship.tilew
+			Local ay:Int=(ty+y2)*myship.tileh
+			
+			If isore(myship.map[tx+x2,ty+y2]) Or myship.map[tx+x2,ty+y2] = 1
+				If rectsoverlap(ax,ay,myship.tilew,myship.tileh,rx,ry,3,3)
+					deleteme = True
+					For Local i:Int=0 Until 10
+						myexplosions.Add(New explosion(x+Rnd(-32,32),y+Rnd(-32,32),1,Rnd(30)))
+					Next						
+					If Rnd()<.8 Then mypickups.Add(New pickups(x*myship.tilew-myship.x+myship.tilew/2,y*myship.tileh-myship.y+myship.tileh/2,9))
+					If Rnd()<.8 Then mypickups.Add(New pickups(x*myship.tilew-myship.x+myship.tilew/2,y*myship.tileh-myship.y+myship.tileh/2,10))
+
+				End If
+			End If
+			If myship.map[tx+x2,ty+y2] = 2 'left top
+			
+				Local x1:Float=ax
+				Local y1:Float=ay+myship.tileh
+				Local x2:Float=ax+myship.tilew
+				Local y2:Float=ay+myship.tileh
+				Local x3:Float=ax+myship.tilew
+				Local y3:Float=ay
+				For Local an:Float=0 To TwoPi Step .5
+				Local x4:Float=Cos(an)*16
+				Local y4:Float=Sin(an)*16
+				If pointintriangle2d(rx+x4,ry+y4,x1,y1,x2,y2,x3,y3)
+					incx=-incx
+					incy=-incy
+					deleteme = True
+					For Local i:Int=0 Until 10
+						myexplosions.Add(New explosion(x+Rnd(-32,32),y+Rnd(-32,32),1,Rnd(30)))
+					Next						
+					If Rnd()<.8 Then mypickups.Add(New pickups(x+myship.tilew/2,y+myship.tileh/2,9))
+					If Rnd()<.8 Then mypickups.Add(New pickups(x+myship.tilew/2,y+myship.tileh/2,10))
+
+					Return
+				End If
+				Next		
+			End if
+			If myship.map[tx+x2,ty+y2] = 3 'right top
+				Local x1:Float=ax
+				Local y1:Float=ay
+				Local x2:Float=ax+myship.tilew
+				Local y2:Float=ay+myship.tileh
+				Local x3:Float=ax
+				Local y3:Float=ay+myship.tileh
+				For Local an:Float=0 To TwoPi Step .5
+				Local x4:Float=Cos(an)*16
+				Local y4:Float=Sin(an)*16
+				If pointintriangle2d(rx+x4,ry+y4,x1,y1,x2,y2,x3,y3)
+					incx=-incx
+					incy=-incy
+					deleteme = True
+					For Local i:Int=0 Until 10
+						myexplosions.Add(New explosion(x+Rnd(-32,32),y+Rnd(-32,32),1,Rnd(30)))
+					Next						
+					If Rnd()<.8 Then mypickups.Add(New pickups(x+myship.tilew/2,y+myship.tileh/2,9))
+					If Rnd()<.8 Then mypickups.Add(New pickups(x+myship.tilew/2,y+myship.tileh/2,10))
+
+					Return
+				End If
+				Next
+			End If			
+			If myship.map[tx+x2,ty+y2] = 4 'left bottom
+			
+				Local x1:Float=ax
+				Local y1:Float=ay
+				Local x2:Float=ax+myship.tilew
+				Local y2:Float=ay+myship.tileh
+				Local x3:Float=ax+myship.tilew
+				Local y3:Float=ay
+	'
+				For Local an:Float=0 To TwoPi Step .5
+				Local x4:Float=Cos(an)*16
+				Local y4:Float=Sin(an)*16
+				If pointintriangle2d(rx+x4,ry+y4,x1,y1,x2,y2,x3,y3)
+					incx=-incx
+					incy=-incy
+					deleteme = True
+					For Local i:Int=0 Until 10
+						myexplosions.Add(New explosion(x+Rnd(-32,32),y+Rnd(-32,32),1,Rnd(30)))
+					Next						
+					If Rnd()<.8 Then mypickups.Add(New pickups(x+myship.tilew/2,y+myship.tileh/2,9))
+					If Rnd()<.8 Then mypickups.Add(New pickups(x+myship.tilew/2,y+myship.tileh/2,10))
+
+					Return
+				End If
+				Next		
+			End if
+			If myship.map[tx+x2,ty+y2] = 5 'right bottom
+			
+				Local x1:Float=ax
+				Local y1:Float=ay
+				Local x2:Float=ax
+				Local y2:Float=ay+myship.tileh
+				Local x3:Float=ax+myship.tilew
+				Local y3:Float=ay+myship.tileh
+				For Local an:Float=0 To TwoPi Step .5
+				Local x4:Float=Cos(an)*16
+				Local y4:Float=Sin(an)*16
+				If pointintriangle2d(rx+x4,ry+y4,x1,y1,x2,y2,x3,y3)
+					incx=-incx
+					incy=-incy
+					deleteme = True
+					For Local i:Int=0 Until 10
+						myexplosions.Add(New explosion(x+Rnd(-32,32),y+Rnd(-32,32),1,Rnd(30)))
+					Next						
+					If Rnd()<.8 Then mypickups.Add(New pickups(x+myship.tilew/2,y+myship.tileh/2,9))
+					If Rnd()<.8 Then mypickups.Add(New pickups(x+myship.tilew/2,y+myship.tileh/2,10))
+
+					Return
+				End If
+				Next		
+			End if
+			
+		Next
+		Next		
+	
+	
+	
+	
 	End Method
 	Method draw(canvas:Canvas)
 		canvas.Color = Color.White
