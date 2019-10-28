@@ -232,8 +232,8 @@ Class missiles
 		If edistance(x,y,320,240)<32
 			home=False
 			deleteme = True
-			mypickups.Add(New pickups(x*myship.tilew-myship.x+myship.tilew/2,y*myship.tileh-myship.y+myship.tileh/2,9))
-			mypickups.Add(New pickups(x*myship.tilew-myship.x+myship.tilew/2,y*myship.tileh-myship.y+myship.tileh/2,10))
+			If Rnd()<.8 Then mypickups.Add(New pickups(x*myship.tilew-myship.x+myship.tilew/2,y*myship.tileh-myship.y+myship.tileh/2,9))
+			If Rnd()<.8 Then mypickups.Add(New pickups(x*myship.tilew-myship.x+myship.tilew/2,y*myship.tileh-myship.y+myship.tileh/2,10))
 			For Local i:Int=0 Until 10
 				myexplosions.Add(New explosion(x+Rnd(-32,32),y+Rnd(-32,32),1,Rnd(30)))
 			Next
@@ -421,9 +421,12 @@ Class laser
 		For Local i:=Eachin mymissiles
 			If rectsoverlap(i.x,i.y,6,6,x,y,4,4)
 				i.deleteme = True
-					For Local i:Int=0 Until 10
-						myexplosions.Add(New explosion(x+Rnd(-32,32),y+Rnd(-32,32),1,Rnd(30)))
-					Next	
+				If Rnd()<.8 Then mypickups.Add(New pickups(x,y,9))
+				If Rnd()<.8 Then mypickups.Add(New pickups(x,y,10))
+			
+				For Local i:Int=0 Until 10
+					myexplosions.Add(New explosion(x+Rnd(-32,32),y+Rnd(-32,32),1,Rnd(30)))
+				Next	
 			End If
 		Next
 	End Method
