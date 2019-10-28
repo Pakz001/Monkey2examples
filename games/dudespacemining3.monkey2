@@ -239,9 +239,10 @@ Class missiles
 			deleteme = True
 			If Rnd()<.8 Then mypickups.Add(New pickups(x*myship.tilew-myship.x+myship.tilew/2,y*myship.tileh-myship.y+myship.tileh/2,9))
 			If Rnd()<.8 Then mypickups.Add(New pickups(x*myship.tilew-myship.x+myship.tilew/2,y*myship.tileh-myship.y+myship.tileh/2,10))
-			For Local i:Int=0 Until 10
-				myexplosions.Add(New explosion(x+Rnd(-32,32),y+Rnd(-32,32),1,Rnd(30)))
-			Next
+			'For Local i:Int=0 Until 10
+			'	myexplosions.Add(New explosion(x+Rnd(-32,32),y+Rnd(-32,32),1,Rnd(30)))
+			'Next
+			myship.dienow()
 		End If
 		If home=False Then Return
 		launchtime-=1
@@ -482,6 +483,11 @@ Class ship
 					i.x += x-startx
 					i.y += y-starty
 				Next
+				For Local i:=Eachin mypickups
+					i.x += x-startx
+					i.y += y-starty
+				Next
+				mylaser.Clear()				
 				' set to original position
 				x = startx
 				y = starty
