@@ -57,6 +57,7 @@ Class explosion
 	Field startcount:Int,startdelay:Int
 	Field anim:Int[],animpointer:Int=0
 	Field deleteme:Bool	
+	Field rotation:Float
 	Method New(x:Int,y:Int,tp:Int,startdelay:Int)
 		Self.x = x
 		Self.y = y
@@ -76,6 +77,8 @@ Class explosion
 		delay += 1
 		startcount+=1
 		If startcount<startdelay Then Return
+		rotation+=.1
+		If rotation > TwoPi Then rotation = 0
 		If delay > delaymax
 			delay = 0
 			animpointer+=1
@@ -91,11 +94,11 @@ Class explosion
 			Case 1
 				Select anim[animpointer]
 					Case 0
-					canvas.DrawImage(explosionframe1im,x,y)
+					canvas.DrawImage(explosionframe1im,x,y,rotation)
 					Case 1
-					canvas.DrawImage(explosionframe2im,x,y)
+					canvas.DrawImage(explosionframe2im,x,y,rotation)
 					Case 2
-					canvas.DrawImage(explosionframe3im,x,y)
+					canvas.DrawImage(explosionframe3im,x,y,rotation)
 				End Select
 		End Select
 	End Method
@@ -397,7 +400,7 @@ Class laser
 				For Local i:=Eachin mymissiles
 					'Print ax*myship.tilew+ ","+ay*myship.tileh
 					'Exit
-					If edistance(ax*myship.tilew-myship.x,ay*myship.tileh-myship.y,i.x,i.y)<64 Then 
+					If edistance(ax*myship.tilew-myship.x+myship.tilew/2,ay*myship.tileh-myship.y+myship.tileh/2,i.x,i.y)<64 Then 
 						i.deleteme = True
 						If Rnd()<.8 Then mypickups.Add(New pickups(i.x+Rnd(-8,8),i.y+Rnd(-8,8),9))
 						If Rnd()<.8 Then mypickups.Add(New pickups(i.x+Rnd(-8,8),i.y+Rnd(-8,8),10))
