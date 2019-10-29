@@ -180,7 +180,7 @@ Class shipinventory
 	Method New()
 		inv = New Int[23]
 		invnum = New Int[23]
-		For Local i:Int=0 Until 23
+		For Local i:Int=0 Until 5
 			Local num:Int=8
 			If Rnd()<.2 Then num=1
 			If Rnd()<.2 Then num=7			 
@@ -506,7 +506,25 @@ Class pickups
 		' if closer to ship remove (add to inventory!)
 		If edistance(x,y,320,240)<10
 			deleteme = True
+			addtoplayerinventory()
 		End If
+	End Method
+	Method addtoplayerinventory()
+		' first check for almost filled stacks
+		For Local i:Int=0 Until myshipinventory.inv.GetSize(0)
+			If myshipinventory.inv[i] = tp And myshipinventory.invnum[i] < 99
+				myshipinventory.invnum[i] += 1
+				Return
+			End If
+		Next
+		' check for empty inventory space
+		For Local i:Int=0 Until myshipinventory.inv.GetSize(0)
+			If myshipinventory.inv[i] = 0 And myshipinventory.invnum[i] < 99
+				myshipinventory.inv[i] = tp
+				myshipinventory.invnum[i] += 1
+				Return
+			End If
+		Next	
 	End Method
 	Method draw(canvas:Canvas)
 '		canvas.Color = Color.Yellow
@@ -1037,7 +1055,7 @@ Global myexplosions:List<explosion> = New List<explosion>
 Global myminimap:minimap
 
 Class MyWindow Extends Window
-	
+	Field introinfotime:Int=200	
 	Method New()
 		'Setup our images so they can be drawn
 		setupim()
@@ -1056,11 +1074,14 @@ Class MyWindow Extends Window
 			If Keyboard.KeyReleased(Key.Key1) Then gamestate = "world"
 		End If
 		If gamestate = "shipinventory"
+			If Keyboard.KeyReleased(Key.I) Then gamestate = "world"
 			myshipinventory.update()
 			myshipinventory.draw(canvas)
+			
 		End If
 		If gamestate = "world"
 			If Keyboard.KeyReleased(Key.Key1) Then gamestate = "minimap"
+			If Keyboard.KeyReleased(Key.I) Then gamestate = "shipinventory"
 			myship.update()
 			myship.controls()
 			' update the lasers
@@ -1124,6 +1145,17 @@ Class MyWindow Extends Window
 			canvas.DrawText("angle : "+myship.angle,0,0)
 			canvas.DrawText("thrust : "+myship.thrust,0,15)
 			canvas.DrawText("incx and incy : "+myship.incx+","+myship.incy,0,25)
+			If introinfotime>0 Then 
+				introinfotime-=1
+				Local x:Int=310
+				If introinfotime<50 Then x+=320-introinfotime*6
+				canvas.Color = Color.Black
+				canvas.DrawRect(x,0,330,40)
+				canvas.Color = Color.White
+				canvas.DrawText("Press i toggle inventory.",x,0)
+				canvas.DrawText("Press w toggle map.",x,20)
+				
+			End If
 		End if
 		
 '
