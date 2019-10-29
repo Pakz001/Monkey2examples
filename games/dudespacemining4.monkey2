@@ -9,7 +9,10 @@
 ' 6 = background rock(cave)
 ' 7 = rock ore1(crystal)
 ' 8 = rock ore2(metal)
-
+' 9 = space station left top
+' 10 = space station right top
+' 11 = space station left bottom
+' 12 = space station right bottom
 #Import "<std>"
 #Import "<mojo>"
 
@@ -67,6 +70,24 @@ Global explosionframe3can:Canvas
 Global missileim:Image
 Global missilecan:Canvas
 
+Global spacestationltim:Image
+Global spacestationrtim:Image
+Global spacestationlbim:Image
+Global spacestationrbim:Image
+Global spacestationltcan:Canvas
+Global spacestationrtcan:Canvas
+Global spacestationlbcan:Canvas
+Global spacestationrbcan:Canvas
+
+Class spacestation
+	Field tilex:Int,tiley:Int	
+	Method New(x:Int,y:Int)
+		tilex = x
+		tiley = y
+	End Method
+	Method update()
+	End Method
+End Class
 
 Class minimap
 	Field infotexttime:Int=200
@@ -111,6 +132,11 @@ Class minimap
 		For Local i:=Eachin mymissiles
 			minimapcan.Color = Color.Red
 			minimapcan.DrawPoint(myship.x/myship.tilew+i.x/myship.tilew,myship.y/myship.tileh+i.y/myship.tileh)			
+		Next
+		'add spacestations
+		For Local i:Int=0 Until myspacestation.Length
+			minimapcan.Color = Color.Blue
+			minimapcan.DrawPoint(myship.x/myship.tilew+myspacestation.Get(i).tilex,myship.y/myship.tileh+myspacestation.Get(i).tiley)					
 		Next
 		minimapcan.Flush()
 
@@ -1036,6 +1062,14 @@ Class ship
 				mymissiles.Add(New missiles(((nx)*tilew)-32/2,ny*tileh+tileh/2,Pi))
 			End If
 		Next
+
+		' add space station
+		myspacestation.Push(New spacestation(400,400))
+		map[400,400] = 9
+		map[401,400] = 10
+		map[400,401] = 11
+		map[401,401] = 12
+
 	End Method
 	Method drawmap(canvas:Canvas)
 		Local offx:Int=x/tilew
@@ -1074,6 +1108,18 @@ Class ship
 			If map[offx+mx,offy+my] = 8 'rock ore 2 (metal)
 				canvas.DrawImage(rockore2im,0+mx*tilew+poffx,0+my*tileh+poffy)
 			End if
+			If map[offx+mx,offy+my] = 9 'space station left top
+				canvas.DrawImage(spacestationltim,0+mx*tilew+poffx,0+my*tileh+poffy)
+			End if
+			If map[offx+mx,offy+my] = 10 'space station right top
+				canvas.DrawImage(spacestationrtim,0+mx*tilew+poffx,0+my*tileh+poffy)
+			End if
+			If map[offx+mx,offy+my] = 11 'space station left bottom
+				canvas.DrawImage(spacestationlbim,0+mx*tilew+poffx,0+my*tileh+poffy)
+			End if
+			If map[offx+mx,offy+my] = 12 'space station right bottom
+				canvas.DrawImage(spacestationrbim,0+mx*tilew+poffx,0+my*tileh+poffy)
+			End if
 
 		Next
 		Next
@@ -1096,6 +1142,7 @@ Global mymissiles:List<missiles> = New List<missiles>
 Global myshipinventory:shipinventory
 Global myexplosions:List<explosion> = New List<explosion>
 Global myminimap:minimap
+Global myspacestation:Stack<spacestation> = New Stack<spacestation>
 
 Class MyWindow Extends Window
 	Field introinfotime:Int=200	
@@ -1311,6 +1358,15 @@ Class MyWindow Extends Window
 		explosionframe3im = New Image(32,32)
 		explosionframe3can = New Canvas(explosionframe3im)
 		explosionframe3im.Handle = New Vec2f(0.5,0.5)
+
+		spacestationltim = New Image(48,48)
+		spacestationltcan = New Canvas(spacestationltim)
+		spacestationrtim = New Image(48,48)
+		spacestationrtcan = New Canvas(spacestationrtim)
+		spacestationlbim = New Image(48,48)
+		spacestationlbcan = New Canvas(spacestationlbim)
+		spacestationrbim = New Image(48,48)
+		spacestationrbcan = New Canvas(spacestationrbim)
 
 'ship
 Local map := New Int[][] (
@@ -1847,6 +1903,114 @@ New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4))
 		Next
 		Next
 		explosionframe3can.Flush()
+
+'space station left top
+map = New Int[][] (
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,0),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,0,0,0,1),
+New Int[](4,4,4,4,4,4,4,4,4,4,0,0,12,15,12,1),
+New Int[](4,4,4,4,4,4,4,0,0,0,12,15,15,15,12,1),
+New Int[](4,4,4,4,4,0,0,12,15,15,15,15,15,15,12,1),
+New Int[](4,4,4,0,0,12,15,15,15,1,1,15,15,15,12,1),
+New Int[](4,0,0,12,15,15,15,1,1,12,15,15,15,15,12,1),
+New Int[](0,12,15,15,15,1,1,12,15,15,15,15,15,15,11,12),
+New Int[](0,15,15,1,1,12,15,15,15,15,15,15,15,12,11,12),
+New Int[](0,15,15,15,15,15,15,15,15,15,15,15,12,11,11,12),
+New Int[](0,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12),
+New Int[](0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1),
+New Int[](0,11,0,11,0,11,0,11,0,11,0,11,0,11,0,11),
+New Int[](0,11,7,11,7,11,7,11,7,11,7,11,7,11,7,11))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			spacestationltcan.Color = c64color[map[y][x]]
+			If map[y][x] = 4 Then spacestationltcan.Alpha = 0 Else spacestationltcan.Alpha=1
+			spacestationltcan.DrawRect(x*3,y*3,3,3)
+		Next
+		Next
+		spacestationltcan.Flush()
+
+'space station right top
+map = New Int[][] (
+New Int[](0,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](1,0,0,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](1,12,12,0,0,0,4,4,4,4,4,4,4,4,4,4),
+New Int[](1,12,15,15,15,12,0,0,0,4,4,4,4,4,4,4),
+New Int[](1,12,15,15,15,15,15,15,12,0,0,4,4,4,4,4),
+New Int[](1,12,15,15,15,1,1,15,15,15,12,0,0,4,4,4),
+New Int[](1,12,15,15,15,15,12,1,1,15,15,15,12,0,0,4),
+New Int[](12,11,15,15,15,15,15,15,12,1,1,15,15,15,12,0),
+New Int[](12,11,12,15,15,15,15,15,15,15,12,1,1,15,15,0),
+New Int[](12,11,11,12,15,15,15,15,15,15,15,15,15,15,15,0),
+New Int[](11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,0),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,0),
+New Int[](1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0),
+New Int[](0,11,0,11,0,11,0,11,0,11,0,11,0,11,11,0),
+New Int[](7,11,7,11,7,11,7,11,7,11,7,11,7,11,11,0))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			spacestationrtcan.Color = c64color[map[y][x]]
+			If map[y][x] = 4 Then spacestationrtcan.Alpha = 0 Else spacestationrtcan.Alpha=1
+			spacestationrtcan.DrawRect(x*3,y*3,3,3)
+		Next
+		Next
+		spacestationrtcan.Flush()
+
+'space station left bottom
+map = New Int[][] (
+New Int[](0,11,7,11,7,11,7,11,7,11,7,11,7,11,7,11),
+New Int[](0,11,0,11,0,11,0,11,0,11,0,11,0,11,0,11),
+New Int[](0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1),
+New Int[](0,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](0,11,11,11,11,11,11,11,11,11,11,11,11,11,11,11),
+New Int[](0,15,15,15,15,15,15,15,15,15,15,12,11,11,11,12),
+New Int[](4,0,12,15,15,15,15,15,15,15,15,15,12,11,11,12),
+New Int[](4,4,0,0,12,15,15,15,15,15,15,15,15,11,11,12),
+New Int[](4,4,4,4,0,0,12,15,15,15,15,15,15,15,11,12),
+New Int[](4,4,4,4,4,4,0,12,15,15,15,15,15,15,12,1),
+New Int[](4,4,4,4,4,4,4,0,0,0,0,12,15,15,12,1),
+New Int[](4,4,4,4,4,4,4,4,4,0,0,0,0,0,12,1),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,0,0,0,12,1),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,0,0,1),
+New Int[](4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,0))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			spacestationlbcan.Color = c64color[map[y][x]]
+			If map[y][x] = 4 Then spacestationlbcan.Alpha = 0 Else spacestationlbcan.Alpha=1
+			spacestationlbcan.DrawRect(x*3,y*3,3,3)
+		Next
+		Next
+		spacestationlbcan.Flush()
+
+'space station right bottom
+map = New Int[][] (
+New Int[](7,11,7,11,7,11,7,11,7,11,7,11,7,11,11,0),
+New Int[](0,11,0,11,0,11,0,11,0,11,0,11,0,11,11,0),
+New Int[](1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0),
+New Int[](12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,0),
+New Int[](0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+New Int[](11,11,11,11,11,11,11,11,11,11,11,11,11,11,11,0),
+New Int[](12,11,11,11,12,15,15,15,15,15,15,15,15,15,15,0),
+New Int[](12,11,11,12,15,15,15,15,15,15,15,15,15,12,0,4),
+New Int[](12,11,11,15,15,15,15,15,15,15,15,12,0,0,4,4),
+New Int[](12,11,15,15,15,15,15,15,15,12,0,0,4,4,4,4),
+New Int[](1,12,15,15,15,15,15,15,12,0,4,4,4,4,4,4),
+New Int[](1,12,15,15,12,0,0,0,0,4,4,4,4,4,4,4),
+New Int[](1,12,0,0,0,0,0,4,4,4,4,4,4,4,4,4),
+New Int[](1,12,0,0,0,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](1,0,0,4,4,4,4,4,4,4,4,4,4,4,4,4),
+New Int[](0,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4))
+		For Local y:Int=0 Until 16
+		For Local x:Int=0 Until 16
+			spacestationrbcan.Color = c64color[map[y][x]]
+			If map[y][x] = 4 Then spacestationrbcan.Alpha = 0 Else spacestationrbcan.Alpha=1
+			spacestationrbcan.DrawRect(x*3,y*3,3,3)
+		Next
+		Next
+		spacestationrbcan.Flush()
 
 End Method
 	'
