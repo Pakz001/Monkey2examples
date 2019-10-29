@@ -69,32 +69,75 @@ Global missilecan:Canvas
 
 
 Class minimap
+	Field infotexttime:Int=200
 	Field minimapim:Image
-	Field mapcan:Canvas
+	Field minimapcan:Canvas
+	Field x:Int,y:Int
 	Method New()
 		createmap()
 	End Method
 	Method createmap()
 		minimapim = New Image(myship.map.GetSize(0),myship.map.GetSize(1))
-		mapcan = New Canvas(minimapim)
+		minimapcan = New Canvas(minimapim)
 		For Local _y:Int=0 Until minimapim.Height
 		For Local _x:Int=0 Until minimapim.Width
 			If solid(_x,_y) 
-				mapcan.Color = Color.Grey
-				mapcan.DrawPoint(_x,_y)
+				minimapcan.Color = Color.Grey
+				minimapcan.DrawPoint(_x,_y)
 			End If
 			If myship.map[_x,_y] = 6 Then 
-				mapcan.Color = Color.Grey.Blend(Color.Black,.7)
-				mapcan.DrawPoint(_x,_y)
+				minimapcan.Color = Color.Grey.Blend(Color.Black,.7)
+				minimapcan.DrawPoint(_x,_y)
 			End If
 		Next
 		Next
-		mapcan.Flush()
+		minimapcan.Flush()
+	End Method
+	Method update()
+		
+		If Keyboard.KeyDown(Key.Right) Then x-=10
+		If Keyboard.KeyDown(Key.Left) Then x+=10
+		If Keyboard.KeyDown(Key.Down) Then y-=10
+		If Keyboard.KeyDown(Key.Up) Then y+=10
+		
+	End Method
+	Method addentities()
+		infotexttime = 100
+		x = -(myship.x/myship.tilew)*4+320
+		y = -(myship.y/myship.tileh)*4+240
+		minimapcan.Color = Color.Yellow
+		minimapcan.DrawPoint(myship.x/myship.tilew+((320/myship.tilew)),myship.y/myship.tileh+((240/myship.tileh)))
+		'add missiles
+		For Local i:=Eachin mymissiles
+			minimapcan.Color = Color.Red
+			minimapcan.DrawPoint(myship.x/myship.tilew+i.x/myship.tilew,myship.y/myship.tileh+i.y/myship.tileh)			
+		Next
+		minimapcan.Flush()
+
+	End Method
+	Method removeentities()
+		minimapcan.Color = Color.Grey.Blend(Color.Black,.7)
+		minimapcan.DrawPoint(myship.x/myship.tilew+((320/myship.tilew)),myship.y/myship.tileh+((240/myship.tileh)))
+		For Local i:=Eachin mymissiles		
+			minimapcan.DrawPoint(myship.x/myship.tilew+i.x/myship.tilew,myship.y/myship.tileh+i.y/myship.tileh)			
+		Next
+		minimapcan.Flush()
 	End Method
 	Method draw(canvas:Canvas)
-		canvas.Color = Color.White
-		canvas.DrawImage(minimapim,0,0)
+				
+		canvas.Color = Color.White		
+		canvas.DrawImage(minimapim,x,y,0,4,4)
+
+		If infotexttime>0 Then
+			infotexttime-=1
+			canvas.Color = Color.Black
+			canvas.DrawRect(200,0,640-200,30)
+			canvas.Color = Color.White		
+			canvas.DrawText("Use Cursor Keys to move map around.. M - exit",210,0)
+		End If
+
 	End Method
+	
 	Method solid:Bool(_x:Int,_y:Int)
 		Select myship.map[_x,_y]
 			Case 0 'nothing
@@ -1071,7 +1114,11 @@ Class MyWindow Extends Window
 		'
 		If gamestate = "minimap"
 			myminimap.draw(canvas)
-			If Keyboard.KeyReleased(Key.Key1) Then gamestate = "world"
+			If Keyboard.KeyReleased(Key.M) Then 
+				gamestate = "world"
+				myminimap.removeentities()
+			End If
+			myminimap.update()
 		End If
 		If gamestate = "shipinventory"
 			If Keyboard.KeyReleased(Key.I) Then gamestate = "world"
@@ -1080,7 +1127,10 @@ Class MyWindow Extends Window
 			
 		End If
 		If gamestate = "world"
-			If Keyboard.KeyReleased(Key.Key1) Then gamestate = "minimap"
+			If Keyboard.KeyReleased(Key.M) Then 
+				gamestate = "minimap"
+				myminimap.addentities()
+			End if
 			If Keyboard.KeyReleased(Key.I) Then gamestate = "shipinventory"
 			myship.update()
 			myship.controls()
@@ -1153,7 +1203,7 @@ Class MyWindow Extends Window
 				canvas.DrawRect(x,0,330,40)
 				canvas.Color = Color.White
 				canvas.DrawText("Press i toggle inventory.",x,0)
-				canvas.DrawText("Press w toggle map.",x,20)
+				canvas.DrawText("Press m toggle map.",x,20)
 				
 			End If
 		End if
