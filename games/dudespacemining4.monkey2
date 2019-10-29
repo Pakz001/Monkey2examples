@@ -94,7 +94,12 @@ Class minimap
 	Field minimapim:Image
 	Field minimapcan:Canvas
 	Field x:Int,y:Int
+	Field entityim:Image
+	Field entitycan:Canvas
 	Method New()
+		entityim = New Image(myship.map.GetSize(0),myship.map.GetSize(1))
+		entitycan = New Canvas(entityim)
+		entitycan.Flush()
 		createmap()
 	End Method
 	Method createmap()
@@ -102,7 +107,7 @@ Class minimap
 		minimapcan = New Canvas(minimapim)
 		For Local _y:Int=0 Until minimapim.Height
 		For Local _x:Int=0 Until minimapim.Width
-			If solid(_x,_y) 
+			If solid(_x,_y)
 				minimapcan.Color = Color.Grey
 				minimapcan.DrawPoint(_x,_y)
 			End If
@@ -123,37 +128,32 @@ Class minimap
 		
 	End Method
 	Method addentities()
+		entitycan.Clear(New Color(0,0,0,.5))
+		entitycan.Flush()
 		infotexttime = 100
 		x = -(myship.x/myship.tilew)*4+320
 		y = -(myship.y/myship.tileh)*4+240
-		minimapcan.Color = Color.Yellow
-		minimapcan.DrawPoint(myship.x/myship.tilew+((320/myship.tilew)),myship.y/myship.tileh+((240/myship.tileh)))
+		entitycan.Color = Color.Yellow
+		entitycan.DrawPoint(myship.x/myship.tilew+((320/myship.tilew)),myship.y/myship.tileh+((240/myship.tileh)))
 		'add missiles
 		For Local i:=Eachin mymissiles
-			minimapcan.Color = Color.Red
-			minimapcan.DrawPoint(myship.x/myship.tilew+i.x/myship.tilew,myship.y/myship.tileh+i.y/myship.tileh)			
+			entitycan.Color = Color.Red
+			entitycan.DrawPoint(myship.x/myship.tilew+i.x/myship.tilew,myship.y/myship.tileh+i.y/myship.tileh)			
 		Next
 		'add spacestations
 		For Local i:Int=0 Until myspacestation.Length
-			minimapcan.Color = Color.Blue
-			minimapcan.DrawPoint(myship.x/myship.tilew+myspacestation.Get(i).tilex,myship.y/myship.tileh+myspacestation.Get(i).tiley)					
+			entitycan.Color = Color.Blue
+			entitycan.DrawRect(myspacestation.Get(i).tilex,myspacestation.Get(i).tiley,4,4)					
 		Next
-		minimapcan.Flush()
+		entitycan.Flush()
 
-	End Method
-	Method removeentities()
-		minimapcan.Color = Color.Grey.Blend(Color.Black,.7)
-		minimapcan.DrawPoint(myship.x/myship.tilew+((320/myship.tilew)),myship.y/myship.tileh+((240/myship.tileh)))
-		For Local i:=Eachin mymissiles		
-			minimapcan.DrawPoint(myship.x/myship.tilew+i.x/myship.tilew,myship.y/myship.tileh+i.y/myship.tileh)			
-		Next
-		minimapcan.Flush()
 	End Method
 	Method draw(canvas:Canvas)
 				
 		canvas.Color = Color.White		
 		canvas.DrawImage(minimapim,x,y,0,4,4)
-
+		
+		canvas.DrawImage(entityim,x,y,0,4,4)
 		If infotexttime>0 Then
 			infotexttime-=1
 			canvas.Color = Color.Black
@@ -1064,11 +1064,11 @@ Class ship
 		Next
 
 		' add space station
-		myspacestation.Push(New spacestation(400,400))
-		map[400,400] = 9
-		map[401,400] = 10
-		map[400,401] = 11
-		map[401,401] = 12
+		myspacestation.Push(New spacestation(350,350))
+		map[350,350] = 9
+		map[351,350] = 10
+		map[350,351] = 11
+		map[351,351] = 12
 
 	End Method
 	Method drawmap(canvas:Canvas)
@@ -1149,9 +1149,9 @@ Class MyWindow Extends Window
 	Method New()
 		'Setup our images so they can be drawn
 		setupim()
-		myship = New ship(256*48,256*48+20,0)
-		startx = 256*48
-		starty = 256*48+20
+		myship = New ship(349*48,349*48+20,0)
+		startx = 349*48
+		starty = 349*48+20
 		myshipinventory = New shipinventory
 		myminimap = New minimap
 	End method
@@ -1162,8 +1162,7 @@ Class MyWindow Extends Window
 		If gamestate = "minimap"
 			myminimap.draw(canvas)
 			If Keyboard.KeyReleased(Key.M) Then 
-				gamestate = "world"
-				myminimap.removeentities()
+				gamestate = "world"				
 			End If
 			myminimap.update()
 		End If
