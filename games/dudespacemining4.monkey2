@@ -997,6 +997,11 @@ Class ship
 			If map[x,y] = 1 And map[x+1,y+1] = 1 And map[x+1,y]=6 Then map[x+1,y] = 3 'right top rock
 			If map[x,y] = 1 And map[x-1,y-1] = 1 And map[x-1,y]=6 Then map[x-1,y] = 4 'left bottom rock
 			If map[x,y] = 1 And map[x+1,y-1] = 1 And map[x+1,y]=6 Then map[x+1,y] = 5 'right bottom rock
+
+			If map[x,y] = 1 And map[x-1,y+1] = 1 And map[x-1,y]=0 Then map[x-1,y] = 2 'left top rock
+			If map[x,y] = 1 And map[x+1,y+1] = 1 And map[x+1,y]=0 Then map[x+1,y] = 3 'right top rock
+			If map[x,y] = 1 And map[x-1,y-1] = 1 And map[x-1,y]=0 Then map[x-1,y] = 4 'left bottom rock
+			If map[x,y] = 1 And map[x+1,y-1] = 1 And map[x+1,y]=0 Then map[x+1,y] = 5 'right bottom rock
 		Next
 		Next
 		
