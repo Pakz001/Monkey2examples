@@ -30,6 +30,7 @@ Class spriteeditor
 	End Class
 
 	' start setup
+	Field startsetuppalettemode:Int=0 '0=c64 1=db32
 	Field startsetupdone:Bool
 	Field startsetupx:Int
 	Field startsetupy:Int
@@ -190,9 +191,9 @@ Class spriteeditor
 		'start setup setup
 		' be sure to start the editor with the selection
 		startsetupdone=False 
-		startsetupx = 320-50
+		startsetupx = 320-80
 		startsetupy = 150
-		startsetupwidth = 100
+		startsetupwidth = 150
 		startsetupheight = 200-35
 		startsetupim = New Image[numstartsetup]
 		startsetupcan = New Canvas[numstartsetup]
@@ -467,19 +468,45 @@ Class spriteeditor
 
 		Local selected:Bool=False		
 		For Local i:Int=0 Until 3
-			canvas.Color = Color.Black
+			canvas.Color = Color.Grey.Blend(Color.Black,.5)
 			canvas.DrawRect(startsetupx+8+20,startsetupy+8+i*48,32,32)
 			canvas.Color = Color.White
 			canvas.DrawImage(startsetupim[i],startsetupx+9+20,startsetupy+9+i*48,0,.9,.9)
+			' draw the palette buttons
+			canvas.Color = Color.Black
+			canvas.DrawRect(startsetupx+8+50,startsetupy+8+i*48,32,32)
+			canvas.Color = Color.White
+			canvas.DrawImage(startsetupim[3],startsetupx+9+50,startsetupy+9+i*48,0,.9,.9)
+			canvas.Color = Color.Black
+			canvas.DrawRect(startsetupx+8+80,startsetupy+8+i*48,32,32)
+			canvas.Color = Color.White
+			canvas.DrawImage(startsetupim[4],startsetupx+9+80,startsetupy+9+i*48,0,.9,.9)
+						
 			If Mouse.ButtonDown(MouseButton.Left)
-				If rectsoverlap(Mouse.X,Mouse.Y,1,1,startsetupx+9+20,startsetupy+9+i*48,32,32)
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,startsetupx+9+50,startsetupy+9+i*48,32,32)
 					startsetupselected = i
+					startsetuppalettemode = 0
 					selected = true
 				End If
+				If rectsoverlap(Mouse.X,Mouse.Y,1,1,startsetupx+9+80,startsetupy+9+i*48,32,32)
+					startsetupselected = i
+					startsetuppalettemode = 1
+					selected = true
+				End If				
 			End If
 		Next
 
 		If selected = True
+			If startsetuppalettemode = 1 ' if the db32 palette was selected
+				paletteeraser = 0
+				palettex = 640-150
+				palettey = 32
+				palettewidth = 32*4
+				paletteheight = 32*4
+				numpalette = 32
+				palettecellwidth = 32*4/4
+				palettecellheight = 32*4/8
+			End If
 			
 			Select startsetupselected
 				Case 0
@@ -1084,7 +1111,11 @@ End Method
 		For Local x:Int=0 Until spritewidth
 			Local pointx:Float=x*spritelibscale
 			Local pointy:Float=y*spritelibscale
-			spritelibcan[spritelibselected].Color = c64color[map[x,y]]
+			If startsetuppalettemode = 0
+				spritelibcan[spritelibselected].Color = c64color[map[x,y]]
+				Else
+				spritelibcan[spritelibselected].Color = db32color[map[x,y]]
+			End If
 			spritelibcan[spritelibselected].DrawRect(pointx,pointy,spritelibscale,spritelibscale)			
 			spritelibmap[spritelibselected,x,y] = map[x,y]
 		Next
@@ -1109,7 +1140,11 @@ End Method
 			Local pointx:Int=(x*gridwidth)+canvasx
 			Local pointy:Int=(y*gridheight)+canvasy
 			'canvas.DrawRect()
-			canvas.Color = c64color[map[x,y]]			
+			If startsetuppalettemode = 0
+				canvas.Color = c64color[map[x,y]]			
+				Else
+				canvas.Color = db32color[map[x,y]]			
+			End If
 			canvas.DrawRect(pointx,pointy,gridwidth,gridheight)
 			
 			'
@@ -1446,7 +1481,11 @@ End Method
 	    While exitloop = False
 		    Local pointx:Int=canvasx+(x1*gridwidth)
 		    Local pointy:Int=canvasy+(y1*gridheight)
-		    canvas.Color = c64color[paletteselected]
+		    If startsetuppalettemode = 0
+		    	canvas.Color = c64color[paletteselected]
+		    	else
+			    canvas.Color = db32color[paletteselected]
+			End If
 			canvas.DrawRect(pointx,pointy,gridwidth,gridheight)  
 			If drawit=True Then 				
 				If x1<0 Or y1<0 Or x1>=spritewidth Or y1>=spriteheight Then Exit
@@ -1538,7 +1577,11 @@ End Method
 			Local pointy:Float=y+palettey
 			'
 			' Draw our color
-			canvas.Color = c64color[cc]
+			If startsetuppalettemode = 0
+				canvas.Color = c64color[cc]
+				Else
+				canvas.Color = db32color[cc]
+			End If
 			canvas.DrawRect(pointx,pointy,palettecellwidth,palettecellheight)
 			'
 			' Draw a white bar around the currently selected color
@@ -1574,7 +1617,11 @@ End Method
 		For Local x:Int=0 Until map.GetSize(0)
 			Local pointx:Int=x*previewcellwidth
 			Local pointy:Int=y*previewcellheight
-			previewcan.Color = c64color[map[x,y]]
+			If startsetuppalettemode = 0
+				previewcan.Color = c64color[map[x,y]]
+				Else
+				previewcan.Color = db32color[map[x,y]]
+			End If
 			previewcan.DrawRect(pointx,pointy,previewcellwidth,previewcellheight)
 		Next
 		Next
