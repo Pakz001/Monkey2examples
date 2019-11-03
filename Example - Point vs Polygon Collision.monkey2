@@ -31,11 +31,13 @@ Class MyWindow Extends Window
 		
 		'
 		drawpoly(canvas)
-		If pointpolycollide(canvas,Mouse.X,Mouse.Y) =True Then 
+		If pointpolycollide(Mouse.X,Mouse.Y) =True Then 
 			canvas.Color = Color.White
 			canvas.DrawText("Collision",0,0)
 		End If
 		
+		canvas.Color = Color.White
+		canvas.DrawText("Move mouse inside and outside of polygon",320,0)
 		' if key escape then quit
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
@@ -46,21 +48,16 @@ Class MyWindow Extends Window
 		Next
 		canvas.DrawLine(polygonx[0],polygony[0],polygonx[polygonx.GetSize(0)-1],polygony[polygony.GetSize(0)-1])
 	End Method
-	Method pointpolycollide:Bool(canvas:Canvas,pointx:Int,pointy:Int)
+	Method pointpolycollide:Bool(pointx:Int,pointy:Int)
 		Local collisioncount:Int=0
 		Local sx:Int=Rnd(640),sy:Int=Rnd(480)
 		If Rnd()<.5 Then sx-=1000 Else sx+=1000
 		If Rnd()<.5 Then sy-=1000 Else sy+=1000
-		sx = 320 ; sy = 100
 		For Local i:Int=1 Until polygonx.GetSize(0)
 			If get_line_intersection(polygonx[i-1],polygony[i-1],polygonx[i],polygony[i],pointx,pointy,sx,sy) Then collisioncount+=1			
 		Next
 		If get_line_intersection(polygonx[0],polygony[0],polygonx[polygonx.GetSize(0)-1],polygony[polygony.GetSize(0)-1],pointx,pointy,sx,sy) Then collisioncount+=1
 		'
-		
-		'
-		'Print (collisioncount Mod 2)
-'		Print collisioncount
 		If (collisioncount Mod 2) > 0 Then Return True
 		
 		'
@@ -75,8 +72,7 @@ Function Main()
 End Function
 
 
-'// Returns 1 if the lines intersect, otherwise 0. In addition, if the lines 
-'// intersect the intersection point may be stored in the floats i_x and i_y.
+'// Returns 1 if the lines intersect, otherwise 0.  Andre la moth.
 Function get_line_intersection:Bool(p0_x:Float, p0_y:Float, p1_x:Float, p1_y:Float, p2_x:Float,p2_y:Float, p3_x:Float, p3_y:Float)
 	
     Local s1_x:Float, s1_y:Float, s2_x:Float, s2_y:Float
