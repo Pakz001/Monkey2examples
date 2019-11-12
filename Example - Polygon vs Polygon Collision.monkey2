@@ -15,15 +15,16 @@ Class MyWindow Extends Window
 	Method New()
 		polygon1x = New Int[4]
 		polygon1y = New Int[4]
-		polygon1x[0] = 50 + 100
-		polygon1y[0] = 50 + 100
-		polygon1x[1] = 250 + 100
-		polygon1y[1] = 100 + 100
-		polygon1x[2] = 250 + 100
-		polygon1y[2] = 250 + 100
-		polygon1x[3] = 200 + 100
-		polygon1y[3] = 250 + 100
-
+		polygon1x[0] = 0 + 200
+		polygon1y[0] = 0 + 200
+		polygon1x[1] = 50 + 200
+		polygon1y[1] = 0 + 200
+		polygon1x[2] = 50 + 200
+		polygon1y[2] = 50 + 200
+		polygon1x[3] = -20 + 200
+		polygon1y[3] = 50 + 200
+		
+		
 		polygon2x = New Int[4]
 		polygon2y = New Int[4]
 		polygon2x[0] = 0 
@@ -44,13 +45,13 @@ Class MyWindow Extends Window
 		' update the position of the second polygon
 		polygon2x[0] = 0 + Mouse.X
 		polygon2y[0] = 0 + Mouse.Y
-		polygon2x[1] = 50 + Mouse.X
+		polygon2x[1] = 50 +100+ Mouse.X
 		polygon2y[1] = 0 + Mouse.Y
-		polygon2x[2] = 50 + Mouse.X
-		polygon2y[2] = 100 + Mouse.Y
+		polygon2x[2] = 50 +100+ Mouse.X
+		polygon2y[2] = 100 +100 +Mouse.Y
 		polygon2x[3] = 0 + Mouse.X
-		polygon2y[3] = 0 + Mouse.Y
-		
+		polygon2y[3] = 0  +100+Mouse.Y
+		'
 		'
 		drawpolygon(canvas,polygon1x,polygon1y)
 		drawpolygon(canvas,polygon2x,polygon2y)
@@ -78,15 +79,26 @@ Class MyWindow Extends Window
 End	Class
 
 Function polypolycollide:Bool(poly1x:Int[],poly1y:Int[],poly2x:Int[],poly2y:Int[])
-	'first check if the first polygon is inside the second polygon
+	'first check if the second polygon is inside the first polygon
 	Local x:Int=-5000,y:Int=-5000
 	Local cnt:Int=0
 	For Local i:Int=1 Until poly1x.GetSize(0)
 		If get_line_intersection(x,y,poly2x[0],poly2y[0],poly1x[i-1],poly1y[i-1],poly1x[i],poly1y[i]) Then cnt+=1
 	Next
-	If get_line_intersection(x,y,poly2x[0],poly2y[0],poly1x[poly1x.GetSize(0)-1],poly1y[poly2x.GetSize(0)-1],poly1x[0],poly1y[0]) Then cnt+=1
+	If get_line_intersection(x,y,poly2x[0],poly2y[0],poly1x[poly1x.GetSize(0)-1],poly1y[poly1x.GetSize(0)-1],poly1x[0],poly1y[0]) Then cnt+=1
 	'
 	If (cnt Mod 2) > 0	Then Return True
+	'Now check if the first polygon is inside the second polygon
+	x=-5000
+	y=-5000
+	cnt=0
+	For Local i:Int=1 Until poly2x.GetSize(0)
+		If get_line_intersection(x,y,poly1x[0],poly1y[0],poly2x[i-1],poly2y[i-1],poly2x[i],poly2y[i]) Then cnt+=1
+	Next
+	If get_line_intersection(x,y,poly1x[0],poly1y[0],poly2x[poly2x.GetSize(0)-1],poly2y[poly2x.GetSize(0)-1],poly2x[0],poly2y[0]) Then cnt+=1
+	'
+	If (cnt Mod 2) > 0	Then Return True
+
 	'
 	' Now check if any of the lines of the two polygons touch
 	For Local i:Int=1 Until poly1x.GetSize(0)
@@ -97,6 +109,10 @@ Function polypolycollide:Bool(poly1x:Int[],poly1y:Int[],poly2x:Int[],poly2y:Int[
 	For Local j:Int=1 Until poly2x.GetSize(0)
 		If get_line_intersection(poly2x[j-1],poly2y[j-1],poly2x[j],poly2y[j],poly1x[0],poly1y[0],poly1x[poly1x.GetSize(0)-1],poly1y[poly1x.GetSize(0)-1]) Then Return True
 	Next
+	For Local j:Int=1 Until poly1x.GetSize(0)
+		If get_line_intersection(poly1x[j-1],poly1y[j-1],poly1x[j],poly1y[j],poly2x[0],poly2y[0],poly2x[poly1x.GetSize(0)-1],poly2y[poly2x.GetSize(0)-1]) Then Return True
+	Next
+
 	'There was no Collision between the two polygons ___ Return
 	Return False
 End Function
