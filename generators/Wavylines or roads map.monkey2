@@ -30,12 +30,30 @@ Class MyWindow Extends Window
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 
+	Method blurmap()
+		For Local y:Int=4 Until mapheight-4
+		For Local x:Int=4 Until mapwidth-4
+			If map[x,y] = 1				
+				For Local y2:Int=-1 To 1
+				For Local x2:Int=-1 To 1
+					If map[x+x2,y+y2] = 0 Then
+						map[x,y] = 2
+						Exit						
+					End If
+				Next
+				Next				
+			End If
+		Next
+		Next
+	End Method
+
 	Method newmap()
+		numpoints=Rnd(6,30)
 		map = New Int[mapwidth,mapheight]
 		point = New Vec2i[numpoints]
 		For Local i:Int=0 Until point.GetSize(0)
-			point[i].y = Rnd(4,mapheight-4)
-			point[i].x = Rnd(4,mapwidth-4)
+			point[i].y = Rnd(8,mapheight-8)
+			point[i].x = Rnd(8,mapwidth-8)
 		Next
 		pointvisited = New Bool[numpoints]
 		'
@@ -60,6 +78,7 @@ Class MyWindow Extends Window
 			Local cnt:Int,cnt2:Int
 			Local m2:Float
 			Local phase1:Bool=False
+			Local s1:Int=1,s2:Int=1
 			While distance(tx,ty,point[p2].x,point[p2].y) > 2
 				
 				cnt+=1
@@ -78,9 +97,10 @@ Class MyWindow Extends Window
 				tx+=Cos(angle)
 				ty+=Sin(angle)
 				
-				For Local y:Int=-1 To 1
-				For Local x:Int=-1 To 1
-					If tx>4 And tx<mapwidth-4 And ty>4 And ty<mapheight-4
+				If Rnd()<.05 Then s1=Rnd(1,4);s2=Rnd(1,4)
+				For Local y:Int=-s1 To s2
+				For Local x:Int=-s1 To s2
+					If tx>8 And tx<mapwidth-8 And ty>8 And ty<mapheight-8
 					map[tx+x,ty+y] = 1
 					End If
 				Next
@@ -98,7 +118,7 @@ Class MyWindow Extends Window
 			
 		Wend
 		'
-
+		blurmap()
 	End Method
 	
 	Method drawmap(canvas:Canvas)
@@ -110,6 +130,11 @@ Class MyWindow Extends Window
 				canvas.Color = Color.White
 				canvas.DrawRect(Float(x)*tw,Float(y)*th,tw,th)
 			End If
+			If map[x,y] = 2
+				canvas.Color = Color.Grey
+				canvas.DrawRect(Float(x)*tw,Float(y)*th,tw,th)
+			End If
+
 		Next
 		Next
 	End Method
