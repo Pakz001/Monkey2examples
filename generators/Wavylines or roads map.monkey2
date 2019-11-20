@@ -30,6 +30,10 @@ Class MyWindow Extends Window
 		If Keyboard.KeyReleased(Key.Escape) Then App.Terminate()		
 	End Method	
 
+	'
+	' Here we find edges. We do this by looping through
+	' the entire map and if we are at a walkable tile we check for unwalkables.
+	' If so then we have a edge situation and can place the edge tile(2)
 	Method blurmap()
 		For Local y:Int=4 Until mapheight-4
 		For Local x:Int=4 Until mapwidth-4
@@ -47,6 +51,13 @@ Class MyWindow Extends Window
 		Next
 	End Method
 
+	'
+	' Hre we create the map. We create a series of random points on the map.
+	' We take one random point and then choose one unvisited other point. We then
+	' tunnel towards this unvisited point. We make sure we have a brush point while
+	' tunneling that can be of changing size. We sometimes wonder of the direction to 
+	' create a bit of a wavy line.
+	'
 	Method newmap()
 		numpoints=Rnd(6,30)
 		map = New Int[mapwidth,mapheight]
@@ -121,6 +132,11 @@ Class MyWindow Extends Window
 		blurmap()
 	End Method
 	
+	'
+	' Here we draw the map on the canvas. The tilewidth and height are
+	' based on the canvas size and map width and height so everything fills
+	' the sceen.
+	'
 	Method drawmap(canvas:Canvas)
 		Local tw:Float=(Float(Width)/Float(mapwidth))
 		Local th:Float=(Float(Height)/Float(mapheight))
@@ -140,6 +156,9 @@ Class MyWindow Extends Window
 	End Method
 	
 End	Class
+
+
+'' Couple of helper functions. Manhattan distance and get angle between two points.
     Function distance:Float(x1:Float,y1:Float,x2:Float,y2:Float)   
     Return Abs(x2-x1)+Abs(y2-y1)   
     End Function
