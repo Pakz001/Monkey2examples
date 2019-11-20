@@ -59,6 +59,7 @@ Class MyWindow Extends Window
 	' create a bit of a wavy line.
 	'
 	Method newmap()
+		SeedRnd(Microsecs())
 		numpoints=Rnd(6,30)
 		map = New Int[mapwidth,mapheight]
 		point = New Vec2i[numpoints]
