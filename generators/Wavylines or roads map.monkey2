@@ -37,7 +37,7 @@ Class MyWindow Extends Window
 	Method blurmap()
 		For Local y:Int=4 Until mapheight-4
 		For Local x:Int=4 Until mapwidth-4
-			If map[x,y] = 1				
+			If map[x,y] = 1	And Rnd()<.3
 				For Local y2:Int=-1 To 1
 				For Local x2:Int=-1 To 1
 					If map[x+x2,y+y2] = 0 Then
