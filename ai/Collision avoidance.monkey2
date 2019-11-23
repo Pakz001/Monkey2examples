@@ -26,17 +26,18 @@ Class entity
 		If ey>480 Then ey=0
 		statecountdown-=1
 		If statecountdown<0
-		If Rnd()<.1 Then 
+		Local n:Float=Rnd()
+		If n<.1 Then 
 		state = "left"
-		statecountdown=60
+		statecountdown=Rnd(10,20)
 		speed = 1
-		Elseif Rnd()<.1
+		Elseif n>.1 And n<.2
 		state = "right"
-		statecountdown=60
+		statecountdown=Rnd(10,20)
 		speed = 1
 		Else
 		state = "forward"
-		statecountdown=60
+		statecountdown=Rnd(40,200)
 		speed = 1
 		End If
 		End If
@@ -48,7 +49,7 @@ Class entity
 					speed-=.012
 					If circleoverlap(ex,ey,20,myentity.Get(i).ex,myentity.Get(i).ey,20) Then speed=0
 					If speed<0 Then speed=0
-					statecountdown = 20
+					statecountdown = Rnd(0,20)
 					'Print "coll"+Microsecs()+"+++"+id+","+myentity.Get(i).id
 				End If
 			End If
