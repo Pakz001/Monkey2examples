@@ -43,10 +43,11 @@ Class entity
 		'
 		For Local i:Int=0 Until myentity.Length
 			If id <> myentity.Get(i).id
-				If circleoverlap(ex,ey,20,myentity.Get(i).ex,myentity.Get(i).ey,20)
+				If circleoverlap(ex,ey,32,myentity.Get(i).ex,myentity.Get(i).ey,32)
 					If orientation(ex,ey,ex+Cos(-angle)*10,ey+Sin(-angle)*10,myentity.Get(i).ex,myentity.Get(i).ey) = -1 Then state="right" Else state="left"
-					speed=0
-					'If speed<0.2 Then speed=.2
+					speed-=.012
+					If circleoverlap(ex,ey,20,myentity.Get(i).ex,myentity.Get(i).ey,20) Then speed=0
+					If speed<0 Then speed=0
 					statecountdown = 20
 					'Print "coll"+Microsecs()+"+++"+id+","+myentity.Get(i).id
 				End If
