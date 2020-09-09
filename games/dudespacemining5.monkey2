@@ -1,4 +1,6 @@
-'
+
+' Play here if the webspace is still active(9-2000)
+' https://cromdesi.home.xs4all.nl/emscripten/dudespacemining/Main.html
 ' tilevalues
 '
 ' 1 = rock
