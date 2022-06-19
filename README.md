@@ -1,4 +1,4 @@
-# Monkey2examples
+# Monkey2examples ( learn to code game by studying examples )
 Example code for the "game" programming language Monkey 2
 
 Dotate to author (book and motivation funds)
