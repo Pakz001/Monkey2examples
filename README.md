@@ -1,7 +1,7 @@
 # Monkey2examples ( learn to code games by studying examples )
 Example code for the "game" programming language Monkey 2
 
-Youtube video's of some of the things in this repo : external links <br<br>
+Youtube video's of some of the things in this repo : external links(click image) <br><br>
 
 
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=McZ7PDm2PcU" target="_blank">
