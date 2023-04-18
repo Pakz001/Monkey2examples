@@ -4,6 +4,10 @@ Example code for the "game" programming language Monkey 2
 Youtube video's of some of the things in this repo : external links(click image) <br><br>
 
 
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=b4fQdZrrX5g" target="_blank">
+ <img src="http://img.youtube.com/vi/b4fQdZrrX5g/mqdefault.jpg" alt="Watch the video" width="30%" border="10" />
+</a>
+
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=McZ7PDm2PcU" target="_blank">
  <img src="http://img.youtube.com/vi/McZ7PDm2PcU/mqdefault.jpg" alt="Watch the video" width="30%" border="10" />
 </a>
