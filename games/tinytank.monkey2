@@ -8,6 +8,10 @@ Global tilew:Int=24,tileh:Int=24
 Global screenw:Int=640
 Global screenh:Int=480
 
+' Preparing to port to JavaScript - Slowed down the bullets and turn speed of the tank. 
+' Aligned the tank turret to center.
+' to do : bullets and particles delete soldiers. Draw gfx.
+'
 
 Class particle
 	Field px:Float,py:Float,pangle:Float
@@ -350,7 +354,7 @@ Class turret
 		turntoplayer()
 		clearshot = pathblocked()
 		If Rnd()<.01 And clearshot  Then 
-			mybullet.Add(New bullet((x+Cos(angle)*(tilew))+tilew/2,(y+Sin(angle)*tileh)+(tileh/2),Cos(angle)*3,Sin(angle)*3,"turret"))
+			mybullet.Add(New bullet((x+Cos(angle)*(tilew))+tilew/2,(y+Sin(angle)*tileh)+(tileh/2),Cos(angle)*1.5,Sin(angle)*1.5,"turret"))
 		End If
 	End Method
 	Method draw(canvas:Canvas)
@@ -579,10 +583,10 @@ Class playertank
 			mybullet.Add(New bullet((320+w/2)-(Cos(angle)*w),(200+h/2)-(Sin(angle)*h),-Cos(angle)*4,-Sin(angle)*4))
 		End If
 		If Keyboard.KeyDown(Key.Left)
-			angle-=.1
+			angle-=0.05'0.1
 		End If
 		If Keyboard.KeyDown(Key.Right)
-			angle+=.1
+			angle+=0.05'0.1
 		End If
 
 		If Keyboard.KeyDown(Key.Up) 
@@ -647,7 +651,7 @@ Class playertank
 		canvas.Translate(320+w/2,200+h/2)
 		canvas.Rotate(-angle)
 		
-		canvas.DrawRect(-12,-4,7,4)
+		canvas.DrawRect(-12,-2,7,4)'-12,-4
 		'canvas.DrawRect(0,-8,10,16)
 		
 		canvas.PopMatrix()
